@@ -14,7 +14,7 @@
             </div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-            <div class="inline-block align-bottom bg-white rounded-md text-left overflow-hidden shadow-xl transition-all modal-pop-in sm:my-8 sm:align-middle w-full" :class="maxWidthClass" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
+            <div class="inline-block align-bottom bg-white rounded-md text-left overflow-hidden shadow-xl transform transition-all modal-pop-in sm:my-8 sm:align-middle w-full" :class="maxWidthClass" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
                 
                 <div v-if="!disableHeader" class="px-6 py-6 border-b border-gray-100 bg-white">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">
