@@ -1,5 +1,5 @@
 <template>
-    <button :type="type" :class="bgColor" :disabled="disabled" class="items-center border border-transparent rounded-md text-sm text-white focus:outline-none transition ease-in-out duration-150">
+    <button :type="type" :class="[bgColor, textColor]" :disabled="disabled" class="items-center border border-transparent rounded-md text-sm focus:outline-none transition ease-in-out duration-150">
         <slot></slot>
     </button>
 </template>
@@ -51,6 +51,13 @@
                 }
                 
                 return cls;
+            },
+            textColor(){
+                // Light/white backgrounds need dark text; everything else keeps white.
+                if (this.color === 'white' || this.color.endsWith('-50') || this.color.endsWith('-100')) {
+                    return 'text-gray-700';
+                }
+                return 'text-white';
             }
         }
     }

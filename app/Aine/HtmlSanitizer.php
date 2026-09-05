@@ -35,6 +35,7 @@ class HtmlSanitizer
         'samp', 'small', 'span', 'strike', 'strong', 'sub', 'sup', 'table',
         'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'u', 'ul', 'var',
         'iframe',
+        'svg', 'path',
     ];
 
     /** Tags removed together with their content. */
@@ -53,6 +54,8 @@ class HtmlSanitizer
         'table' => ['border', 'cellpadding', 'cellspacing', 'width', 'align'],
         'col' => ['span', 'width'],
         'colgroup' => ['span', 'width'],
+        'svg' => ['viewbox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'aria-hidden', 'width', 'height'],
+        'path' => ['d', 'stroke-dasharray', 'fill', 'stroke', 'stroke-width', 'stroke-linecap'],
     ];
 
     private const GLOBAL_ATTRIBUTES = [
@@ -197,6 +200,10 @@ class HtmlSanitizer
             if (str_starts_with($name, 'on')) {
                 $toRemove[] = $attribute->nodeName;
 
+                continue;
+            }
+
+            if (str_starts_with($name, 'data-')) {
                 continue;
             }
 
