@@ -170,8 +170,20 @@ class ContentRevisionTest extends TestCase
         $this->newController()->store($project->id, $collection->id,
             Request::create('/x', 'POST', ['locale' => 'en', 'data' => ['title' => 'A', 'body' => 'B']]));
         $content = Content::where('project_id', $project->id)->first();
+
+        // Simulate a meta row that exists in the current data but was absent
+        // from the first revision's snapshot (e.g. a field that was removed
+        // from the collection definition after the revision was taken).
+        ContentMeta::create([
+            'project_id' => $project->id,
+            'collection_id' => $collection->id,
+            'content_id' => $content->id,
+            'field_name' => 'extra',
+            'value' => 'X',
+        ]);
+
         $this->newController()->update($project->id, $collection->id, $content->id,
-            Request::create('/x', 'POST', ['data' => ['title' => 'A2', 'body' => 'B2', 'extra' => 'X']]));
+            Request::create('/x', 'POST', ['data' => ['title' => 'A2', 'body' => 'B2']]));
 
         $this->assertDatabaseHas('content_meta', ['content_id' => $content->id, 'field_name' => 'extra']);
 

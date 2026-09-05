@@ -15,8 +15,6 @@ class CollectionField extends Model
         'project_id' => 'integer',
         'collection_id' => 'integer',
         'order' => 'integer',
-        'options' => 'array',
-        'validations' => 'array',
     ];
 
     public function project(){

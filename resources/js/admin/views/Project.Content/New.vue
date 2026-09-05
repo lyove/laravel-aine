@@ -178,7 +178,7 @@
                                             </button>
                                         </div>
                                     </div>
-                                    <div v-if="field.type == 'slug'">
+                                    <div v-if="field.type == 'slug' && field.options.slug !== undefined">
                                         <div v-if="field.options.slug.field === null">
                                             <input
                                                 type="text"
@@ -432,7 +432,7 @@
                                             <input type="time" v-model="newData.data[field.name]" v-forminput />
                                         </div>
                                     </div>
-                                    <div v-if="field.type == 'media'" class="w-full">
+                                    <div v-if="field.type == 'media' && field.options.media !== undefined" class="w-full">
                                         <div
                                             class="w-32 h-32 float-left my-1 mr-2 p-3 bg-gray-200 rounded-md flex items-center text-center cursor-pointer hover:bg-gray-300"
                                             @click="openMediaLibraryModalFn(field.name, false, field.options.media.type)"
@@ -502,7 +502,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div v-if="field.type == 'relation'" class="w-full">
+                                    <div v-if="field.type == 'relation' && field.options.relation !== undefined" class="w-full">
                                         <div class="w-full border rounded-md p-2">
                                             <div
                                                 class="text-indigo-500 text-sm border cursor-pointer p-2 hover:bg-indigo-50 rounded-md w-full"

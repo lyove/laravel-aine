@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Aine\AuditLogger;
 use App\Events\ContentPublished;
 use App\Events\ContentUpdated;
 use App\Http\Controllers\Controller;
@@ -73,6 +74,12 @@ class WorkflowController extends Controller
 
         $this->bumpPublicCacheVersion($publishedContent->project_id);
         event(new ContentPublished(['source' => 'User', 'content' => $publishedContent]));
+
+        AuditLogger::log('publish', 'content', $publishedContent->id, 'Content #' . $publishedContent->id, [
+            'collection_id' => $collection_id,
+            'workflow'      => 'approve',
+            'draft_branch'  => $content->isDraftBranch() ? $content->id : null,
+        ], $project->id);
 
         return response()->json(['success' => true, 'message' => 'Approved and published.', 'data' => ['workflow_state' => 'published']]);
     }

@@ -688,7 +688,7 @@
                                 />
                             </div>
                         </div>
-                        <div v-if="field.type == 'media'" class="w-full">
+                        <div v-if="field.type == 'media' && field.options.media !== undefined" class="w-full">
                             <div
                                 v-show="!processing"
                                 @click="$refs['fileInput_' + field.name].click()"

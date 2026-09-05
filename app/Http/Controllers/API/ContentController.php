@@ -251,7 +251,7 @@ class ContentController extends Controller
         return $this->searchContentByUuid($project->uuid, $slug, $request);
     }
 
-    private function searchContentByUuid($uuid, $slug, Request $request)
+    public function searchContentByUuid($uuid, $slug, Request $request)
     {
         $project = Project::where('uuid', $uuid)->first();
         if (! $project) return $this->notFound('Project not found');

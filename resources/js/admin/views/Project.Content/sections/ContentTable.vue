@@ -951,9 +951,12 @@ export default {
         },
 
         async showRelationlist(field, value) {
+            let options = typeof field.options === "string" ? JSON.parse(field.options) : field.options;
+            if (options.relation === undefined) return;
+
             let data = {
                 selected: value.split(","),
-                collection_id: field.options.relation.collection,
+                collection_id: options.relation.collection,
             };
 
             await axios.post("content/get-selected-records/" + this.$route.params.project_id, { data: data }).then((response) => {

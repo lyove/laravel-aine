@@ -229,11 +229,11 @@
                                             <span v-if="field.type == 'date'">
                                                 <span v-if="field.options.timepicker">{{ __(': time') }}</span>
                                             </span>
-                                            <span v-if="field.type == 'media'">
+                                            <span v-if="field.type == 'media' && field.options.media !== undefined">
                                                 <span v-if="field.options.media.type == 1">{{ __(': single') }}</span>
                                                 <span v-else-if="field.options.media.type == 2">{{ __(': multiple') }}</span>
                                             </span>
-                                            <span v-else-if="field.type == 'relation'">
+                                            <span v-else-if="field.type == 'relation' && field.options.relation !== undefined">
                                                 <span v-if="field.options.relation.type == 1">{{ __(': one-to-one') }}</span>
                                                 <span v-else-if="field.options.relation.type == 2">{{ __(': one-to-many') }}</span>
                                             </span>

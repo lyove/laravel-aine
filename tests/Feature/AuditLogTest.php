@@ -132,11 +132,9 @@ class AuditLogTest extends TestCase
     {
         $content = $this->createContent('Live', true);
 
-        $this->controller()->update($this->project->id, $this->collectionId(), $content->id, Request::create('/x', 'POST', [
-            'locale' => 'en',
-            'data' => ['title' => 'Taken down'],
-            'unpublished' => true,
-        ]));
+        // The dedicated unpublish endpoint (added in the draft-branch
+        // redesign) is the canonical way to take live content down.
+        $this->controller()->unpublish($this->project->id, $this->collectionId(), $content->id);
 
         $log = AuditLog::where('project_id', $this->project->id)->where('action', 'unpublish')->latest()->first();
 
