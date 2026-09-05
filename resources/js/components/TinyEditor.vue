@@ -123,7 +123,7 @@ export default {
                     " .ssml-block { border: 1px dashed #4f7cff; border-radius: 6px; padding: 10px 14px; margin: 10px 0; background: #f8faff; cursor: pointer; }" +
                     " .ssml-block:hover { border-color: #3b5fe0; background: #f0f4ff; }" +
                     " .ssml-empty { color: #999; }" +
-                    " .ssml-edit-hint { color: #4f7cff; font-size: 12px; margin-top: 6px; }" +
+                    " .ssml-edit-hint { color: #4f7cff; font-size: 12px; }" +
                     " .ssml-block .se-editor { position: relative; padding: 0; background: transparent; font-size: 15px; line-height: 2rem; color: #1f2430; }" +
                     " .ssml-block .se-line { margin: 0; min-height: 1.9em; line-height: 2.4rem; }" +
                     " .ssml-block .se-ch { position: relative; display: inline-block; vertical-align: baseline; }" +
