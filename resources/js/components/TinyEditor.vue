@@ -127,7 +127,7 @@ export default {
                     " .ssml-block .se-editor { position: relative; padding: 0; background: transparent; font-size: 15px; line-height: 2rem; color: #1f2430; }" +
                     " .ssml-block .se-line { margin: 0; min-height: 1.9em; line-height: 2.4rem; }" +
                     " .ssml-block .se-ch { position: relative; display: inline-block; vertical-align: baseline; }" +
-                    " .ssml-block .se-ch.se-py { display: inline-block; position: relative; text-align: center; vertical-align: baseline; margin-right: 0.25em; padding-top: 1.15em; }" +
+                    " .ssml-block .se-ch.se-py { display: inline-block; position: relative; text-align: center; vertical-align: baseline; }" +
                     " .ssml-block .se-ch.se-py .se-py-line { display: block; font-size: 0.75em; line-height: 0.1; font-weight: 500; white-space: nowrap; padding: 0 0.22em; visibility: hidden; }" +
                     " .ssml-block .se-ch.se-py::before { content: attr(data-val); position: absolute; left: 50%; top: -0.25rem; transform: translateX(-50%); font-size: 0.75em; line-height: 1.2; font-weight: 500; color: #4f7cff; white-space: nowrap; pointer-events: none; user-select: none; padding: 0 0.3em; }" +
                     " .ssml-block .se-bracket { display: inline; position: relative; cursor: default; user-select: none; vertical-align: baseline; }" +
@@ -144,7 +144,10 @@ export default {
                     " .ssml-block .se-bracket--ro { cursor: default; opacity: 0.55; }" +
                     " .ssml-block .se-break { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; width: auto; height: 1.15em; position: relative; cursor: default; color: #94a3b8; }" +
                     " .ssml-block .se-break .se-break-svg { display: block; width: auto; height: 100%; max-height: 1.15em; flex: none; }" +
-                    " .ssml-block .se-break--ro { cursor: default; opacity: 0.72; color: #94a3b8; background: transparent !important; box-shadow: none !important; }",
+                    " .ssml-block .se-break--ro { cursor: default; opacity: 0.72; color: #94a3b8; background: transparent !important; box-shadow: none !important; }" +
+                    (this.disabled
+                        ? " .ssml-edit-hint { display: none; } .ssml-block { cursor: default; } .ssml-block:hover { border-color: #4f7cff; background: #f8faff; }"
+                        : ""),
                 noneditable_class: "ssml-block",
                 extended_valid_elements:
                     "div[class|contenteditable|data-ssml],span[class|data-val],svg[class|viewBox|fill|stroke|stroke-width|stroke-linecap|aria-hidden],path[d|stroke-dasharray]",
@@ -273,14 +276,13 @@ export default {
                 }
             } else {
                 // ---- Insert new placeholder at TinyMCE cursor ----
-                // Wrap data-ssml in single quotes; escape JSON single quotes as &#39;
                 const safeJson = json.replace(/'/g, "&#39;");
                 const html =
                     `<div class="ssml-block" contenteditable="false" data-ssml='${safeJson}'>` +
                     `<div class="ssml-rich-preview">${previewHtml}</div>` +
                     `<div class="ssml-edit-hint">${this.__("Click to edit SSML speech annotations")}</div>` +
                     `</div>` +
-                    `<p></p>`; // Empty paragraph after placeholder for easier continued typing
+                    `<p></p>`;
                 this.ssmlTinyEditor.insertContent(html);
             }
 

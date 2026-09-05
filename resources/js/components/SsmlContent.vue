@@ -53,27 +53,17 @@ export default {
             blocks.forEach((block) => {
                 const data = block.getAttribute("data-ssml");
                 if (!data) { 
-                    return; 
+                    return;
                 }
 
                 try {
                     const model = JSON.parse(data);
-
-                    // Clear placeholder content and mount read-only editor
                     block.innerHTML = "";
-                    block.style.cursor = "default";
-                    block.style.border = "1px solid #e5e7eb";
-                    block.style.borderRadius = "6px";
-                    block.style.padding = "10px 14px";
-                    block.style.margin = "10px 0";
-                    block.style.background = "#fafafa";
-
                     const editor = new SSMLEditor({
                         el: block,
                         value: model,
-                        readOnly: true, // Read-only mode
+                        readOnly: true,
                     });
-
                     this.ssmlInstances.push(editor);
                 } catch (e) {
                     console.error("Failed to render SSML block:", e);
