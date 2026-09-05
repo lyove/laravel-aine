@@ -129,7 +129,7 @@ class ContentImportExportTest extends TestCase
         $this->assertDatabaseHas('content_meta', ['field_name' => 'title', 'value' => 'Imported One']);
 
         //An initial revision should be recorded for imported rows
-        $this->assertDatabaseHas('content_revisions', ['note' => 'Imported']);
+        $this->assertDatabaseHas('content_revisions', ['action' => 'imported']);
     }
 
     public function test_import_csv_creates_content(): void

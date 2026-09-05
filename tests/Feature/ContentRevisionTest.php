@@ -88,7 +88,7 @@ class ContentRevisionTest extends TestCase
 
         $this->assertDatabaseHas('content_revisions', [
             'content_id' => $content->id,
-            'note' => 'Created',
+            'action' => 'created',
         ]);
 
         $revision = ContentRevision::where('content_id', $content->id)->first();
@@ -110,7 +110,7 @@ class ContentRevisionTest extends TestCase
         $revisions = ContentRevision::where('content_id', $content->id)->orderByDesc('id')->get();
 
         $this->assertCount(2, $revisions);
-        $this->assertSame('Updated', $revisions->first()->note);
+        $this->assertSame('updated', $revisions->first()->action);
         $this->assertSame(['title' => 'Hello World v2', 'body' => 'New body'], $revisions->first()->data);
     }
 
@@ -130,8 +130,8 @@ class ContentRevisionTest extends TestCase
         $json = json_decode($response->getContent(), true);
 
         $this->assertCount(2, $json);
-        $this->assertSame('Updated', $json[0]['note']);
-        $this->assertSame('Created', $json[1]['note']);
+        $this->assertSame('updated', $json[0]['action']);
+        $this->assertSame('created', $json[1]['action']);
         $this->assertSame('Admin', $json[0]['user']['name'] ?? null);
     }
 

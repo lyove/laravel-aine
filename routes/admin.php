@@ -152,6 +152,9 @@ Route::middleware('auth:web')->prefix('admin-api')->group(function(){
         Route::get('/export/{project_id}/{collection_id}', [ContentController::class, 'exportContent']);
         Route::post('/import/{project_id}/{collection_id}', [ContentController::class, 'importContent']);
         Route::get('/revisions/{project_id}/{collection_id}/{content_id}', [ContentController::class, 'revisions']);
+        Route::get('/revisions/{project_id}/{collection_id}/{content_id}/{revision_id}', [ContentController::class, 'showRevision']);
+        Route::get('/revisions/{project_id}/{collection_id}/{content_id}/diff/{from_id}/{to_id}', [ContentController::class, 'diffRevisions']);
+        Route::patch('/revisions/{project_id}/{collection_id}/{content_id}/{revision_id}/label', [ContentController::class, 'updateRevisionLabel']);
         Route::post('/revisions/{project_id}/{collection_id}/{content_id}/{revision_id}/restore', [ContentController::class, 'restoreRevision']);
         Route::post('/unpublish/{project_id}/{collection_id}/{content_id}', [ContentController::class, 'unpublish']);
         Route::post('/publish-draft/{project_id}/{collection_id}/{content_id}', [ContentController::class, 'publishDraft']);

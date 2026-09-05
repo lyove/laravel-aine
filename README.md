@@ -15,6 +15,26 @@
 - **Relations** — one-to-one / one-to-many between collections (e.g. category → articles, author → articles).
 - **Preset templates** — create a project from the **CMS Template** (articles, pages, categories, authors, tags, comments, globals) or the **Business Directory Template** (listings, categories, tags, locations, reviews) and extend it freely.
 
+### Content Revisions & Version History
+- **Automatic snapshots** — every create, update, publish, unpublish, draft-edit, restore and import creates a full-field snapshot in `content_revisions`, with a version chain (`parent_id`) linking each revision to its predecessor.
+- **Field-level change summary** — each revision records which fields changed vs. the previous version (added / removed / modified), shown inline in the history panel.
+- **Version comparison** — select any two revisions and view a side-by-side, field-level diff with before/after values and color-coded change types.
+- **Version labels** — tag any revision with a custom label (e.g. "v1.0 release", "Editor approved") for easy reference.
+- **Safe restore** — restoring a version first shows a preview of all changes that will be applied; confirming creates a new "restored" revision on top, so the history is never destructive.
+- **Draft-branch history merged** — edits saved as a draft of published content appear in the main content's history (attached via `overrideContentId`), so the full edit trail is visible in one place.
+- **History badge** — the editor's **History** button shows the live revision count; the list marks the current version and shows author, timestamp, action type and changed fields.
+
+### Draft Branch & Publishing Workflow
+- **Draft branch** — editing a published piece without unpublishing it clones a draft child (`draft_parent_id`); changes are saved there until you choose to publish, merge or discard.
+- **Scheduled publishing** — set `scheduled_at`; the `aine:publish_scheduled` artisan command (run via cron) publishes content automatically at the right time.
+- **Workflow approval** — per-project workflow gate: publishing requires an admin's approve/reject action with a reviewer comment; all transitions are audited.
+- **Preview tokens** — draft content can be shared via a time-limited `preview_token` URL without exposing it to the public API.
+
+### SSML Speech Annotation (Rich Text)
+- The TinyMCE rich-text editor integrates an **SSML editor** for adding speech-synthesis annotations (pinyin, phoneme, prosody, break) to text.
+- Annotations render as inline `data-*` attributes on `<span>` elements; the HTML sanitizer whitelists `data-*`, `svg` and `path` so annotations survive save/load and render correctly on the frontend.
+- Read-only mode hides the "Click to edit" hint and shows a static preview.
+
 ### Publishing & API
 - **Two API modes**:
   - `/api/project/{uuid|slug}/...` — for frontend apps; validated by **domain whitelist**, with an optional **Public API** switch for token-free reads.
@@ -26,7 +46,7 @@
 ### Security
 - **Rate limiting** — per-user/IP throttling on the API (`60/min`), write endpoints (`30/min`), search (`60/min` logged-in, `20/min` anonymous), public form submissions/uploads, and admin auth (password reset / 2FA).
 - **Security headers** — `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy` on every response, plus `X-Frame-Options: SAMEORIGIN` on the admin area.
-- **HTML sanitization** — rich text is whitelist-sanitized before saving (admin content & public forms), stripping scripts, event handlers, `javascript:` links and dangerous CSS.
+- **HTML sanitization** — rich text is whitelist-sanitized before saving (admin content & public forms), stripping scripts, event handlers, `javascript:` links and dangerous CSS. `data-*` attributes are preserved (inert, used by SSML annotations and frontend renderers), as are `svg`/`path` with a restricted attribute set (`viewbox`, `d`, `fill`, `stroke`, etc.).
 - **Upload guard** — media uploads are double-checked by extension + content MIME against a deny-list (`php`, `phar`, `phtml`, `asp`, `jsp`, …) on top of the MIME whitelist.
 
 ### Multilingual
@@ -35,7 +55,9 @@
 - **Translation manager** — global UI string translations plus per-project translations (collection names, field labels, custom strings), driven by an explicit `__()` helper and a `{{ ... }}` pattern-matching dictionary engine.
 
 ### Admin Experience
-- Single-page Vue 3 admin (`/admin`): projects, collections, content tables, rich text editor (TinyMCE), drag-and-drop field ordering, forms, media, settings.
+- Single-page Vue 3 admin (`/admin`): projects, collections, content tables, rich text editor (TinyMCE with SSML speech annotation), drag-and-drop field ordering, forms, media, settings.
+- **Content History panel** — every content editor has a **History** button (with a live revision-count badge) opening a dual-pane modal: revision list on the left (action badge, label, author, timestamp, changed-field chips, current-version marker), detail/preview or two-version diff on the right, plus label editing and restore-with-preview confirmation.
+- **Audit log** — all admin actions (create, update, publish, unpublish, restore, import, workflow approve/reject, revision label) are recorded with actor, entity, timestamp and metadata.
 - **Web installer** — visiting `/install` on a fresh deployment starts a wizard: language selection, server requirements, folder permissions, environment configuration (app + database + admin account), confirmation, migrations, done.
 - Supports **SQLite, MySQL, PostgreSQL and SQL Server**.
 
@@ -208,6 +230,7 @@ REDIS_CLIENT=predis
 2. **Create a project** (or use a preset template: CMS / Business Directory).
 3. In the project, create **Collections** (e.g. `articles`) and add **Fields** (e.g. `title`, `url`, `content`).
 4. Add **Content** entries under Content → your collection.
+   - In any content editor, click **History** (top-right, with a revision-count badge) to view the full version history: preview any version, compare two versions field-by-field, tag a version with a custom label, or restore a previous version (with a change preview before confirming).
 5. Open **Settings → API**:
    - add your frontend domain to the **Domain Whitelist**,
    - create an **Access Token** (choose `read` / `write` abilities),
@@ -307,6 +330,21 @@ php artisan optimize:clear
 
 Project templates (CMS, Business Directory) are defined in `app/Aine/ProjectTemplates.php` — they ship the collections, fields and demo data used by the seeded demo projects (`database/seeders/DemoProjectsSeeder.php`).
 
+### Content Revisions architecture
+
+| Piece | Location |
+| --- | --- |
+| Migration (enhanced schema) | `database/migrations/2026_01_01_000040_enhance_content_revisions_table.php` — adds `parent_id`, `action`, `label`, `meta` (JSON), composite index |
+| Model | `app/Models/ContentRevision.php` — `parent`/`children` relations, `is_current`, `change_summary`, `action_label` accessors, static `diffFields()` |
+| Snapshot helper | `ContentController::createRevision($content, $action, $note, $overrideContentId)` — reads all `ContentMeta`, finds the previous revision as `parent_id`, computes field-level diff into `meta.change_summary` |
+| Admin API | `routes/admin.php` — list / show / diff / label / restore under `admin-api/content/revisions/...` |
+| Frontend panel | `resources/js/admin/views/components/RevisionsModal.vue` — dual-pane list + preview + two-version diff + label editing + restore-with-preview |
+| Editor integration | `resources/js/admin/views/Project.Content/Edit.vue` — History button with revision-count badge, auto-refresh on load/save, `@restored="getEdit()"` |
+
+**Action types**: `created`, `updated`, `published`, `unpublished`, `draft_updated`, `restored`, `imported`, `deleted`.
+
+**Draft-branch merge**: when a draft of published content is saved, the revision is attached to the **main** content id via `overrideContentId`, so draft edits appear in the main content's history rather than being isolated on the draft row.
+
 ### Admin UI translation (development guide)
 
 The admin UI is authored in English. Translations are stored in the **database** and served to the browser as **dictionaries** (`GET /admin-api/translations/dict?locale=…`). Every user-visible string must go through the explicit, reactive `__()` helper — there is **no automatic DOM-scanning fallback**: a string left unwrapped simply stays in English.
@@ -360,7 +398,7 @@ Notes:
 php artisan test
 ```
 
-The feature test asserts the frontend root responds correctly; extend `tests/` as you add functionality.
+The suite covers content CRUD, revisions (create / update / list / diff / restore / label), import/export, media, API auth & querying, workflow audit, collection field management, and the frontend root response. Current baseline: **171 tests / 429 assertions**.
 
 ---
 

@@ -109,19 +109,58 @@ class ContentController extends Controller
     // Revision helper
     // =================================================================
 
-    private function createRevision(Content $content, string $note = 'Updated'): void
-    {
+    /**
+     * Create a content revision snapshot.
+     *
+     * @param  Content  $content           The content whose meta is snapshotted.
+     * @param  string   $action            Action type: created/updated/published/
+     *                                      unpublished/draft_updated/restored/imported.
+     * @param  string|null $note           Optional human-readable note.
+     * @param  int|null $overrideContentId When set, the revision is attached to
+     *                                      this content_id instead of $content->id.
+     *                                      Used for draft branches so draft edits
+     *                                      appear in the main content's history.
+     */
+    private function createRevision(
+        Content $content,
+        string $action = 'updated',
+        ?string $note = null,
+        ?int $overrideContentId = null
+    ): void {
+        $targetContentId = $overrideContentId ?? $content->id;
+
+        // Snapshot all meta fields.
         $data = [];
         foreach (ContentMeta::where('content_id', $content->id)->get() as $meta) {
             $data[$meta->field_name] = $meta->value;
         }
+
+        // Find the previous revision of the same target content (version chain).
+        $parent = ContentRevision::where('content_id', $targetContentId)
+            ->orderByDesc('id')
+            ->first();
+
+        // Compute change summary against the parent revision.
+        $changeSummary = null;
+        if ($parent) {
+            $changes = ContentRevision::diffFields($parent->data ?? [], $data);
+            $changeSummary = [
+                'changed_count' => count($changes),
+                'changed_fields' => array_column($changes, 'field'),
+                'changes' => $changes,
+            ];
+        }
+
         ContentRevision::create([
             'project_id'    => $content->project_id,
             'collection_id' => $content->collection_id,
-            'content_id'    => $content->id,
+            'content_id'    => $targetContentId,
             'locale'        => $content->locale,
             'data'          => $data,
             'note'          => $note,
+            'action'        => $action,
+            'parent_id'     => $parent?->id,
+            'meta'          => $changeSummary ? ['change_summary' => $changeSummary] : null,
             'created_by'    => Auth::id(),
         ]);
     }
@@ -330,7 +369,7 @@ class ContentController extends Controller
         );
 
         // Admin side-effects.
-        $this->createRevision($content, 'Created');
+        $this->createRevision($content, 'created');
         AuditLogger::log('create', 'content', $content->id, 'Content #' . $content->id, [
             'collection_id' => $collection->id,
             'locale'        => $content->locale,
@@ -401,7 +440,9 @@ class ContentController extends Controller
                 deletedMetaIds: $request->get('deleted', [])
             );
 
-            $this->createRevision($draft, 'Draft updated');
+            // Attach draft revision to the MAIN content so the full history
+            // (including draft edits) is visible from the main content's History.
+            $this->createRevision($draft, 'draft_updated', null, $content->id);
 
             AuditLogger::log('update', 'content', $draft->id,
                 'Draft branch #' . $draft->id . ' (of #' . $content_id . ')',
@@ -440,7 +481,7 @@ class ContentController extends Controller
             );
 
             $main = $this->mutations->publishDraftBranch($content, Auth::id());
-            $this->createRevision($main, 'Published from draft branch');
+            $this->createRevision($main, 'published');
             ContentPublished::dispatch(['source' => 'User', 'content' => $main]);
 
             AuditLogger::log('publish_draft', 'content', $main->id, 'Content #' . $main->id, [
@@ -494,7 +535,11 @@ class ContentController extends Controller
         }
 
         ContentUpdated::dispatch(['source' => 'User', 'content' => $content]);
-        $this->createRevision($content, 'Updated');
+
+        $revisionAction = $request->get('published') ? 'published' : ($action === 'unpublish' ? 'unpublished' : 'updated');
+        $this->createRevision($content, $revisionAction);
+
+        return response($content->load('meta'), 200);
     }
 
     // =================================================================
@@ -550,7 +595,89 @@ class ContentController extends Controller
             ->where('content_id', $content_id)
             ->orderByDesc('id')->get();
 
+        // Mark the latest revision as "current" and attach change summaries.
+        $latestId = $revisions->isNotEmpty() ? $revisions->first()->id : null;
+        $revisions->each(function ($rev) use ($latestId) {
+            $rev->is_current = $rev->id === $latestId;
+            $rev->change_summary = $rev->change_summary;
+            $rev->action_label = $rev->action_label;
+        });
+
         return response()->json($revisions, 200);
+    }
+
+    /**
+     * Show a single revision with its full snapshot data.
+     */
+    public function showRevision($project_id, $collection_id, $content_id, $revision_id)
+    {
+        $project = Project::findOrFail($project_id);
+        $this->authorizeEditor($project);
+
+        $revision = ContentRevision::with('user:id,name,email')
+            ->where('project_id', $project->id)
+            ->where('collection_id', $collection_id)
+            ->where('content_id', $content_id)
+            ->where('id', $revision_id)
+            ->firstOrFail();
+
+        $revision->action_label = $revision->action_label;
+        $revision->change_summary = $revision->change_summary;
+
+        return response()->json($revision, 200);
+    }
+
+    /**
+     * Compute a field-level diff between two revisions.
+     */
+    public function diffRevisions($project_id, $collection_id, $content_id, $from_id, $to_id)
+    {
+        $project = Project::findOrFail($project_id);
+        $this->authorizeEditor($project);
+
+        $query = ContentRevision::where('project_id', $project->id)
+            ->where('collection_id', $collection_id)
+            ->where('content_id', $content_id);
+
+        $from = (clone $query)->where('id', $from_id)->firstOrFail();
+        $to = (clone $query)->where('id', $to_id)->firstOrFail();
+
+        $changes = ContentRevision::diffFields($from->data ?? [], $to->data ?? []);
+
+        return response()->json([
+            'from' => ['id' => $from->id, 'action' => $from->action, 'created_at' => $from->created_at],
+            'to' => ['id' => $to->id, 'action' => $to->action, 'created_at' => $to->created_at],
+            'changes' => $changes,
+            'changed_count' => count($changes),
+        ], 200);
+    }
+
+    /**
+     * Update a revision's user-defined label (e.g. "v1.0 release").
+     */
+    public function updateRevisionLabel($project_id, $collection_id, $content_id, $revision_id, Request $request)
+    {
+        $project = Project::findOrFail($project_id);
+        $this->authorizeEditor($project);
+
+        $revision = ContentRevision::where('project_id', $project->id)
+            ->where('collection_id', $collection_id)
+            ->where('content_id', $content_id)
+            ->where('id', $revision_id)
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'label' => 'nullable|string|max:120',
+        ]);
+
+        $revision->update(['label' => $validated['label'] ?? null]);
+
+        AuditLogger::log('revision_label', 'content_revision', $revision->id,
+            'Revision #' . $revision->id . ' label updated',
+            ['content_id' => $content_id, 'label' => $revision->label],
+            $project->id);
+
+        return response()->json($revision, 200);
     }
 
     public function restoreRevision($project_id, $collection_id, $content_id, $revision_id)
@@ -591,7 +718,7 @@ class ContentController extends Controller
             }
         });
 
-        $this->createRevision($content, 'Restored from revision #' . $revision->id);
+        $this->createRevision($content, 'restored', 'Restored from revision #' . $revision->id);
 
         ContentUpdated::dispatch(['source' => 'User', 'content' => $content]);
 
@@ -723,7 +850,7 @@ class ContentController extends Controller
                     ]);
                 }
 
-                $this->createRevision($content, 'Imported');
+                $this->createRevision($content, 'imported');
                 ContentCreated::dispatch(['source' => 'Import', 'content' => $content]);
                 AuditLogger::log('import', 'content', $content->id, 'Content #' . $content->id, [
                     'collection_id' => $collection_id, 'source' => 'Import',
@@ -794,7 +921,7 @@ class ContentController extends Controller
 
         $main = $this->mutations->publishDraftBranch($draft, Auth::id());
 
-        $this->createRevision($main, 'Published from draft branch');
+        $this->createRevision($main, 'published');
         ContentPublished::dispatch(['source' => 'User', 'content' => $main]);
 
         AuditLogger::log('publish_draft', 'content', $main->id, 'Content #' . $main->id, [

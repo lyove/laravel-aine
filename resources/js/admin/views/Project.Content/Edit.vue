@@ -23,8 +23,11 @@
                         <small class="text-gray-500 font-normal"> {{ __('/ Update Content') }}</small>
                     </div>
                     <div class="flex">
-                        <ui-button type="button" color="white" hover="indigo-50" class="mr-2" @click="showRevisions = true">
+                        <ui-button type="button" color="white" hover="indigo-50" class="mr-2 relative" @click="showRevisions = true">
                             <i class="fa fa-history mr-1"></i>{{ __('History') }}
+                            <span v-if="revisionCount > 0" class="absolute -top-1 -right-1 bg-indigo-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                                {{ revisionCount }}
+                            </span>
                         </ui-button>
                         <ui-button :color="'indigo-500'" :disabled="!isSavingEnable" class="rounded-r-none" @click="saveEdit(false)"> {{ __('Save') }} </ui-button>
                         <div
@@ -833,6 +836,7 @@ export default {
             currentRelationField: null,
             relationRecords: {},
             showRevisions: false,
+            revisionCount: 0,
             scheduledAt: null,
             init: false,
         };
@@ -947,7 +951,19 @@ export default {
                 });
 
                 this.newDataClone = JSON.parse(JSON.stringify(this.newData));
+                this.loadRevisionCount();
             });
+        },
+
+        loadRevisionCount() {
+            axios
+                .get("content/revisions/" + this.$route.params.project_id + "/" + this.$route.params.col_id + "/" + this.$route.params.content_id)
+                .then((response) => {
+                    this.revisionCount = (response.data || []).length;
+                })
+                .catch(() => {
+                    this.revisionCount = 0;
+                });
         },
 
         addNewLineToRepeatableField(field, value, id = null) {
