@@ -1,0 +1,36 @@
+<?php
+
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\TwoFactorChallengeController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/login', [AuthenticatedSessionController::class, 'create'])->middleware('guest')->name('login');
+
+Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('guest');
+
+Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->middleware('guest')->name('password.request');
+
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+    ->middleware('guest')
+    ->middleware('throttle:6,1')
+    ->name('password.email');
+
+Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->middleware('guest')->name('password.reset');
+
+Route::post('/reset-password', [NewPasswordController::class, 'store'])
+    ->middleware('guest')
+    ->middleware('throttle:5,1')
+    ->name('password.update');
+
+Route::get('/two-factor-challenge', [TwoFactorChallengeController::class, 'create'])->middleware('guest')->name('two-factor.challenge');
+
+Route::post('/two-factor-challenge', [TwoFactorChallengeController::class, 'store'])
+    ->middleware('guest')
+    ->middleware('throttle:5,1');
+
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->middleware('auth')->name('logout');
+
+// Route::get('/register', [RegisteredUserController::class, 'create'])->middleware('guest')->name('register');
