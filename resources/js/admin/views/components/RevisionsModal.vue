@@ -244,55 +244,62 @@
                 </div>
             </div>
         </template>
+    </ui-modal>
 
-        <!-- Restore confirmation dialog -->
-        <ui-modal :show="showRestoreConfirm" max-width="lg" @close="showRestoreConfirm = false">
-            <template #title>
-                <i class="fa fa-exclamation-triangle text-yellow-500 mr-2"></i>{{ __('Confirm Restore') }}
-            </template>
-            <template #content>
-                <div v-if="restoreTarget">
-                    <p class="text-sm text-gray-600 mb-3">
-                        {{ __('You are about to restore the content to version #') }}{{ restoreTarget.id }}
-                        ({{ restoreTarget.action_label || restoreTarget.action }}, {{ formatDate(restoreTarget.created_at) }}).
-                    </p>
-                    <p class="text-sm text-gray-600 mb-3">
-                        {{ __('The current content will be overwritten. A new revision will be created for this restore action.') }}
-                    </p>
+    <!-- Restore confirmation dialog -->
+    <ui-modal :show="showRestoreConfirm" max-width="lg" @close="showRestoreConfirm = false">
+        <template #title>
+            <i class="fa fa-exclamation-triangle text-yellow-500 mr-2"></i>{{ __('Confirm Restore') }}
+        </template>
+        <template #content>
+            <div v-if="restoreTarget">
+                <p class="text-sm text-gray-600 mb-3">
+                    {{ __('You are about to restore the content to version #') }}{{ restoreTarget.id }}
+                    ({{ restoreTarget.action_label || restoreTarget.action }}, {{ formatDate(restoreTarget.created_at) }}).
+                </p>
+                <p class="text-sm text-gray-600 mb-3">
+                    {{ __('The current content will be overwritten. A new revision will be created for this restore action.') }}
+                </p>
 
-                    <div v-if="restoreDiff" class="border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
-                        <div class="px-3 py-1.5 bg-gray-50 border-b text-xs font-semibold text-gray-600">
-                            {{ __('Changes that will be applied') }} ({{ restoreDiff.changed_count }})
-                        </div>
-                        <div class="divide-y">
-                            <div v-for="change in restoreDiff.changes" :key="change.field" class="px-3 py-2 text-xs">
-                                <span class="font-semibold text-gray-700">{{ change.field }}</span>
-                                <span class="mx-1 text-gray-400">→</span>
-                                <span class="text-green-700">{{ formatValue(change.new) || '(empty)' }}</span>
-                            </div>
-                        </div>
+                <div v-if="restoreDiff" class="border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+                    <div class="px-3 py-1.5 bg-gray-50 border-b text-xs font-semibold text-gray-600">
+                        {{ __('Changes that will be applied') }} ({{ restoreDiff.changed_count }})
                     </div>
-                    <div v-else-if="restoreDiffLoading" class="text-center text-gray-400 text-sm py-4">
-                        <i class="fa fa-spinner fa-spin"></i> {{ __('Computing changes...') }}
+                    <div class="divide-y">
+                        <div v-for="change in restoreDiff.changes" :key="change.field" class="px-3 py-2 text-xs">
+                            <span class="font-semibold text-gray-700">{{ change.field }}</span>
+                            <span class="mx-1 text-gray-400">→</span>
+                            <span class="text-green-700">{{ formatValue(change.new) || '(empty)' }}</span>
+                        </div>
                     </div>
                 </div>
-            </template>
-            <template #footer>
-                <ui-button color="white" hover="gray-200" @click="showRestoreConfirm = false">
-                    {{ __('Cancel') }}
-                </ui-button>
-                <ui-button color="indigo-500" :disabled="restoring" @click="doRestore">
-                    <i v-if="restoring" class="fa fa-spinner fa-spin mr-1"></i>
-                    {{ __('Confirm Restore') }}
-                </ui-button>
-            </template>
-        </ui-modal>
+                <div v-else-if="restoreDiffLoading" class="text-center text-gray-400 text-sm py-4">
+                    <i class="fa fa-spinner fa-spin"></i> {{ __('Computing changes...') }}
+                </div>
+            </div>
+        </template>
+        <template #footer>
+            <ui-button color="white" hover="gray-200" @click="showRestoreConfirm = false">
+                {{ __('Cancel') }}
+            </ui-button>
+            <ui-button color="indigo-500" :disabled="restoring" @click="doRestore">
+                <i v-if="restoring" class="fa fa-spinner fa-spin mr-1"></i>
+                {{ __('Confirm Restore') }}
+            </ui-button>
+        </template>
     </ui-modal>
 </template>
 
 <script>
+import UiButton from "../../../components/Button.vue";
+import UiModal from "../../../components/Modal.vue";
+
 export default {
     name: "RevisionsModal",
+    components: {
+        UiButton,
+        UiModal,
+    },
     props: {
         show: { type: Boolean, default: false },
         projectId: { type: [Number, String], required: true },
@@ -398,8 +405,8 @@ export default {
             this.isEditingLabel = revision.id;
             this.labelDraft = revision.label || "";
             this.$nextTick(() => {
-                if (this.$refs.labelInput && this.$refs.labelInput[0]) {
-                    this.$refs.labelInput[0].focus();
+                if (this.$refs.labelInput) {
+                    this.$refs.labelInput.focus();
                 }
             });
         },
