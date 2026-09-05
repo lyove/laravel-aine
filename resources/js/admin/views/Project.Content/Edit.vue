@@ -51,10 +51,10 @@
                             </ui-dropdown>
                         </div>
 
-                        <ui-button v-if="content.published_at === null" :color="'green-500'" class="rounded-r-none ml-2" @click="saveEdit(true)">{{ __('Save and Publish') }}</ui-button>
                         <ui-button type="button" color="white" hover="indigo-50" class="ml-2" @click="showRevisions = true">
                             <i class="fa fa-history mr-1"></i>{{ __('History') }}
                         </ui-button>
+                        <ui-button v-if="content.published_at === null" :color="'green-500'" class="rounded-r-none ml-2" @click="saveEdit(true)">{{ __('Save and Publish') }}</ui-button>
                         <div v-if="content.published_at === null" class="ml-2 flex items-center space-x-1">
                             <i class="fa fa-clock text-gray-400"></i>
                             <input
