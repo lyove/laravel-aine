@@ -458,8 +458,6 @@ export default {
     min-height: 240px;
     max-height: 500px;
     overflow-y: auto;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
     padding: 4px;
 }
 
