@@ -82,8 +82,6 @@ export async function cachedGet(url, params = {}) {
     }
 
     const request = http.get(url, { params: scoped(params) }).then((response) => {
-        // The interceptor resolves `null` for network / HTTP / business
-        // failures, so `response.data` here is the envelope — or null.
         return response ? response.data : null;
     });
     inflight.set(key, request);

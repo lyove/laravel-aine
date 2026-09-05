@@ -220,6 +220,13 @@ class ContentController extends Controller
             $content_items->whereIn('id', $meta);
         }
 
+        $locale = $request->get('locale');
+        if ($locale !== null && $locale !== '' && $locale !== 'all') {
+            $content_items->where('locale', $locale);
+        } elseif ($locale === null || $locale === '') {
+            $content_items->where('locale', $project->default_locale);
+        }
+
         $orderBy  = $request->get('orderBy', 'created_at');
         $criteria = $request->get('cr', 'ASC');
         $each     = $request->get('each', 15);

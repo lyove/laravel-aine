@@ -83,6 +83,20 @@
             </div>
 
             <div class="w-auto h-auto ml-2">
+                <select
+                    v-model="localeFilter"
+                    @change="changeLocale()"
+                    v-formselect
+                    class="px-3 pr-8 pl-3 text-gray-700 bg-white focus:border-gray-300 cursor-pointer"
+                    :title="__('Language')"
+                >
+                    <option v-for="opt in localeOptions" :key="opt.value" :value="opt.value">
+                        {{ opt.label }}
+                    </option>
+                </select>
+            </div>
+
+            <div class="w-auto h-auto ml-2">
                 <ui-dropdown align="right" :closeable="false">
                     <template #trigger>
                         <ui-button :color="'white'" class="border border-gray-200">
@@ -664,10 +678,26 @@ import { useAttrs } from "vue";
 import { formatDate } from "../../../../utils/filters";
 
 import { useAdminStore } from "../../../store";
+import { localeDisplayName } from "../../../utils/locales";
 
 import UiModal from "../../../../components/Modal.vue";
 import UiButton from "../../../../components/Button.vue";
 import UiDropdown from "../../../../components/Dropdown.vue";
+
+/**
+ * Normalize a project's `locales` attribute (comma-separated string or
+ * array) into a clean array of locale codes.
+ */
+function parseLocales(value) {
+    if (Array.isArray(value)) return value.filter((l) => typeof l === "string" && l !== "");
+    if (typeof value === "string") {
+        return value
+            .split(",")
+            .map((l) => l.trim())
+            .filter((l) => l !== "");
+    }
+    return [];
+}
 
 export default {
     components: {
@@ -694,6 +724,31 @@ export default {
     },
 
     data() {
+        // The list is per-language: default to the project's current
+        // language (its default locale), remembering the admin's last
+        // per-project choice in localStorage when one exists.
+        const store = useAdminStore();
+        const currentProject = store.currentProject || {};
+        const projectId = currentProject.id;
+
+        let localeStorageKey = null;
+        let localeFilter = "";
+        let projectLocales = [];
+
+        if (projectId) {
+            localeStorageKey = "aine_admin_content_locale_" + projectId;
+            projectLocales = parseLocales(currentProject.locales);
+            const defaultLocale = currentProject.default_locale || projectLocales[0] || "en";
+
+            let saved = null;
+            try {
+                saved = localStorage.getItem(localeStorageKey);
+            } catch (error) {
+                saved = null;
+            }
+            localeFilter = saved !== null && (saved === "all" || projectLocales.includes(saved)) ? saved : defaultLocale;
+        }
+
         return {
             project: {},
             collection: {},
@@ -703,6 +758,9 @@ export default {
             draftCount: 0,
             trashedCount: 0,
             search: "",
+            localeFilter,
+            projectLocales,
+            localeStorageKey,
             columns: {},
             listOptions: {
                 orderBy: "created_at",
@@ -762,13 +820,30 @@ export default {
                         "&each=" +
                         this.each +
                         "&getItems=" +
-                        this.listOptions.getItems
+                        this.listOptions.getItems +
+                        "&locale=" +
+                        this.localeFilter
                 )
                 .then((response) => {
                     this.project = response.data.project;
                     this.collection = response.data.collection;
                     this.content = response.data.content;
                     this.form_count = response.data.forms;
+
+                    // Keep the language filter in sync with the authoritative
+                    // project payload (e.g. a locale removed since the last
+                    // visit): fall back to the default language and refetch.
+                    const locales = parseLocales(this.project.locales);
+                    this.projectLocales = locales;
+                    if (!this.localeStorageKey) {
+                        this.localeStorageKey = "aine_admin_content_locale_" + this.$route.params.project_id;
+                    }
+                    if (this.localeFilter !== "all" && !locales.includes(this.localeFilter)) {
+                        this.localeFilter = this.project.default_locale || locales[0] || "en";
+                        this.saveLocalePreference();
+                        this.getContent(page);
+                        return;
+                    }
 
                     this.totalCount = response.data.totalCount;
                     this.publishedCount = response.data.published;
@@ -831,6 +906,20 @@ export default {
                 collection_id: this.collection_id,
                 columns: this.columns,
             });
+        },
+
+        changeLocale() {
+            this.saveLocalePreference();
+            this.getContent();
+        },
+
+        saveLocalePreference() {
+            if (!this.localeStorageKey) return;
+            try {
+                localStorage.setItem(this.localeStorageKey, this.localeFilter);
+            } catch (error) {
+                // Storage unavailable: the preference is a nicety, never fatal.
+            }
         },
 
         sortBy(field, meta = 0) {
@@ -1106,6 +1195,14 @@ export default {
     },
 
     computed: {
+        localeOptions() {
+            const options = this.projectLocales.map((l) => {
+                const name = localeDisplayName(l) || l.toUpperCase();
+                return { value: l, label: name + " (" + l + ")" };
+            });
+            options.push({ value: "all", label: __("All Languages") });
+            return options;
+        },
         paginationInfo() {
             return __('{total} records, {from} - {to} showing', { total: this.content.total, from: this.content.from, to: this.content.to });
         },
