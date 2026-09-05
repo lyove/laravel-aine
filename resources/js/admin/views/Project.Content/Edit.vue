@@ -23,6 +23,9 @@
                         <small class="text-gray-500 font-normal"> {{ __('/ Update Content') }}</small>
                     </div>
                     <div class="flex">
+                        <ui-button type="button" color="white" hover="indigo-50" class="mr-2" @click="showRevisions = true">
+                            <i class="fa fa-history mr-1"></i>{{ __('History') }}
+                        </ui-button>
                         <ui-button :color="'indigo-500'" :disabled="!isSavingEnable" class="rounded-r-none" @click="saveEdit(false)"> {{ __('Save') }} </ui-button>
                         <div
                             class="flex border border-l-1 border-t-0 border-b-0 border-r-0"
@@ -50,10 +53,6 @@
                                 </template>
                             </ui-dropdown>
                         </div>
-
-                        <ui-button type="button" color="white" hover="indigo-50" class="ml-2" @click="showRevisions = true">
-                            <i class="fa fa-history mr-1"></i>{{ __('History') }}
-                        </ui-button>
                         <ui-button v-if="content.published_at === null" :color="'green-500'" class="rounded-r-none ml-2" @click="saveEdit(true)">{{ __('Save and Publish') }}</ui-button>
                         <div v-if="content.published_at === null" class="ml-2 flex items-center space-x-1">
                             <i class="fa fa-clock text-gray-400"></i>
