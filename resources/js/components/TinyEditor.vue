@@ -107,7 +107,6 @@ export default {
             return {
                 suffix: ".min",
                 base_url: "/js/tinymce",
-                license_key: "gpl",
                 plugins: this.plugins,
                 toolbar: this.toolbarButtons + " | ssml",
                 height: parseInt(this.height),
