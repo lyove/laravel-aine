@@ -11,9 +11,8 @@
 5. [方式 2：UUID + Token 接口](#方式-2uuid-token接口)
 6. [接口列表](#接口列表)
 7. [参数说明](#参数说明)
-8. [Where 条件](#where-条件)
-9. [关联条件](#关联条件)
-10. [响应格式](#响应格式)
+8. [过滤条件 filters](#过滤条件-filters)
+9. [响应格式](#响应格式)
 11. [错误响应](#错误响应)
 12. [使用示例](#使用示例)
 13. [快速开始](#快速开始)
@@ -167,7 +166,7 @@ Origin: https://your-frontend.com
 
 | # | 方法 | 接口路径 | 说明 | 参数 | 认证 |
 | -- | --- | --- | --- | --- | --- |
-| 2 | GET | `/api/project/{project_identifier}/{slug}` | 获取内容列表 | `where`、`whereRelation`、`sort`、`offset`、`limit`、`count`、`first`、`state`、`timestamps`（均可选） | ✅ 白名单（+Token 若未开启 Public API） |
+| 2 | GET | `/api/project/{project_identifier}/{slug}` | 获取内容列表 | `filters`、`or`、`sort`、`offset`、`limit`、`count`、`first`、`state`、`timestamps`（均可选） | ✅ 白名单（+Token 若未开启 Public API） |
 | 3 | GET | `/api/project/{project_identifier}/{slug}/{slug_id}` | 获取单条内容 | `slug_id`: int、`timestamps`（可选） | ✅ 同上 |
 | 3a | GET | `/api/project/{project_identifier}/{slug}/{slug_id}/{related_slug}` | 按关联内容查询（如分类下的文章） | `slug_id`: int、`related_slug`: string、同列表查询参数 | ✅ 同上 |
 | 3b | GET | `/api/project/{project_identifier}/portal` | 获取项目门户内容（首页/精选/最新等页面骨架） | `collection`: string（可选，默认 `articles`） | ✅ 同上 |
@@ -247,17 +246,17 @@ Origin: https://your-frontend.com
 
 | 参数 | 类型 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- | --- |
-| `where` | object | 否 | - | 条件过滤，详见 [Where 条件](#where-条件) |
-| `whereRelation` | object | 否 | - | 关联条件过滤，详见 [关联条件](#关联条件) |
+| `filters.*` | string | 否 | - | 字段过滤，点号表示法，详见 [过滤条件 filters](#过滤条件-filters) |
+| `or` | string | 否 | - | OR 条件，逗号分隔的 `field.operator.value` 列表 |
 | `sort` | string | 否 | - | 排序，格式 `field:direction`，支持逗号分隔多字段，如 `created_at:desc,title:asc` |
 | `offset` | int | 否 | - | 偏移量，**必须与 `limit` 配合使用** |
 | `limit` | int | 否 | - | 每页数量 |
 | `count` | bool | 否 | false | 返回总数而非列表（`data` 为数字） |
 | `first` | bool | 否 | false | 只返回第一条记录（`data` 为对象） |
-| `state` | string | 否 | - | `only_draft` 仅返回草稿；**默认只返回已发布内容** |
+| `state` | string | 否 | - | `only_draft` 仅返回草稿；**默认（含不传或其他值）只返回已发布内容** |
 | `timestamps` | bool | 否 | false | 是否返回 `created_at` / `updated_at` / `published_at` 字段 |
 
-> **locale 过滤**：内容按语言存储，可通过 `where[locale]=zh` 过滤指定语言（`locale` 是内容列而非自定义字段）。
+> **locale 过滤**：内容按语言存储，可通过 `filters.locale=zh` 过滤指定语言（`locale` 是内容表的直接列，不是自定义字段）。
 
 ### 查询参数（单条内容）
 
@@ -324,78 +323,115 @@ Content-Type: application/json              # POST/PUT 时
 
 ***
 
-## Where 条件
+## 过滤条件 filters
 
-**基本格式**：
+### 基本格式（点号表示法）
 
-```json
-{
-    "field_name": "value"
-}
+过滤参数统一使用 `filters.` 前缀 + 点号表示法，浏览器 Network 面板中显示为扁平的 `filters.field=value`，无方括号：
+
+```
+filters.locale=zh
+filters.title=contains.laravel
+filters.price=greaterThan.100
 ```
 
-**支持的操作**：
+**等值过滤**（不传操作符，直接传值）：
 
-| 操作 | 格式 | 示例 |
+```
+filters.slug=my-article
+filters.locale=en
+```
+
+**带操作符的过滤**（值的格式为 `operator.value`，点号分隔）：
+
+```
+filters.title=contains.laravel
+filters.price=greaterThan.100
+filters.status=notEquals.draft
+```
+
+> 值本身含点号（如 URL `my-article.html`）时自动安全处理——只有点号前是已注册操作符才解析，否则整体作为等值匹配。
+
+### 支持的操作符（16 种语义化英文单词）
+
+| 操作符 | 含义 | URL 示例 |
 | --- | --- | --- |
-| 等于 | `"field": "value"` | `"title": "Hello"` |
-| 不等于 | `"field": {"not": "value"}` | `"status": {"not": "draft"}` |
-| 包含 | `"field": {"like": "pattern"}` | `"title": {"like": "%hello%"}` |
-| 小于 | `"field": {"lt": "value"}` | `"price": {"lt": 100}` |
-| 小于等于 | `"field": {"lte": "value"}` | `"price": {"lte": 100}` |
-| 大于 | `"field": {"gt": "value"}` | `"price": {"gt": 10}` |
-| 大于等于 | `"field": {"gte": "value"}` | `"price": {"gte": 10}` |
-| 范围 | `"field": {"between": "min,max"}` | `"price": {"between": "10,100"}` |
-| 不在范围 | `"field": {"not_between": "min,max"}` | `"price": {"not_between": "0,10"}` |
-| 在列表中 | `"field": {"in": "val1,val2"}` | `"category": {"in": "news,blog"}` |
-| 不在列表中 | `"field": {"not_in": "val1,val2"}` | `"category": {"not_in": "spam"}` |
-| 为空 | `"field": "null"` | `"image": "null"` |
-| 不为空 | `"field": "not_null"` | `"image": "not_null"` |
+| `equals` | 等于（默认，可省略） | `filters.slug=my-article` |
+| `notEquals` | 不等于 | `filters.status=notEquals.draft` |
+| `contains` | 包含（模糊匹配） | `filters.title=contains.laravel` |
+| `notContains` | 不包含 | `filters.title=notContains.spam` |
+| `greaterThan` | 大于 | `filters.price=greaterThan.100` |
+| `greaterThanOrEqual` | 大于等于 | `filters.price=greaterThanOrEqual.100` |
+| `lessThan` | 小于 | `filters.price=lessThan.50` |
+| `lessThanOrEqual` | 小于等于 | `filters.price=lessThanOrEqual.50` |
+| `in` | 在列表中（逗号分隔） | `filters.category=in.news,blog` |
+| `notIn` | 不在列表中 | `filters.category=notIn.spam` |
+| `between` | 在区间内（逗号分隔 min,max） | `filters.price=between.10,100` |
+| `notBetween` | 不在区间内 | `filters.price=notBetween.0,10` |
+| `isEmpty` | 为空（null 或空字符串） | `filters.image=isEmpty` |
+| `notEmpty` | 不为空 | `filters.image=notEmpty` |
 
-> 系统列（`id`、`locale`、`created_at`、`updated_at`、`published_at`）也可作为 where 条件；日期列支持 `lt`/`lte`/`gt`/`gte`（按日期比较）及 `between`/`in`/`not_in`/`not`。
+### 可过滤的字段类型
 
-**多条件（AND）**：
+| 字段类型 | 说明 | 示例 |
+| --- | --- | --- |
+| **直接列** | 内容表的原生列：`id`、`locale`、`created_at`、`updated_at`、`published_at` | `filters.locale=zh`、`filters.published_at=greaterThan.2026-01-01` |
+| **自定义字段** | 集合定义的 meta 字段（text/number/boolean/slug/select 等） | `filters.title=contains.hello`、`filters.price=greaterThan.100` |
+| **关联字段** | relation 类型字段，用点号路径指定关联目标字段 | `filters.category.slug=tech`（见下方） |
 
-```json
-{
-    "status": "published",
-    "category": "news"
-}
+> 日期列（`created_at`/`updated_at`/`published_at`）的等值过滤自动按日期比较（`whereDate`）。
+
+### 关联过滤
+
+按关联集合的字段过滤主集合内容，使用**点号路径**：`filters.{关联字段名}.{目标字段名}=值`。
+
+**示例**：查询分类 slug 为 `tech` 的所有文章：
+
+```
+filters.category.slug=tech
 ```
 
-**多条件（OR）**：
+**带操作符的关联过滤**：
 
-```json
-{
-    "or": [
-        {"category": "news"},
-        {"category": "blog"}
-    ]
-}
+```
+filters.category.name=contains.前端
 ```
 
-***
+**原理**：后端自动检测第一段（`category`）是否为 relation 类型字段——如果是，自动查询关联集合中匹配目标字段（`slug`）的记录 ID，再回主表匹配关联字段值。前端无需任何特殊标记。
 
-## 关联条件
+### 多条件（AND）
 
-**格式**：按关联字段过滤，关联字段的值是关联集合内容的 ID。
+同时传多个 `filters.*` 参数即为 AND：
 
-```json
-{
-    "relation_field": {
-        "related_field": "value"
-    }
-}
+```
+filters.locale=zh&filters.category.slug=tech&filters.published_at=greaterThan.2026-01-01
 ```
 
-**示例**（查询作者名字为 John 的文章）：
+### OR 条件
 
-```json
-{
-    "author": {
-        "name": "John"
-    }
-}
+使用顶层 `or` 参数，逗号分隔多个条件，每个条件格式为 `field.operator.value`（等值可省略操作符）：
+
+```
+or=title.contains.vue,excerpt.contains.vue
+```
+
+关联字段的 OR 条件同样支持点号路径：
+
+```
+or=category.slug.tech,category.slug.news
+```
+
+### 完整 URL 示例
+
+```
+# 中文文章，标题含 laravel，价格大于 100，按发布时间倒序，取前 10 条
+GET /api/project/my-blog/articles?filters.locale=zh&filters.title=contains.laravel&filters.price=greaterThan.100&sort=published_at:desc&limit=10
+
+# 分类 slug 为 tech 的文章（关联过滤）
+GET /api/project/my-blog/articles?filters.category.slug=tech
+
+# 标题含 vue 或摘要含 vue（OR）
+GET /api/project/my-blog/articles?or=title.contains.vue,excerpt.contains.vue
 ```
 
 ***
@@ -426,14 +462,14 @@ Content-Type: application/json              # POST/PUT 时
     "id": 1,
     "locale": "zh",
     "title": "文章标题",
-    "url": "article-slug",
+    "slug": "article-slug",
     "category": "3",
     "featured-image": { "id": 5, "url": "/uploads/..." }
 }
 ```
 
 - **基础字段**：`id`、`locale`；`timestamps=true` 时含 `created_at` / `updated_at` / `published_at`
-- **自定义字段**：以字段名为键展开（`title`、`url`、`category`…）
+- **自定义字段**：以字段名为键展开（`title`、`slug`、`category`…）
 - **类型转换**：`boolean` 字段 → `true/false`；`number` 字段 → 数字；`media` 字段 → 媒体对象；`repeatable` 字段 → 数组
 - **隐藏字段**：字段配置了 "Hidden in API" 时不会出现在响应中
 
@@ -465,11 +501,11 @@ Content-Type: application/json              # POST/PUT 时
 
 | 状态码 | 说明 |
 | --- | --- |
-| 400 | 请求参数错误（如 `offset` 未与 `limit` 搭配、where 格式错误） |
+| 400 | 请求参数错误（如 `offset` 未与 `limit` 搭配、filters 格式错误） |
 | 401 | 未认证（缺少 Token 或 Token 无效） |
 | 403 | 无权限（Token 不属于该项目 / 权限不足 / 域名不在白名单） |
 | 404 | 资源未找到（项目 / 集合 / 内容 / 媒体不存在） |
-| 422 | 验证失败（创建/更新内容字段校验不通过、where 语句格式错误） |
+| 422 | 验证失败（创建/更新内容字段校验不通过、filters 语句格式错误） |
 | 429 | 请求过于频繁（触发限流，见 [限流与安全](#限流与安全)） |
 
 ### 常见错误
@@ -482,7 +518,7 @@ Content-Type: application/json              # POST/PUT 时
 | `Unauthenticated` | 缺少 Token 或 Token 无效 | 添加正确的 `Authorization: Bearer` 头 |
 | `API token is not valid for this project` | Token 不属于该项目 | 使用该项目的 Token |
 | `API token does not have the required permissions` | Token 缺少 `read` / `write` 权限 | 在后台重新创建 Token 并勾选对应权限 |
-| `Incorrect where statement` | where 参数格式错误 | 参考 [Where 条件](#where-条件) |
+| `Incorrect filters statement` | filters 参数格式错误 | 参考 [过滤条件 filters](#过滤条件-filters) |
 | `Incorrect offset statement. Offset must be used with limit` | offset 未与 limit 搭配 | 同时传 `limit` 参数 |
 | `429 Too Many Requests` | 触发速率限制 | 降低请求频率，稍后重试（见 [限流与安全](#限流与安全)） |
 
@@ -501,7 +537,7 @@ curl -H "Origin: https://your-frontend.com" \
 
 ```bash
 curl -H "Origin: https://your-frontend.com" \
-     "https://backend.com/api/project/my-blog/articles?limit=10&sort=published_at:desc&where%5Blocale%5D=zh"
+     "https://backend.com/api/project/my-blog/articles?limit=10&sort=published_at:desc&filters.locale=zh"
 ```
 
 ### 方式 1：获取内容列表（未开启 Public API，需 Token）
@@ -524,7 +560,7 @@ curl -H "Authorization: Bearer your_token" \
             "id": 1,
             "locale": "zh",
             "title": "人工智能的未来",
-            "url": "ai-future",
+            "slug": "ai-future",
             "category": "3",
             "created_at": "2026-01-15 10:30:00",
             "updated_at": "2026-01-15 10:30:00",
@@ -567,12 +603,12 @@ curl -H "Authorization: Bearer your_token" \
 }
 ```
 
-### 使用 Where 条件
+### 使用 filters 过滤条件
 
 ```bash
 curl -H "Authorization: Bearer your_token" \
      -H "Origin: https://your-frontend.com" \
-     "https://backend.com/api/project/my-blog/articles?where=%7B%22category%22%3A%223%22%2C%22status%22%3A%22published%22%7D"
+     "https://backend.com/api/project/my-blog/articles?filters.category.slug=tech&filters.locale=zh&sort=published_at:desc&limit=10"
 ```
 
 ### 方式 2：获取内容列表
@@ -591,7 +627,7 @@ curl -X POST \
      -H "Origin: https://your-frontend.com" \
      -d '{
          "title": "New Article",
-         "url": "new-article",
+         "slug": "new-article",
          "content": "Article content",
          "locale": "en"
      }' \
@@ -605,7 +641,7 @@ curl -X POST \
     "success": true,
     "code": 201,
     "message": "Content created successfully",
-    "data": { "id": 42, "locale": "en", "title": "New Article", "url": "new-article" }
+    "data": { "id": 42, "locale": "en", "title": "New Article", "slug": "new-article" }
 }
 ```
 
@@ -619,33 +655,68 @@ curl -X POST \
      https://backend.com/api/project/my-blog/media/upload
 ```
 
-### JavaScript 示例（Axios）
+### JavaScript 示例（项目自带 API 客户端）
+
+项目前端内置了语义化 API 客户端（`resources/js/frontend/api.js`），方法名直接表达意图，无需手动拼接 URL：
 
 ```javascript
-import axios from 'axios';
+import { api } from './api';
 
-const api = axios.create({
-    baseURL: 'https://backend.com/api',
-    headers: {
-        'Authorization': 'Bearer your_token',
-        'Origin': 'https://your-frontend.com'
-    }
+// 获取文章列表（GET，过滤 + 排序 + 分页）
+const articles = await api.getArticles({
+    filters: { locale: 'zh', category: { slug: 'tech' } },
+    sort: 'published_at:desc',
+    limit: 10,
+    offset: 0,
+    timestamps: true,
 });
+// → GET /api/project/my-blog/articles?filters.locale=zh&filters.category.slug=tech&sort=published_at:desc&limit=10
 
-// 获取内容列表
-const articles = await api.get('/project/my-blog/articles', {
-    params: { limit: 10, sort: 'created_at:desc', where: { locale: 'zh' } }
-});
+// 获取单条文章（GET by ID）
+const article = await api.getArticle(42, { timestamps: true });
+// → GET /api/project/my-blog/articles/42
 
-// 创建内容
-const newArticle = await api.post('/project/my-blog/articles', {
+// 搜索文章
+const results = await api.searchArticles({ query: 'laravel', limit: 20 });
+// → GET /api/project/my-blog/articles/search?query=laravel&limit=20
+
+// 创建文章（POST）
+const newArticle = await api.createArticle({
     title: 'New Article',
-    url: 'new-article'
+    slug: 'new-article',
+    locale: 'en',
 });
+// → POST /api/project/my-blog/articles
 
-// 按分类查询
-const news = await api.get('/project/my-blog/categories/3/articles');
+// 更新文章（POST，项目用 POST 而非 PUT）
+const updated = await api.updateArticle(42, { title: 'Updated Title' });
+// → POST /api/project/my-blog/articles/update/42
+
+// 删除文章（DELETE）
+const ok = await api.deleteArticle(42);
+// → DELETE /api/project/my-blog/articles/42
+
+// 按分类查询文章（关联查询）
+const categoryArticles = await api.getCategoryArticles(3, { limit: 10 });
+// → GET /api/project/my-blog/categories/3/articles?limit=10
+
+// 获取门户内容
+const portal = await api.getCmsPortal({ collection: 'articles' });
+// → GET /api/project/my-blog/portal?collection=articles
+
+// 通用 request 方法（适合动态/不常见端点）
+const reviews = await api.request({
+    type: 'get',
+    project: 'business-directory',
+    source: 'listings',
+    id: 42,
+    related: 'reviews',
+    params: { sort: 'created_at:desc', limit: 10 },
+});
+// → GET /api/project/business-directory/listings/42/reviews?sort=created_at:desc&limit=10
 ```
+
+> 所有 GET 请求自动携带当前语言过滤（`filters.locale`），通过 `setApiLocale('zh')` 设置。相同 URL 的并发请求自动去重，只发一次。
 
 ***
 
@@ -782,10 +853,10 @@ curl -H "Authorization: Bearer your_token" \
 
 ### Q9: 如何按语言获取内容？
 
-**A**: 使用 `where[locale]=zh`（或 `en` 等），例如：
+**A**: 使用 `filters.locale=zh`（或 `en` 等），例如：
 
 ```bash
-curl "https://backend.com/api/project/my-blog/articles?where%5Blocale%5D=zh"
+curl "https://backend.com/api/project/my-blog/articles?filters.locale=zh"
 ```
 
 ### Q10: 为什么列表接口默认看不到刚创建的草稿？

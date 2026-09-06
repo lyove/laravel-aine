@@ -39,7 +39,7 @@
 - **Two API modes**:
   - `/api/project/{uuid|slug}/...` — for frontend apps; validated by **domain whitelist**, with an optional **Public API** switch for token-free reads.
   - `/api/{uuid}/...` — for server-to-server calls; every request requires a **Sanctum token** bound to the project.
-- **Rich querying** — `where` (eq/not/like/lt/lte/gt/gte/between/in/not_in/null/not_null, AND & OR), `whereRelation`, multi-field `sort`, `offset`/`limit`, `count`, `first`, `state` (published/draft), `timestamps`, and **locale filtering** (`where[locale]=zh`).
+- **Rich querying** — `filters` (dot-notation: `filters.locale=zh`, `filters.title=contains.laravel`, `filters.price=greaterThan.100`, `filters.category.slug=tech` for relation filtering; 16 semantic operators: equals/notEquals/contains/notContains/greaterThan/greaterThanOrEqual/lessThan/lessThanOrEqual/in/notIn/between/notBetween/isEmpty/notEmpty), `or` (comma-separated OR conditions), multi-field `sort`, `offset`/`limit`, `count`, `first`, `state` (published/draft), `timestamps`, and **locale filtering** (`filters.locale=zh`).
 - **Media library** — upload, list, fetch and delete media per project (local or cloud disks).
 - **Webhooks** — per-project webhook endpoints with collection targeting and request logs.
 
@@ -125,10 +125,13 @@ php artisan key:generate
 php artisan migrate --force
 php artisan db:seed --force
 
-# 4. Build frontend assets
+# Persistent storage
+php artisan storage:link
+
+# 5. Build frontend assets
 npm run build
 
-# 5. Serve
+# 6. Serve
 php artisan serve
 ```
 
@@ -256,7 +259,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 
 ## 📖 API Documentation
 
-The complete API reference (authentication, endpoints, query parameters, where clauses, responses, examples, FAQ) lives in **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)**.
+The complete API reference (authentication, endpoints, query parameters, filter clauses, responses, examples, FAQ) lives in **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)**.
 
 Quick overview:
 
@@ -273,7 +276,7 @@ Quick overview:
 - **Manage languages**: `Localization` page in the sidebar — add locales, set the default display language. Dictionary keys are always the English source strings (the authoring language).
 - **Translate the UI**: `Translations` page — translate any admin interface string.
 - **Per-project translations**: Project → Settings → Translations — translate collection names, field labels and custom strings used in the admin for that project.
-- **Content locales**: create content with `locale` (`en`, `zh`, …); filter API reads with `where[locale]=...`.
+- **Content locales**: create content with `locale` (`en`, `zh`, …); filter API reads with `filters.locale=...`.
 
 ---
 
@@ -306,6 +309,9 @@ npm run dev
 
 # Production build
 npm run build
+
+# Persistent storage
+php artisan storage:link
 
 # Run tests
 php artisan test

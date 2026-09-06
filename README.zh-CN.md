@@ -39,7 +39,7 @@
 - **两种 API 模式**：
   - `/api/project/{uuid|slug}/...` —— 面向前端应用，通过**域名白名单**校验，可开启 **Public API** 实现免 Token 读取；
   - `/api/{uuid}/...` —— 面向服务端调用，所有请求都需要绑定项目的 **Sanctum Token**。
-- **丰富的查询能力**：`where`（等于/不等于/包含/小于/小于等于/大于/大于等于/区间/在列表中/为空/不为空，支持 AND 与 OR）、`whereRelation` 关联过滤、多字段 `sort` 排序、`offset`/`limit` 分页、`count` 计数、`first` 取单条、`state` 发布状态（已发布/草稿）、`timestamps` 时间戳，以及**语言过滤**（`where[locale]=zh`）。
+- **丰富的查询能力**：`filters` 点号表示法（`filters.locale=zh`、`filters.title=contains.laravel`、`filters.price=greaterThan.100`、关联过滤 `filters.category.slug=tech`；16 种语义化操作符：equals/notEquals/contains/notContains/greaterThan/greaterThanOrEqual/lessThan/lessThanOrEqual/in/notIn/between/notBetween/isEmpty/notEmpty）、`or` 逗号分隔 OR 条件、多字段 `sort` 排序、`offset`/`limit` 分页、`count` 计数、`first` 取单条、`state` 发布状态（已发布/草稿）、`timestamps` 时间戳，以及**语言过滤**（`filters.locale=zh`）。
 - **媒体库**：按项目上传、列表、获取、删除媒体（支持本地或云存储磁盘）。
 - **Webhooks**：按项目配置 Webhook 端点，可指定集合并查看请求日志。
 
@@ -255,7 +255,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 
 ## 📖 API 文档
 
-完整的 API 参考（认证、接口列表、查询参数、Where 条件、响应格式、示例、常见问题）请参阅 **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)**。
+完整的 API 参考（认证、接口列表、查询参数、过滤条件、响应格式、示例、常见问题）请参阅 **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)**。
 
 快速总览：
 
@@ -272,7 +272,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 - **语言管理**：侧边栏 `Localization` 页面——添加语言、设置默认显示语言。字典 key 始终为英文源字符串（基准语言）。
 - **界面翻译**：`Translations` 页面——翻译后台任意界面文案。
 - **项目级翻译**：项目 → 设置 → Translations——翻译该项目后台使用的集合名、字段标签与自定义文案。
-- **内容语言**：创建内容时指定 `locale`（`en`、`zh`…）；API 查询用 `where[locale]=...` 过滤。
+- **内容语言**：创建内容时指定 `locale`（`en`、`zh`…）；API 查询用 `filters.locale=...` 过滤。
 
 ---
 
