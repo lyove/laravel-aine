@@ -22,7 +22,7 @@
             <div class="mb-3 flex flex-wrap items-center gap-2 text-sm">
                 <router-link
                     v-if="item.category"
-                    :to="`/directory/category/${item.category.url}`"
+                    :to="`/directory/category/${item.category.slug}`"
                     class="font-medium text-indigo-600 hover:text-indigo-700"
                 >
                     {{ item.category.title }}
@@ -30,7 +30,7 @@
                 <span v-if="item.location" class="text-gray-400">·</span>
                 <router-link
                     v-if="item.location"
-                    :to="`/directory/location/${item.location.url}`"
+                    :to="`/directory/location/${item.location.slug}`"
                     class="text-gray-500 hover:text-indigo-600"
                 >
                     {{ item.location.name }}
@@ -177,21 +177,22 @@ export default {
             const categoryUrl = this.$route.params.category;
 
             try {
-                const matches = await api.collection(PROJECTS.directory.identifier, PROJECTS.directory.contentCollection, {
-                    where: { url: listingUrl },
+                const matches = await api.getListings({
+                    filters: { slug: listingUrl },
                     timestamps: true,
                 });
-                const match = (matches || []).find((l) => (l.category ? l.category.url : null) === categoryUrl);
+                const match = (matches || []).find((l) => (l.category ? l.category.slug : null) === categoryUrl);
                 this.item = match || (matches || [])[0] || null;
 
                 if (this.item) {
-                    this.reviews = (await api.related(
-                        PROJECTS.directory.identifier,
-                        PROJECTS.directory.contentCollection,
-                        this.item.id,
-                        "reviews",
-                        { sort: "created_at:desc", timestamps: true, state: "only_published" }
-                    )) || [];
+                    this.reviews = (await api.request({
+                        type: "get",
+                        project: PROJECTS.directory.identifier,
+                        source: PROJECTS.directory.contentCollection,
+                        id: this.item.id,
+                        related: "reviews",
+                        params: { sort: "created_at:desc", timestamps: true, state: "only_published" },
+                    })) || [];
                 }
             } catch (error) {
                 console.error("Failed to load listing:", error);

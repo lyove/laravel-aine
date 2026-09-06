@@ -23,7 +23,7 @@
             <div class="mb-3 flex flex-wrap items-center gap-2 text-sm">
                 <router-link
                     v-if="item.category"
-                    :to="`/content/category/${item.category.url}`"
+                    :to="`/content/category/${item.category.slug}`"
                     class="font-medium text-indigo-600 hover:text-indigo-700"
                 >
                     {{ item.category.title }}
@@ -105,11 +105,11 @@ export default {
             const categoryUrl = this.$route.params.category;
 
             try {
-                const matches = await api.collection(PROJECTS.cms.identifier, PROJECTS.cms.contentCollection, {
-                    where: { url: articleUrl },
+                const matches = await api.getArticles({
+                    filters: { slug: articleUrl },
                     timestamps: true,
                 });
-                const match = (matches || []).find((a) => (a.category ? a.category.url : null) === categoryUrl);
+                const match = (matches || []).find((a) => (a.category ? a.category.slug : null) === categoryUrl);
                 this.item = match || (matches || [])[0] || null;
             } catch (error) {
                 console.error("Failed to load article:", error);

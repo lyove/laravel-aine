@@ -19,7 +19,7 @@
                     <div class="max-w-xl text-white">
                         <router-link
                             v-if="slide.category"
-                            :to="`${pathPrefix}/category/${slide.category.url}`"
+                            :to="`${pathPrefix}/category/${slide.category.slug}`"
                             class="mb-3 inline-block rounded-full border border-white/50 px-2.5 py-0.5 text-xs uppercase tracking-widest"
                         >
                             {{ slide.category.title }}
@@ -103,8 +103,8 @@ export default {
     },
     methods: {
         slideLink(slide, pathPrefix) {
-            const category = slide.category ? slide.category.url : "articles";
-            const url = slide.url || slide.id;
+            const category = slide.category ? slide.category.slug : "articles";
+            const url = slide.slug || slide.id;
             return `${pathPrefix || ''}/${category}/${url}`;
         },
         go(index) {

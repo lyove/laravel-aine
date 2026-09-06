@@ -187,7 +187,11 @@ export default {
         },
 
         async resolveEntity(collectionSlug, matchField) {
-            const list = await api.collection(this.projectConfig.identifier, collectionSlug);
+            const list = await api.request({
+                type: "get",
+                project: this.projectConfig.identifier,
+                collection: collectionSlug,
+            });
             let match = null;
 
             if (this.mode === "tag") {
@@ -207,51 +211,85 @@ export default {
             let data;
 
             if (this.mode === "all") {
-                data = await api.collection(cfg.identifier, cfg.contentCollection, {
-                    offset: this.offset,
-                    limit: ARCHIVE_PAGE_SIZE,
-                    sort: "published_at:desc",
-                    timestamps: true,
+                data = await api.request({
+                    type: "get",
+                    project: cfg.identifier,
+                    collection: cfg.contentCollection,
+                    params: {
+                        offset: this.offset,
+                        limit: ARCHIVE_PAGE_SIZE,
+                        sort: "published_at:desc",
+                        timestamps: true,
+                    },
                 });
             } else if (this.mode === "category") {
-                data = await api.related(cfg.identifier, COLLECTIONS.categories, this.entityId, cfg.contentCollection, {
-                    offset: this.offset,
-                    limit: ARCHIVE_PAGE_SIZE,
-                    sort: "published_at:desc",
-                    timestamps: true,
-                    state: "only_published",
+                data = await api.request({
+                    type: "get",
+                    project: cfg.identifier,
+                    source: COLLECTIONS.categories,
+                    id: this.entityId,
+                    related: cfg.contentCollection,
+                    params: {
+                        offset: this.offset,
+                        limit: ARCHIVE_PAGE_SIZE,
+                        sort: "published_at:desc",
+                        timestamps: true,
+                        state: "only_published",
+                    },
                 });
             } else if (this.mode === "location") {
-                data = await api.related(cfg.identifier, "locations", this.entityId, cfg.contentCollection, {
-                    offset: this.offset,
-                    limit: ARCHIVE_PAGE_SIZE,
-                    sort: "published_at:desc",
-                    timestamps: true,
-                    state: "only_published",
+                data = await api.request({
+                    type: "get",
+                    project: cfg.identifier,
+                    source: "locations",
+                    id: this.entityId,
+                    related: cfg.contentCollection,
+                    params: {
+                        offset: this.offset,
+                        limit: ARCHIVE_PAGE_SIZE,
+                        sort: "published_at:desc",
+                        timestamps: true,
+                        state: "only_published",
+                    },
                 });
             } else if (this.mode === "featured") {
-                data = await api.collection(cfg.identifier, cfg.contentCollection, {
-                    where: { featured: 1 },
-                    offset: this.offset,
-                    limit: ARCHIVE_PAGE_SIZE,
-                    sort: "published_at:desc",
-                    timestamps: true,
+                data = await api.request({
+                    type: "get",
+                    project: cfg.identifier,
+                    collection: cfg.contentCollection,
+                    params: {
+                        filters: { featured: "1" },
+                        offset: this.offset,
+                        limit: ARCHIVE_PAGE_SIZE,
+                        sort: "published_at:desc",
+                        timestamps: true,
+                    },
                 });
             } else if (this.mode === "recommended") {
-                data = await api.collection(cfg.identifier, cfg.contentCollection, {
-                    where: { recommended: 1 },
-                    offset: this.offset,
-                    limit: ARCHIVE_PAGE_SIZE,
-                    sort: "published_at:desc",
-                    timestamps: true,
+                data = await api.request({
+                    type: "get",
+                    project: cfg.identifier,
+                    collection: cfg.contentCollection,
+                    params: {
+                        filters: { recommended: "1" },
+                        offset: this.offset,
+                        limit: ARCHIVE_PAGE_SIZE,
+                        sort: "published_at:desc",
+                        timestamps: true,
+                    },
                 });
             } else {
-                data = await api.collection(cfg.identifier, cfg.contentCollection, {
-                    where: { tags: this.entityId },
-                    offset: this.offset,
-                    limit: ARCHIVE_PAGE_SIZE,
-                    sort: "published_at:desc",
-                    timestamps: true,
+                data = await api.request({
+                    type: "get",
+                    project: cfg.identifier,
+                    collection: cfg.contentCollection,
+                    params: {
+                        filters: { tags: String(this.entityId) },
+                        offset: this.offset,
+                        limit: ARCHIVE_PAGE_SIZE,
+                        sort: "published_at:desc",
+                        timestamps: true,
+                    },
                 });
             }
 

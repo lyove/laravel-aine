@@ -14,7 +14,7 @@
                 <router-link
                     v-for="page in pages"
                     :key="page.id"
-                    :to="`${pathPrefix}/${page.url}`"
+                    :to="`${pathPrefix}/${page.slug}`"
                     class="flex h-9 items-center truncate text-sm text-gray-700 transition hover:text-indigo-600"
                 >
                     {{ page.title }}

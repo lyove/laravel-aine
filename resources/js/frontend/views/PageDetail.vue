@@ -60,7 +60,7 @@ export default {
             try {
                 const store = useFrontendStore();
                 const pages = await store.loadPages();
-                this.page = (pages || []).find((p) => p.url === this.slug) || null;
+                this.page = (pages || []).find((p) => p.slug === this.slug) || null;
             } catch (error) {
                 console.error("Failed to load page:", error);
                 this.page = null;

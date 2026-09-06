@@ -159,8 +159,6 @@ export default {
         };
     },
     computed: {
-        // Section visibility is driven by each project's portal config
-        // (frontend pruning of the portal /portal skeleton).
         showCmsSlider() {
             return this.hasBlock(this.cms, "slider");
         },
@@ -177,8 +175,8 @@ export default {
             const directory = this.directory;
 
             const [cmsPortal, directoryPortal] = await Promise.all([
-                api.collection(cms.identifier, COLLECTIONS.portal, { collection: cms.contentCollection }).catch(() => null),
-                api.collection(directory.identifier, COLLECTIONS.portal, { collection: directory.contentCollection }).catch(() => null),
+                api.getCmsPortal({ collection: cms.contentCollection }).catch(() => null),
+                api.getDirectoryPortal({ collection: directory.contentCollection }).catch(() => null),
             ]);
 
             const cmsData = this.mapSections(cms, cmsPortal, true);

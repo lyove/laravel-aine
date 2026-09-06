@@ -27,7 +27,7 @@
             <router-link
                 v-for="page in pages"
                 :key="page.id"
-                :to="`/content/${page.url}`"
+                :to="`/content/${page.slug}`"
                 class="group rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-300 hover:shadow-md"
             >
                 <div class="mb-1 flex items-center justify-between gap-2">

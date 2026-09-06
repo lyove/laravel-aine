@@ -38,7 +38,7 @@ class FeedTest extends TestCase
 
         $this->project = Project::create(['name' => 'Blog', 'slug' => 'blog', 'status' => 1, 'public_api' => 1]);
         $this->collection = Collection::create(['name' => 'Articles', 'slug' => 'articles', 'project_id' => $this->project->id]);
-        $this->addUrlField($this->collection);
+        $this->addSlugField($this->collection);
     }
 
     private function addContent(Collection $collection, array $metaMap, bool $published = true): Content
@@ -59,10 +59,10 @@ class FeedTest extends TestCase
         return $content;
     }
 
-    private function addUrlField(Collection $collection): void
+    private function addSlugField(Collection $collection): void
     {
         CollectionField::create([
-            'type' => 'slug', 'label' => 'Path', 'name' => 'url',
+            'type' => 'slug', 'label' => 'Path', 'name' => 'slug',
             'options' => '{}', 'validations' => '{}',
             'project_id' => $this->project->id, 'collection_id' => $collection->id, 'order' => 1,
         ]);
@@ -70,8 +70,8 @@ class FeedTest extends TestCase
 
     public function test_rss_lists_published_articles_with_two_segment_url(): void
     {
-        $this->addContent($this->collection, ['title' => 'Hello', 'url' => 'headline', 'category' => 'tech']);
-        $this->addContent($this->collection, ['title' => 'Hidden', 'url' => 'hidden', 'category' => 'tech'], false);
+        $this->addContent($this->collection, ['title' => 'Hello', 'slug' => 'headline', 'category' => 'tech']);
+        $this->addContent($this->collection, ['title' => 'Hidden', 'slug' => 'hidden', 'category' => 'tech'], false);
 
         $resp = $this->get('/api/project/blog/feed.xml?collection=articles');
         $resp->assertStatus(200);
@@ -85,16 +85,16 @@ class FeedTest extends TestCase
     public function test_rss_resolves_category_via_relation(): void
     {
         $catColl = Collection::create(['name' => 'Categories', 'slug' => 'categories', 'project_id' => $this->project->id]);
-        $this->addUrlField($catColl);
+        $this->addSlugField($catColl);
         CollectionField::create([
             'type' => 'text', 'label' => 'Title', 'name' => 'title',
             'options' => '{}', 'validations' => '{}',
             'project_id' => $this->project->id, 'collection_id' => $catColl->id, 'order' => 2,
         ]);
-        $category = $this->addContent($catColl, ['title' => 'News', 'url' => 'news']);
+        $category = $this->addContent($catColl, ['title' => 'News', 'slug' => 'news']);
 
         $this->addContent($this->collection, [
-            'title' => 'Headline', 'url' => 'headline', 'category' => (string) $category->id,
+            'title' => 'Headline', 'slug' => 'headline', 'category' => (string) $category->id,
         ]);
 
         $resp = $this->get('/api/project/blog/feed.xml?collection=articles');
@@ -106,13 +106,13 @@ class FeedTest extends TestCase
     public function test_pages_collection_uses_single_segment_url(): void
     {
         $pagesColl = Collection::create(['name' => 'Pages', 'slug' => 'pages', 'project_id' => $this->project->id]);
-        $this->addUrlField($pagesColl);
+        $this->addSlugField($pagesColl);
         CollectionField::create([
             'type' => 'text', 'label' => 'Title', 'name' => 'title',
             'options' => '{}', 'validations' => '{}',
             'project_id' => $this->project->id, 'collection_id' => $pagesColl->id, 'order' => 2,
         ]);
-        $this->addContent($pagesColl, ['title' => 'About', 'url' => 'about']);
+        $this->addContent($pagesColl, ['title' => 'About', 'slug' => 'about']);
 
         $resp = $this->get('/api/project/blog/feed.xml?collection=pages');
         $resp->assertStatus(200);
@@ -124,8 +124,8 @@ class FeedTest extends TestCase
 
     public function test_sitemap_lists_published_with_correct_path(): void
     {
-        $this->addContent($this->collection, ['title' => 'Hello', 'url' => 'headline', 'category' => 'tech']);
-        $this->addContent($this->collection, ['title' => 'Hidden', 'url' => 'hidden', 'category' => 'tech'], false);
+        $this->addContent($this->collection, ['title' => 'Hello', 'slug' => 'headline', 'category' => 'tech']);
+        $this->addContent($this->collection, ['title' => 'Hidden', 'slug' => 'hidden', 'category' => 'tech'], false);
 
         $resp = $this->get('/api/project/blog/sitemap.xml');
         $resp->assertStatus(200);

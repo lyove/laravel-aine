@@ -34,7 +34,7 @@
             <span v-else class="flex-1"></span>
 
             <router-link
-                :to="`${pathPrefix}/category/${activeSection.category.url}`"
+                :to="`${pathPrefix}/category/${activeSection.category.slug}`"
                 class="ml-auto text-sm font-medium text-indigo-600 hover:opacity-80"
             >
                 More →

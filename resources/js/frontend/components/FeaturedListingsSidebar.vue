@@ -49,7 +49,7 @@
                     <div class="mb-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-gray-400">
                         <router-link
                             v-if="item.category"
-                            :to="`${pathPrefix}/category/${item.category.url}`"
+                            :to="`${pathPrefix}/category/${item.category.slug}`"
                             class="font-medium text-indigo-600 hover:text-indigo-700"
                         >
                             {{ item.category.title }}
@@ -98,8 +98,8 @@ export default {
     },
     methods: {
         itemLink(item) {
-            const category = item.category ? item.category.url : "listings";
-            const url = item.url || item.id;
+            const category = item.category ? item.category.slug : "listings";
+            const url = item.slug || item.id;
             return `${this.pathPrefix}/${category}/${url}`;
         },
         initials(item) {

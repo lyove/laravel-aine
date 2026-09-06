@@ -503,9 +503,9 @@ class ContentController extends Controller
             'success' => true, 'code' => 200, 'message' => 'Success',
             'data' => [
                 'categories'  => $sections,
-                'featured'    => $listFn($project->uuid, $collectionSlug, $skel(['where' => ['featured' => 1], 'limit' => 8])),
-                'recommended' => $listFn($project->uuid, $collectionSlug, $skel(['where' => ['recommended' => 1], 'limit' => 8])),
-                'slider'      => $listFn($project->uuid, $collectionSlug, $skel(['where' => ['slider' => 1], 'limit' => 5])),
+                'featured'    => $listFn($project->uuid, $collectionSlug, $skel(['filters.featured' => '1', 'limit' => 8])),
+                'recommended' => $listFn($project->uuid, $collectionSlug, $skel(['filters.recommended' => '1', 'limit' => 8])),
+                'slider'      => $listFn($project->uuid, $collectionSlug, $skel(['filters.slider' => '1', 'limit' => 5])),
                 'latest'      => $listFn($project->uuid, $collectionSlug, $skel(['limit' => 10])),
                 'pages'       => $listFn($project->uuid, 'pages', ['timestamps' => true]),
             ],
@@ -516,11 +516,7 @@ class ContentController extends Controller
     {
         $params = $request->query();
         foreach ($overrides as $key => $value) {
-            if ($key === 'where' && isset($params['where']) && is_array($params['where'])) {
-                $params['where'] = array_merge($params['where'], (array) $value);
-            } else {
-                $params[$key] = $value;
-            }
+            $params[$key] = $value;
         }
         $sub = Request::create('/', 'GET', $params);
         $sub->attributes->set('resolved_project', $request->attributes->get('resolved_project'));
@@ -544,21 +540,8 @@ class ContentController extends Controller
             ->where('project_id', $project->id)->where('collection_id', $collection->id)
             ->whereNull('draft_parent_id');
 
-        // --- where clause ---
-        if ($request->has('where')) {
-            $where = $request->get('where');
-            if (! is_array($where)) {
-                return $this->validationError('Incorrect where statement.');
-            }
-            $result = $this->applyWhereClause($content, $where, $project, $collection, $request);
-            if ($result instanceof JsonResponse) return $result;
-        }
-
-        // --- whereRelation ---
-        if ($request->has('whereRelation')) {
-            $result = $this->applyWhereRelation($content, $request->get('whereRelation'), $project, $collection);
-            if ($result instanceof JsonResponse) return $result;
-        }
+        // --- filters (dot-notation: filters.locale=zh, filters.title=contains.x) ---
+        $this->parseFilters($request, $collection, $content);
 
         // --- sort ---
         if ($request->has('sort')) {
@@ -578,12 +561,11 @@ class ContentController extends Controller
         }
 
         // --- state filter ---
-        if ($request->has('state')) {
-            if ($request->get('state') === 'only_draft') $content->whereNull('published_at');
+        if ($request->has('state') && $request->get('state') === 'only_draft') {
+            $content->whereNull('published_at');
         } else {
             $content->whereNotNull('published_at');
         }
-
         if ($request->has('offset') && ! $request->has('limit')) {
             return $this->validationError('Incorrect offset statement.');
         }
@@ -610,230 +592,6 @@ class ContentController extends Controller
         $content = $content->get();
         ContentSerializer::preload($content);
         return $this->success(ContentResource::collection($content), 'Success');
-    }
-
-    // =================================================================
-    // Where-clause engine
-    // =================================================================
-
-    private function applyWhereClause($content, array $where, Project $project, Collection $collection, Request $request)
-    {
-        $isMultiDim = is_numeric(array_key_first($where)) && array_key_first($where) === 0;
-
-        if ($isMultiDim) {
-            return $this->applyMultiWhere($content, $where, $project, $collection);
-        }
-        return $this->applySingleWhere($content, $where, $project, $collection);
-    }
-
-    private function applySingleWhere($content, array $where, Project $project, Collection $collection)
-    {
-        $meta = ContentMeta::where('project_id', $project->id)->where('collection_id', $collection->id);
-
-        foreach ($where as $key => $value) {
-            if (in_array($key, ['id', 'locale', 'created_at', 'updated_at', 'published_at'])) {
-                $this->applyDirectWhere($content, $key, $value);
-            } else {
-                $this->applyMetaWhere($meta, $key, $value, $project, $collection);
-            }
-        }
-        $content->whereIn('id', $meta->get(['content_id']));
-        return null;
-    }
-
-    private function applyMultiWhere($content, array $where, Project $project, Collection $collection)
-    {
-        $metaSql = 'SELECT c.id as content_id FROM content c,';
-        $bind = []; $num = 1;
-
-        foreach ($where as $w) { $metaSql .= ' content_meta m' . $num . ','; $num++; }
-        $metaSql = rtrim($metaSql, ',') . ' WHERE ';
-        $num = 1;
-        foreach ($where as $w) {
-            $metaSql .= ' m' . $num . '.project_id= ? AND m' . $num . '.collection_id= ? AND ';
-            $bind[] = $project->id; $bind[] = $collection->id;
-            $num++;
-        }
-        $metaSql = rtrim($metaSql, ' AND ');
-        $num = 1;
-        foreach ($where as $w) { $metaSql .= ' AND c.id = m' . $num . '.content_id'; $num++; }
-        $metaSql .= ' AND (';
-        $num = 1;
-
-        foreach ($where as $k => $w) {
-            foreach ($w as $key => $value) {
-                if (in_array($key, ['id', 'locale', 'created_at', 'updated_at', 'published_at'])) continue;
-
-                if ($num != 1 && $k === 'or') $metaSql .= ' OR ';
-                if ($num > 1 && $k !== 'or') $metaSql .= ' AND ';
-
-                if (is_array($value)) {
-                    $metaSql .= '(m' . $num . '.field_name= ? AND '; $bind[] = $key;
-                    if (isset($value['like'])) {
-                        $bind[] = "%{$value['like']}%"; $metaSql .= 'm' . $num . '.value LIKE ?)';
-                    } elseif (isset($value['not'])) {
-                        $bind[] = $value['not']; $metaSql .= 'm' . $num . '.value != ?)';
-                    } elseif (isset($value['in'])) {
-                        $inV = array_map('trim', explode(',', $value['in']));
-                        $metaSql .= 'm' . $num . '.value IN (' . implode(',', array_fill(0, count($inV), '?')) . '))';
-                        foreach ($inV as $iv) $bind[] = $iv;
-                    } elseif (isset($value['not_in'])) {
-                        $niV = array_map('trim', explode(',', $value['not_in']));
-                        $metaSql .= 'm' . $num . '.value NOT IN (' . implode(',', array_fill(0, count($niV), '?')) . '))';
-                        foreach ($niV as $nv) $bind[] = $nv;
-                    } elseif (isset($value['lt'])) {
-                        $bind[] = $value['lt']; $metaSql .= 'm' . $num . '.value < ?)';
-                    } elseif (isset($value['lte'])) {
-                        $bind[] = $value['lte']; $metaSql .= 'm' . $num . '.value <= ?)';
-                    } elseif (isset($value['gt'])) {
-                        $bind[] = $value['gt']; $metaSql .= 'm' . $num . '.value > ?)';
-                    } elseif (isset($value['gte'])) {
-                        $bind[] = $value['gte']; $metaSql .= 'm' . $num . '.value >= ?)';
-                    } elseif (isset($value['between'])) {
-                        $exp = array_map('trim', explode(',', $value['between']));
-                        if (count($exp) < 2 || count($exp) > 2) return $this->validationError('Incorrect where statement');
-                        $metaSql .= 'm' . $num . '.value BETWEEN ? AND ?)'; $bind[] = $exp[0]; $bind[] = $exp[1];
-                    } elseif (isset($value['not_between'])) {
-                        $exp = array_map('trim', explode(',', $value['not_between']));
-                        if (count($exp) < 2 || count($exp) > 2) return $this->validationError('Incorrect where statement');
-                        $metaSql .= 'm' . $num . '.value NOT BETWEEN ? AND ?)'; $bind[] = $exp[0]; $bind[] = $exp[1];
-                    }
-                } else {
-                    if ($value === 'null') {
-                        $notNull = ContentMeta::where('project_id', $project->id)
-                            ->where('collection_id', $collection->id)->where('field_name', $key)
-                            ->where('value', '!=', '')->get(['content_id']);
-                        $ids = $notNull->pluck('content_id')->implode(',') ?: '-1';
-                        $metaSql .= 'm' . $num . '.content_id NOT IN (' . $ids . ')';
-                    } elseif ($value === 'not_null') {
-                        $notNull = ContentMeta::where('project_id', $project->id)
-                            ->where('collection_id', $collection->id)->where('field_name', $key)
-                            ->where('value', '!=', '')->get(['content_id']);
-                        $ids = $notNull->pluck('content_id')->implode(',') ?: '-1';
-                        $metaSql .= 'm' . $num . '.content_id IN (' . $ids . ')';
-                    } else {
-                        $field = CollectionField::where('project_id', $project->id)
-                            ->where('collection_id', $collection->id)->where('name', $key)->first();
-                        if (! $field) return $this->validationError('Field not found [' . $key . ']');
-                        if ($field->type === 'relation') {
-                            $metaSql .= '(m' . $num . '.field_name= ? AND (m' . $num . '.value = ? OR m' . $num . '.value LIKE ? OR m' . $num . '.value LIKE ? OR m' . $num . '.value LIKE ?))';
-                            $bind[] = $key; $bind[] = $value; $bind[] = $value . ',%'; $bind[] = '%,' . $value; $bind[] = '%,' . $value . ',%';
-                        } else {
-                            $bind[] = $key; $bind[] = $value;
-                            $metaSql .= '(m' . $num . '.field_name= ? AND m' . $num . '.value= ?)';
-                        }
-                    }
-                }
-            }
-            $num++;
-        }
-        $metaSql .= ')';
-        $num = 1;
-        foreach ($where as $w) { $metaSql .= ' AND m' . $num . '.deleted_at is null'; $num++; }
-
-        $query = DB::select($metaSql, $bind);
-        $ids = array_map(fn ($q) => $q->content_id, $query);
-        $content->whereIn('id', $ids);
-        return null;
-    }
-
-    private function applyDirectWhere($content, string $key, $value): void
-    {
-        if (! is_array($value)) {
-            if (in_array($key, ['created_at', 'updated_at', 'published_at'])) {
-                $content->whereDate($key, $value);
-            } else {
-                $content->where($key, $value);
-            }
-            return;
-        }
-
-        $isDate = in_array($key, ['created_at', 'updated_at', 'published_at']);
-
-        if (isset($value['not']))  $content->where($key, '!=', $value['not']);
-        if (isset($value['in']))   $content->whereIn($key, explode(',', $value['in']));
-        if (isset($value['not_in'])) $content->whereNotIn($key, explode(',', $value['not_in']));
-
-        foreach (['lt', 'lte', 'gt', 'gte'] as $op) {
-            if (isset($value[$op])) {
-                $method = $isDate ? 'whereDate' : 'where';
-                $content->$method($key, $op === 'lt' ? '<' : ($op === 'lte' ? '<=' : ($op === 'gt' ? '>' : '>=')), $value[$op]);
-            }
-        }
-
-        if (isset($value['between'])) {
-            $exp = explode(',', $value['between']);
-            if (count($exp) === 2) $content->whereBetween($key, $exp);
-        }
-        if (isset($value['not_between'])) {
-            $exp = explode(',', $value['not_between']);
-            if (count($exp) === 2) $content->whereNotBetween($key, $exp);
-        }
-    }
-
-    private function applyMetaWhere($meta, string $key, $value, Project $project, Collection $collection): void
-    {
-        if (! is_array($value)) {
-            if ($value === 'null') {
-                $copy = (clone $meta)->where('field_name', $key)->where('value', '!=', '')->get(['content_id']);
-                $meta->whereNotIn('content_id', $copy);
-            } elseif ($value === 'not_null') {
-                $copy = (clone $meta)->where('field_name', $key)->where('value', '!=', '')->get(['content_id']);
-                $meta->whereIn('content_id', $copy);
-            } else {
-                $field = CollectionField::where('project_id', $project->id)
-                    ->where('collection_id', $collection->id)->where('name', $key)->first();
-                if (! $field) return;
-                if ($field->type === 'relation') {
-                    $meta->where('field_name', $key)->where($this->relationValueMatcher($value));
-                } else {
-                    $meta->where('field_name', $key)->where('value', $value);
-                }
-            }
-            return;
-        }
-
-        $meta->where('field_name', $key);
-        if (isset($value['like']))       $meta->where('value', 'LIKE', "%{$value['like']}%");
-        if (isset($value['not']))        $meta->where('value', '!=', $value['not']);
-        if (isset($value['in']))         $meta->whereIn('value', array_map('trim', explode(',', $value['in'])));
-        if (isset($value['not_in']))     $meta->whereNotIn('value', array_map('trim', explode(',', $value['not_in'])));
-        if (isset($value['lt']))         $meta->where('value', '<', $value['lt']);
-        if (isset($value['lte']))        $meta->where('value', '<=', $value['lte']);
-        if (isset($value['gt']))         $meta->where('value', '>', $value['gt']);
-        if (isset($value['gte']))        $meta->where('value', '>=', $value['gte']);
-        if (isset($value['between']))    { $exp = explode(',', $value['between']); if (count($exp) === 2) $meta->whereBetween('value', $exp); }
-        if (isset($value['not_between'])){ $exp = explode(',', $value['not_between']); if (count($exp) === 2) $meta->whereNotBetween('value', $exp); }
-    }
-
-    private function applyWhereRelation($content, array $whereRelation, Project $project, Collection $collection)
-    {
-        foreach ($whereRelation as $key => $value) {
-            $mainField = CollectionField::where('project_id', $project->id)
-                ->where('collection_id', $collection->id)->where('name', $key)->first();
-            if (! $mainField) return $this->validationError('Field not found [' . $key . ']');
-            if ($mainField->type !== 'relation') return $this->validationError('This field is not a relation type field.');
-
-            $relationOptions = json_decode($mainField->options);
-            foreach ($value as $rKey => $rValue) {
-                $relationField = CollectionField::where('project_id', $project->id)
-                    ->where('collection_id', $relationOptions->relation->collection)
-                    ->where('name', $rKey)->first();
-                if (! $relationField) return $this->validationError('Relation field not found [' . $rKey . ']');
-
-                $relationMeta = ContentMeta::where('project_id', $project->id)
-                    ->where('collection_id', $relationOptions->relation->collection)
-                    ->where('field_name', $rKey)->where('value', 'LIKE', "%{$rValue}%")
-                    ->first(['content_id']);
-                if (! $relationMeta) return $this->notFound('Record not found');
-
-                $meta = ContentMeta::where('project_id', $project->id)
-                    ->where('collection_id', $collection->id)->where('field_name', $key)
-                    ->where($this->relationValueMatcher($relationMeta->content_id));
-                $content->whereIn('id', $meta->get(['content_id']));
-            }
-        }
-        return null;
     }
 
     // =================================================================
@@ -965,5 +723,284 @@ class ContentController extends Controller
             }
         }
         return null;
+    }
+
+    // =================================================================
+    // Dot-notation filter engine (filters.locale=zh, filters.title=contains.x)
+    // =================================================================
+
+    /** Registered filter operators (must match the frontend serializeQuery list). */
+    private const FILTER_OPERATORS = [
+        'equals', 'notEquals', 'contains', 'notContains',
+        'greaterThan', 'greaterThanOrEqual', 'lessThan', 'lessThanOrEqual',
+        'in', 'notIn', 'between', 'notBetween', 'isEmpty', 'notEmpty',
+    ];
+
+    /** Direct columns on the content table (not stored in content_meta). */
+    private const DIRECT_COLUMNS = ['id', 'locale', 'created_at', 'updated_at', 'published_at'];
+
+    /**
+     * Parse all `filters.*` query params and the `or` clause, applying them
+     * to the given query builder.  Dot-notation on the wire:
+     *   filters.locale=zh
+     *   filters.title=contains.laravel
+     *   filters.price=greaterThan.100
+     *   filters.category.url=tech          (relation filter, auto-detected)
+     *   filters.category.name=contains.tech (relation filter with operator)
+     */
+    private function parseFilters(Request $request, Collection $collection, $query): void
+    {
+        foreach ($request->all() as $key => $value) {
+            if (! is_string($value) && ! is_numeric($value)) continue;
+            $value = (string) $value;
+
+            if (str_starts_with($key, 'filters.')) {
+                $fieldPath = substr($key, 8); // strip 'filters.'
+                $parsed = $this->parseFilterOperator($value);
+                $this->applyFieldFilter($query, $collection, $fieldPath, $parsed['operator'], $parsed['value']);
+            }
+        }
+
+        // OR clause: or=title.contains.vue,excerpt.contains.vue
+        if ($request->has('or')) {
+            $this->applyOrFilters($query, $collection, (string) $request->get('or'));
+        }
+    }
+
+    /**
+     * Parse a raw value like "contains.laravel" into ['operator' => 'contains', 'value' => 'laravel'].
+     * If the value has no dot, or the part before the dot is not a registered
+     * operator, the whole value is treated as an equality match (so URLs and
+     * filenames containing dots are safe).
+     */
+    private function parseFilterOperator(string $raw): array
+    {
+        $dotPos = strpos($raw, '.');
+        if ($dotPos !== false) {
+            $possibleOp = substr($raw, 0, $dotPos);
+            if (in_array($possibleOp, self::FILTER_OPERATORS, true)) {
+                return ['operator' => $possibleOp, 'value' => substr($raw, $dotPos + 1)];
+            }
+        }
+        return ['operator' => 'equals', 'value' => $raw];
+    }
+
+    /**
+     * Apply a single field filter.  Supports:
+     *   - Direct columns (id, locale, created_at, ...) on the content table
+     *   - Collection-defined meta fields via content_meta subquery
+     *   - Relation filters via dotted path: category.url → category is a
+     *     relation field, url is the target field in the related collection
+     */
+    private function applyFieldFilter($query, Collection $collection, string $field, string $operator, $value): void
+    {
+        $segments = explode('.', $field);
+        if (count($segments) > 1) {
+            $firstField = $segments[0];
+            $fieldDef = $collection->fields->firstWhere('slug', $firstField)
+                ?? $collection->fields->firstWhere('name', $firstField);
+
+            if ($fieldDef && $fieldDef->type === 'relation') {
+                $targetField = implode('.', array_slice($segments, 1));
+                $this->applyRelationFilter($query, $collection, $firstField, $targetField, $operator, $value);
+                return;
+            }
+        }
+
+        // Direct column on the content table
+        if (in_array($field, self::DIRECT_COLUMNS, true)) {
+            $isDate = in_array($field, ['created_at', 'updated_at', 'published_at'], true);
+            $this->applyOperatorToQuery($query, $field, $operator, $value, $isDate ? 'date' : 'string');
+            return;
+        }
+
+        // Meta field
+        $fieldDef = $collection->fields->firstWhere('slug', $field)
+            ?? $collection->fields->firstWhere('name', $field);
+        if (! $fieldDef) {
+            return;
+        }
+
+        $metaQuery = ContentMeta::where('project_id', $collection->project_id)
+            ->where('collection_id', $collection->id)
+            ->where('field_name', $field);
+
+        $this->applyOperatorToQuery($metaQuery, 'value', $operator, $value, $fieldDef->type ?? 'string');
+        $query->whereIn('id', $metaQuery->select('content_id'));
+    }
+
+    /**
+     * Apply an operator to a query builder column.  Used for both direct
+     * columns and the meta `value` column.
+     */
+    private function applyOperatorToQuery($query, string $column, string $operator, $value, string $fieldType = 'string'): void
+    {
+        switch ($operator) {
+            case 'equals':
+                if ($fieldType === 'date') {
+                    $query->whereDate($column, $value);
+                } else {
+                    $query->where($column, $value);
+                }
+                break;
+            case 'notEquals':
+                $query->where($column, '!=', $value);
+                break;
+            case 'contains':
+                $query->where($column, 'LIKE', '%' . $value . '%');
+                break;
+            case 'notContains':
+                $query->where($column, 'NOT LIKE', '%' . $value . '%');
+                break;
+            case 'greaterThan':
+                $query->where($column, '>', $value);
+                break;
+            case 'greaterThanOrEqual':
+                $query->where($column, '>=', $value);
+                break;
+            case 'lessThan':
+                $query->where($column, '<', $value);
+                break;
+            case 'lessThanOrEqual':
+                $query->where($column, '<=', $value);
+                break;
+            case 'in':
+                $query->whereIn($column, array_map('trim', explode(',', $value)));
+                break;
+            case 'notIn':
+                $query->whereNotIn($column, array_map('trim', explode(',', $value)));
+                break;
+            case 'between':
+                $parts = array_map('trim', explode(',', $value));
+                if (count($parts) === 2) {
+                    $query->whereBetween($column, $parts);
+                }
+                break;
+            case 'notBetween':
+                $parts = array_map('trim', explode(',', $value));
+                if (count($parts) === 2) {
+                    $query->whereNotBetween($column, $parts);
+                }
+                break;
+            case 'isEmpty':
+                $query->where(function ($q) use ($column) {
+                    $q->whereNull($column)->orWhere($column, '');
+                });
+                break;
+            case 'notEmpty':
+                $query->whereNotNull($column)->where($column, '!=', '');
+                break;
+        }
+    }
+
+    /**
+     * Apply a relation filter: find records in the related collection matching
+     * the target field condition, then match the main collection's relation
+     * meta value against those IDs (supports comma-separated relation values).
+     */
+    private function applyRelationFilter($query, Collection $collection, string $relationField, string $targetField, string $operator, $value): void
+    {
+        $fieldDef = $collection->fields->firstWhere('slug', $relationField)
+            ?? $collection->fields->firstWhere('name', $relationField);
+        if (! $fieldDef || $fieldDef->type !== 'relation') {
+            return;
+        }
+
+        $options = json_decode($fieldDef->options);
+        $relatedCollectionId = $options->relation->collection ?? null;
+        if (! $relatedCollectionId) {
+            return;
+        }
+
+        $relatedCollection = Collection::find($relatedCollectionId);
+        if (! $relatedCollection) {
+            return;
+        }
+
+        // Find matching IDs in the related collection
+        $relatedQuery = Content::where('project_id', $collection->project_id)
+            ->where('collection_id', $relatedCollection->id);
+
+        if (in_array($targetField, self::DIRECT_COLUMNS, true)) {
+            $isDate = in_array($targetField, ['created_at', 'updated_at', 'published_at'], true);
+            $this->applyOperatorToQuery($relatedQuery, $targetField, $operator, $value, $isDate ? 'date' : 'string');
+        } else {
+            $targetMeta = ContentMeta::where('project_id', $collection->project_id)
+                ->where('collection_id', $relatedCollection->id)
+                ->where('field_name', $targetField);
+            $this->applyOperatorToQuery($targetMeta, 'value', $operator, $value, 'string');
+            $relatedQuery->whereIn('id', $targetMeta->select('content_id'));
+        }
+
+        $relatedIds = $relatedQuery->pluck('id')->all();
+        if (empty($relatedIds)) {
+            $query->whereRaw('1=0');
+            return;
+        }
+
+        // Match the main collection's relation meta against those IDs
+        // (relation values may be comma-separated lists)
+        $mainMeta = ContentMeta::where('project_id', $collection->project_id)
+            ->where('collection_id', $collection->id)
+            ->where('field_name', $relationField)
+            ->where(function ($q) use ($relatedIds) {
+                foreach ($relatedIds as $rid) {
+                    $rid = (string) $rid;
+                    $q->orWhere('value', $rid)
+                      ->orWhere('value', 'like', $rid . ',%')
+                      ->orWhere('value', 'like', '%,' . $rid)
+                      ->orWhere('value', 'like', '%,' . $rid . ',%');
+                }
+            });
+
+        $query->whereIn('id', $mainMeta->select('content_id'));
+    }
+
+    /**
+     * Apply an OR clause.  The `or` param is a comma-separated list of
+     * conditions, each parsed right-to-left:
+     *   title.contains.vue          → field=title, operator=contains, value=vue
+     *   category.url.contains.tech   → field=category.url, operator=contains, value=tech
+     *   slug.my-article.html         → field=slug, operator=equals, value=my-article.html
+     *   locale=zh                    → field=locale, operator=equals, value=zh
+     *
+     * Relation detection is handled by applyFieldFilter automatically.
+     */
+    private function applyOrFilters($query, Collection $collection, string $orClause): void
+    {
+        $conditions = array_filter(array_map('trim', explode(',', $orClause)));
+        if (empty($conditions)) {
+            return;
+        }
+
+        $query->where(function ($outer) use ($collection, $conditions) {
+            foreach ($conditions as $condition) {
+                $segments = explode('.', $condition);
+                if (count($segments) < 2) {
+                    continue;
+                }
+
+                $value = end($segments);
+                $operator = 'equals';
+                $fieldSegments = array_slice($segments, 0, -1);
+
+                if (count($segments) >= 3) {
+                    $possibleOp = $segments[count($segments) - 2];
+                    if (in_array($possibleOp, self::FILTER_OPERATORS, true)) {
+                        $operator = $possibleOp;
+                        $fieldSegments = array_slice($segments, 0, -2);
+                    }
+                }
+
+                $field = implode('.', $fieldSegments);
+                if ($field === '') {
+                    continue;
+                }
+
+                $outer->orWhere(function ($subQuery) use ($collection, $field, $operator, $value) {
+                    $this->applyFieldFilter($subQuery, $collection, $field, $operator, $value);
+                });
+            }
+        });
     }
 }

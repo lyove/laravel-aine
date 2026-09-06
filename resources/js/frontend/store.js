@@ -1,13 +1,10 @@
 import { defineStore } from "pinia";
 import http from "./http";
 import { api, setApiLocale } from "./api";
-import { PROJECTS, COLLECTIONS } from "./config";
+import { PROJECTS } from "./config";
 
 const STORAGE_KEY = "aine_frontend_locale";
 
-// In-flight de-duplication for requests issued directly via axios
-// (settings / project info). Multiple callers (e.g. router guard + layout)
-// sharing the same promise issue a single HTTP request.
 let settingsRequest = null;
 const projectRequests = {};
 
@@ -42,8 +39,6 @@ export const useFrontendStore = defineStore("frontend", {
             }
 
             settingsRequest = (async () => {
-                // /settings returns a plain object (not the API envelope):
-                // { name, description, version }
                 const response = await http.get("/settings");
                 if (response && response.data && typeof response.data === "object") {
                     this.settings = {
@@ -74,8 +69,7 @@ export const useFrontendStore = defineStore("frontend", {
             }
 
             projectRequests[identifier] = (async () => {
-                // /api/project/{identifier} returns the API envelope, so the
-                // project info lives at response.data.data.
+
                 const response = await http.get(`/api/project/${identifier}`);
                 this.projectsInfo[identifier] = (response && response.data && response.data.data) || null;
                 return this.projectsInfo[identifier];
@@ -118,7 +112,7 @@ export const useFrontendStore = defineStore("frontend", {
             if (this.pagesLoaded && !force) {
                 return this.pages;
             }
-            this.pages = (await api.collection(PROJECTS.cms.identifier, COLLECTIONS.pages, { timestamps: true })) || [];
+            this.pages = (await api.getPages({ timestamps: true })) || [];
             this.pagesLoaded = true;
             return this.pages;
         },

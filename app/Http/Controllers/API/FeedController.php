@@ -142,7 +142,7 @@ class FeedController extends Controller
     private function contentPath(Content $content, string $prefix): string
     {
         $collectionSlug = $content->collection?->slug ?? 'content';
-        $url = $this->metaString($content->id, 'url') ?: ('id-' . $content->id);
+        $url = $this->metaString($content->id, 'slug') ?: ('id-' . $content->id);
         $segUrl = rawurlencode($url);
         $base = '/' . $prefix . '/';
 
@@ -189,7 +189,7 @@ class FeedController extends Controller
         }
 
         $categoryUrl = ContentMeta::where('content_id', (int) $ids[0])
-            ->where('field_name', 'url')
+            ->where('field_name', 'slug')
             ->value('value');
 
         return $categoryUrl ? (string) $categoryUrl : null;

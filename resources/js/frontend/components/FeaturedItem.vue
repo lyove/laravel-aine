@@ -25,7 +25,7 @@
             <div class="mb-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-gray-400">
                 <router-link
                     v-if="item.category"
-                    :to="`${pathPrefix}/category/${item.category.url}`"
+                    :to="`${pathPrefix}/category/${item.category.slug}`"
                     class="font-medium text-indigo-600 hover:text-indigo-700"
                 >
                     {{ item.category.title }}
@@ -65,8 +65,8 @@ export default {
     },
     computed: {
         itemLink() {
-            const category = this.item.category ? this.item.category.url : "articles";
-            const url = this.item.url || this.item.id;
+            const category = this.item.category ? this.item.category.slug : "articles";
+            const url = this.item.slug || this.item.id;
             return `${this.pathPrefix}/${category}/${url}`;
         },
         formattedDate() {
