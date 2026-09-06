@@ -750,12 +750,10 @@ class ContentController extends Controller
      */
     private function parseFilters(Request $request, Collection $collection, $query): void
     {
-        foreach ($request->all() as $key => $value) {
-            if (! is_string($value) && ! is_numeric($value)) continue;
-            $value = (string) $value;
-
-            if (str_starts_with($key, 'filters.')) {
-                $fieldPath = substr($key, 8); // strip 'filters.'
+        $queryString = $request->server('QUERY_STRING', '');
+        if (preg_match_all('/(?:^|&)filters\.([^=]+)=([^&]*)/', $queryString, $matches)) {
+            foreach ($matches[1] as $i => $fieldPath) {
+                $value = rawurldecode($matches[2][$i]);
                 $parsed = $this->parseFilterOperator($value);
                 $this->applyFieldFilter($query, $collection, $fieldPath, $parsed['operator'], $parsed['value']);
             }

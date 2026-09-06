@@ -243,7 +243,9 @@ export function setApiLocale(locale) {
 
 function scoped(params = {}) {
   const merged = { ...params };
-  if (currentLocale) {
+  const skipLocale = merged._skipLocale === true;
+  delete merged._skipLocale;
+  if (currentLocale && !skipLocale) {
     merged.filters = { locale: currentLocale, ...(merged.filters || {}) };
   }
   return merged;

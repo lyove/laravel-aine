@@ -767,7 +767,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DD9y30uN.js",
+    "file": "assets/app-BjBNyXNq.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -801,7 +801,7 @@
     ]
   },
   "resources/js/frontend/views/Archive.vue": {
-    "file": "assets/Archive-CbJu81SY.js",
+    "file": "assets/Archive-Dtk_GsNX.js",
     "name": "Archive",
     "src": "resources/js/frontend/views/Archive.vue",
     "isDynamicEntry": true,
@@ -815,7 +815,7 @@
     ]
   },
   "resources/js/frontend/views/ArticleDetail.vue": {
-    "file": "assets/ArticleDetail-kwzC3SsJ.js",
+    "file": "assets/ArticleDetail-2ARqJwtj.js",
     "name": "ArticleDetail",
     "src": "resources/js/frontend/views/ArticleDetail.vue",
     "isDynamicEntry": true,
@@ -832,7 +832,7 @@
     ]
   },
   "resources/js/frontend/views/Home.vue": {
-    "file": "assets/Home-BWJJggqq.js",
+    "file": "assets/Home-BXgKzNa9.js",
     "name": "Home",
     "src": "resources/js/frontend/views/Home.vue",
     "isDynamicEntry": true,
@@ -845,7 +845,7 @@
     ]
   },
   "resources/js/frontend/views/ListingDetail.vue": {
-    "file": "assets/ListingDetail-DyVhU-MT.js",
+    "file": "assets/ListingDetail-B63mxKw1.js",
     "name": "ListingDetail",
     "src": "resources/js/frontend/views/ListingDetail.vue",
     "isDynamicEntry": true,
@@ -856,7 +856,7 @@
     ]
   },
   "resources/js/frontend/views/PageDetail.vue": {
-    "file": "assets/PageDetail-DZvuGkrr.js",
+    "file": "assets/PageDetail-DKEBa58-.js",
     "name": "PageDetail",
     "src": "resources/js/frontend/views/PageDetail.vue",
     "isDynamicEntry": true,
@@ -872,7 +872,7 @@
     ]
   },
   "resources/js/frontend/views/PagesList.vue": {
-    "file": "assets/PagesList-r_Zrcq8C.js",
+    "file": "assets/PagesList-BmM9eec0.js",
     "name": "PagesList",
     "src": "resources/js/frontend/views/PagesList.vue",
     "isDynamicEntry": true,
