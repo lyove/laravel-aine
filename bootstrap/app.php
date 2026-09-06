@@ -52,6 +52,7 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->prepend(\App\Http\Middleware\ConvertDotNotationQueryParams::class);
         $middleware->prepend(\App\Http\Middleware\RedirectIfNotInstalled::class);
         $middleware->prepend(\App\Http\Middleware\DynamicCors::class);
         $middleware->prepend(\App\Http\Middleware\SecurityHeaders::class);

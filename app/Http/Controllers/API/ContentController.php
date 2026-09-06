@@ -516,11 +516,34 @@ class ContentController extends Controller
     {
         $params = $request->query();
         foreach ($overrides as $key => $value) {
-            $params[$key] = $value;
+            if (is_string($key) && str_contains($key, '.') && ! str_contains($key, '[')) {
+                $this->setNestedValue($params, $key, $value);
+            } else {
+                $params[$key] = $value;
+            }
         }
         $sub = Request::create('/', 'GET', $params);
         $sub->attributes->set('resolved_project', $request->attributes->get('resolved_project'));
         return $sub;
+    }
+
+    /**
+     * Set a value in a nested array using a dot-notation key.
+     *
+     * setNestedValue($arr, 'filters.featured', '1')
+     *   => $arr['filters']['featured'] = '1'
+     */
+    private function setNestedValue(array &$array, string $key, $value): void
+    {
+        $segments = explode('.', $key);
+        $current = &$array;
+        foreach ($segments as $segment) {
+            if (! isset($current[$segment]) || ! is_array($current[$segment])) {
+                $current[$segment] = [];
+            }
+            $current = &$current[$segment];
+        }
+        $current = $value;
     }
 
     // =================================================================
@@ -741,28 +764,44 @@ class ContentController extends Controller
 
     /**
      * Parse all `filters.*` query params and the `or` clause, applying them
-     * to the given query builder.  Dot-notation on the wire:
-     *   filters.locale=zh
-     *   filters.title=contains.laravel
-     *   filters.price=greaterThan.100
-     *   filters.category.url=tech          (relation filter, auto-detected)
-     *   filters.category.name=contains.tech (relation filter with operator)
+     * to the given query builder.
      */
     private function parseFilters(Request $request, Collection $collection, $query): void
     {
-        $queryString = $request->server('QUERY_STRING', '');
-        if (preg_match_all('/(?:^|&)filters\.([^=]+)=([^&]*)/', $queryString, $matches)) {
-            foreach ($matches[1] as $i => $fieldPath) {
-                $value = rawurldecode($matches[2][$i]);
-                $parsed = $this->parseFilterOperator($value);
-                $this->applyFieldFilter($query, $collection, $fieldPath, $parsed['operator'], $parsed['value']);
-            }
+        $filters = $request->input('filters', []);
+        if (! is_array($filters)) {
+            $filters = [];
+        }
+
+        foreach ($this->flattenFilters($filters) as $fieldPath => $value) {
+            $parsed = $this->parseFilterOperator((string) $value);
+            $this->applyFieldFilter($query, $collection, $fieldPath, $parsed['operator'], $parsed['value']);
         }
 
         // OR clause: or=title.contains.vue,excerpt.contains.vue
         if ($request->has('or')) {
             $this->applyOrFilters($query, $collection, (string) $request->get('or'));
         }
+    }
+
+    /**
+     * Flatten a nested filters array into dot-notation field paths.
+     *
+     *   ['locale' => 'zh', 'category' => ['slug' => 'tech']]
+     *     => ['locale' => 'zh', 'category.slug' => 'tech']
+     */
+    private function flattenFilters(array $filters, string $prefix = ''): array
+    {
+        $result = [];
+        foreach ($filters as $key => $value) {
+            $fieldPath = $prefix === '' ? $key : $prefix . '.' . $key;
+            if (is_array($value)) {
+                $result = array_merge($result, $this->flattenFilters($value, $fieldPath));
+            } else {
+                $result[$fieldPath] = $value;
+            }
+        }
+        return $result;
     }
 
     /**
