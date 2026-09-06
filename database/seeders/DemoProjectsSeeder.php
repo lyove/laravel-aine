@@ -340,9 +340,9 @@ class DemoProjectsSeeder extends Seeder
 
         /* --- Pages --- */
         foreach ([
-            ['title' => 'Home', 'url' => 'home', 'content' => '<h1>Welcome to Content Management System</h1><p>Articles, categories, authors, tags, comments and pages — every field type and content state is covered.</p>'],
-            ['title' => 'About Us', 'url' => 'about', 'content' => '<h2>About Content Management System</h2><p>This site is powered by <a href="https://github.com/kothing/laravel-aine">Aine CMS</a>, a self-hosted headless content management framework built with Laravel and Vue.js.</p>'],
-            ['title' => 'Contact', 'url' => 'contact', 'content' => '<h2>Contact Us</h2><p>Reach the team at <strong>hello@cms.example</strong>.</p>'],
+            ['title' => 'Home', 'slug' => 'home', 'content' => '<h1>Welcome to Content Management System</h1><p>Articles, categories, authors, tags, comments and pages — every field type and content state is covered.</p>'],
+            ['title' => 'About Us', 'slug' => 'about', 'content' => '<h2>About Content Management System</h2><p>This site is powered by <a href="https://github.com/kothing/laravel-aine">Aine CMS</a>, a self-hosted headless content management framework built with Laravel and Vue.js.</p>'],
+            ['title' => 'Contact', 'slug' => 'contact', 'content' => '<h2>Contact Us</h2><p>Reach the team at <strong>hello@cms.example</strong>.</p>'],
         ] as $i => $data) {
             $this->addContent($project, $c['pages'], $data, published: true, daysAgo: 20 - $i);
         }
@@ -350,7 +350,7 @@ class DemoProjectsSeeder extends Seeder
         /* --- Categories / Authors / Tags --- */
         $categories = [];
         foreach ([['News', 'news'], ['Tutorials', 'tutorials'], ['Reviews', 'reviews']] as $i => [$title, $url]) {
-            $categories[$title] = $this->addContent($project, $c['categories'], ['title' => $title, 'url' => $url], published: true, daysAgo: 19 - $i)->id;
+            $categories[$title] = $this->addContent($project, $c['categories'], ['title' => $title, 'slug' => $url], published: true, daysAgo: 19 - $i)->id;
         }
 
         $authors = [];
@@ -374,97 +374,97 @@ class DemoProjectsSeeder extends Seeder
         /* --- Articles --- */
         $articleData = [
             [
-                'title' => 'Getting Started with Aine CMS', 'url' => 'getting-started-with-aine-cms', 'excerpt' => 'A gentle introduction to Aine: install it, create your first project from the CMS Template and serve content through the REST API.',
+                'title' => 'Getting Started with Aine CMS', 'slug' => 'getting-started-with-aine-cms', 'excerpt' => 'A gentle introduction to Aine: install it, create your first project from the CMS Template and serve content through the REST API.',
                 'content' => '<h2>What is Aine?</h2><p>Aine is a <strong>self-hosted headless CMS</strong> built with Laravel and Vue.js.</p><h3>Key concepts</h3><ol><li><strong>Projects</strong> — isolated content spaces.</li><li><strong>Collections</strong> — your content models (Articles, Categories, Authors...).</li><li><strong>Fields</strong> — 15 field types from simple text to media and relations.</li></ol>',
                 'featured-image' => $media['cover-1.jpg'], 'category' => $categories['Tutorials'], 'author' => $authors['Jane Doe'],
                 'tags' => $tags['Laravel'].','.$tags['CMS'], 'slider' => 1, 'featured' => 1,
             ],
             [
-                'title' => 'Building a Blog Frontend with Vue 3', 'url' => 'building-a-blog-frontend-with-vue-3', 'excerpt' => 'Consume the Aine content API from a Vue 3 single page app using the domain-whitelist authentication method.',
+                'title' => 'Building a Blog Frontend with Vue 3', 'slug' => 'building-a-blog-frontend-with-vue-3', 'excerpt' => 'Consume the Aine content API from a Vue 3 single page app using the domain-whitelist authentication method.',
                 'content' => '<h2>Frontend setup</h2><p>Point your Vue router at the project and fetch content from <code>/api/project/cms/articles</code>.</p><p>The <em>featured-image</em> media field, <em>category</em> and <em>author</em> relations are all resolved by the API.</p>',
                 'featured-image' => $media['cover-2.jpg'], 'category' => $categories['Tutorials'], 'author' => $authors['Jane Doe'],
                 'tags' => (string) $tags['Vue'], 'slider' => 1, 'recommended' => 1,
             ],
             [
-                'title' => 'Aine 2.0 Release Notes: What\u2019s New', 'url' => 'aine-2-0-release-notes-what-s-new', 'excerpt' => 'A quick tour of the 2.0 release: multi-locale projects, domain whitelist API, webhooks with signed payloads and more.',
+                'title' => 'Aine 2.0 Release Notes: What\u2019s New', 'slug' => 'aine-2-0-release-notes-what-s-new', 'excerpt' => 'A quick tour of the 2.0 release: multi-locale projects, domain whitelist API, webhooks with signed payloads and more.',
                 'content' => '<h2>Release highlights</h2><ul><li>Multi-locale content in every project.</li><li>Domain whitelist authentication for pure frontend apps.</li><li>Signed webhooks on every content event.</li></ul>',
                 'featured-image' => $media['cover-3.jpg'], 'category' => $categories['News'], 'author' => $authors['John Smith'],
                 'tags' => $tags['PHP'].','.$tags['CMS'], 'slider' => 1, 'featured' => 1,
             ],
             [
-                'title' => 'Top 10 Laravel Packages for 2026', 'url' => 'top-10-laravel-packages-for-2026', 'excerpt' => 'Our hand-picked list of the most useful Laravel packages this year, from permissions to webhook delivery.',
+                'title' => 'Top 10 Laravel Packages for 2026', 'slug' => 'top-10-laravel-packages-for-2026', 'excerpt' => 'Our hand-picked list of the most useful Laravel packages this year, from permissions to webhook delivery.',
                 'content' => '<h2>The list</h2><ol><li>Spatie Laravel Permission</li><li>Spatie Laravel Webhook Server</li><li>Laravel Sanctum</li><li>Intervention Image</li></ol>',
                 'featured-image' => $media['cover-4.jpg'], 'category' => $categories['Reviews'], 'author' => $authors['John Smith'],
                 'tags' => $tags['Laravel'].','.$tags['PHP'], 'recommended' => 1,
             ],
             [
-                'title' => 'Anatomy of a Headless CMS (draft)', 'url' => 'anatomy-of-a-headless-cms-draft', 'excerpt' => 'Draft article: not published yet and therefore hidden from the public API.',
+                'title' => 'Anatomy of a Headless CMS (draft)', 'slug' => 'anatomy-of-a-headless-cms-draft', 'excerpt' => 'Draft article: not published yet and therefore hidden from the public API.',
                 'content' => '<h2>Under construction</h2><p>This article is a <strong>draft</strong> — it has no <em>published_at</em> timestamp.</p>',
                 'featured-image' => null, 'category' => $categories['News'], 'author' => $authors['Jane Doe'],
                 'tags' => (string) $tags['CMS'],
             ],
             [
-                'title' => 'Hello World (trashed)', 'url' => 'hello-world-trashed', 'excerpt' => 'This article lives in the recycle bin — restore it from the admin panel.',
+                'title' => 'Hello World (trashed)', 'slug' => 'hello-world-trashed', 'excerpt' => 'This article lives in the recycle bin — restore it from the admin panel.',
                 'content' => '<p>A very old article that has been moved to trash.</p>',
                 'featured-image' => $media['cover-2.jpg'], 'category' => $categories['Reviews'], 'author' => $authors['John Smith'],
                 'tags' => (string) $tags['Laravel'],
             ],
             [
-                'title' => 'Mastering Eloquent Relationships', 'url' => 'mastering-eloquent-relationships', 'excerpt' => 'Has-many, belongs-to, morphs — a practical tour of Eloquent relationship patterns with real-world examples.',
+                'title' => 'Mastering Eloquent Relationships', 'slug' => 'mastering-eloquent-relationships', 'excerpt' => 'Has-many, belongs-to, morphs — a practical tour of Eloquent relationship patterns with real-world examples.',
                 'content' => '<h2>Relationships that scale</h2><p>Eloquent makes related data a joy. We cover <strong>hasMany</strong>, <strong>belongsTo</strong> and polymorphic relations, plus common pitfalls like N+1 queries.</p><pre>Article::with(\'author\', \'tags\')->get();</pre>',
                 'featured-image' => $media['cover-3.jpg'], 'category' => $categories['Tutorials'], 'author' => $authors['Jane Doe'],
                 'tags' => $tags['Laravel'].','.$tags['PHP'], 'featured' => 1,
             ],
             [
-                'title' => 'Vue 3 Composables in Practice', 'url' => 'vue-3-composables-in-practice', 'excerpt' => 'Extract and reuse stateful logic with Vue 3 composables — from a simple useFetch to a full feature module.',
+                'title' => 'Vue 3 Composables in Practice', 'slug' => 'vue-3-composables-in-practice', 'excerpt' => 'Extract and reuse stateful logic with Vue 3 composables — from a simple useFetch to a full feature module.',
                 'content' => '<h2>Composables everywhere</h2><p>Composables are the heart of Vue 3. Learn how to structure <code>useFetch</code>, <code>useLocalStorage</code> and feature-level composables that keep components clean.</p>',
                 'featured-image' => $media['cover-2.jpg'], 'category' => $categories['Tutorials'], 'author' => $authors['Alex Rivera'],
                 'tags' => (string) $tags['Vue'], 'slider' => 1,
             ],
             [
-                'title' => 'Community Spotlight: Aine in Production', 'url' => 'community-spotlight-aine-in-production', 'excerpt' => 'Three teams share how they run Aine in production — traffic, multi-project setups and lessons learned.',
+                'title' => 'Community Spotlight: Aine in Production', 'slug' => 'community-spotlight-aine-in-production', 'excerpt' => 'Three teams share how they run Aine in production — traffic, multi-project setups and lessons learned.',
                 'content' => '<h2>Real deployments</h2><p>From a news portal to a SaaS documentation site, hear how teams keep hundreds of collections fast and reliable.</p>',
                 'featured-image' => $media['cover-1.jpg'], 'category' => $categories['News'], 'author' => $authors['John Smith'],
                 'tags' => (string) $tags['CMS'], 'featured' => 1,
             ],
             [
-                'title' => 'Security Best Practices for Headless CMS', 'url' => 'security-best-practices-for-headless-cms', 'excerpt' => 'Tokens, CORS, whitelists and rate limiting — a checklist for exposing your content API safely.',
+                'title' => 'Security Best Practices for Headless CMS', 'slug' => 'security-best-practices-for-headless-cms', 'excerpt' => 'Tokens, CORS, whitelists and rate limiting — a checklist for exposing your content API safely.',
                 'content' => '<h2>Lock it down</h2><ul><li>Rotate API tokens regularly.</li><li>Use domain whitelists for browser clients.</li><li>Never log secrets.</li></ul>',
                 'featured-image' => $media['cover-4.jpg'], 'category' => $categories['News'], 'author' => $authors['Jane Doe'],
                 'tags' => $tags['PHP'].','.$tags['Security'], 'recommended' => 1,
             ],
             [
-                'title' => 'Review: The Best Code Editors of 2026', 'url' => 'review-best-code-editors-2026', 'excerpt' => 'We put five editors through a month of daily PHP and Vue work. One clear winner emerged.',
+                'title' => 'Review: The Best Code Editors of 2026', 'slug' => 'review-best-code-editors-2026', 'excerpt' => 'We put five editors through a month of daily PHP and Vue work. One clear winner emerged.',
                 'content' => '<h2>The contenders</h2><ol><li>VS Code</li><li>PhpStorm</li><li>Neovim</li><li>Sublime Text</li><li>Zed</li></ol><p>Spoiler: the winner is the one you already know.</p>',
                 'featured-image' => $media['cover-3.jpg'], 'category' => $categories['Reviews'], 'author' => $authors['John Smith'],
                 'tags' => $tags['PHP'].','.$tags['Design'], 'recommended' => 1,
             ],
             [
-                'title' => 'Designing Content Models that Scale', 'url' => 'designing-content-models-that-scale', 'excerpt' => 'Collections, fields and relations are your schema. Design them like a database — because they are one.',
+                'title' => 'Designing Content Models that Scale', 'slug' => 'designing-content-models-that-scale', 'excerpt' => 'Collections, fields and relations are your schema. Design them like a database — because they are one.',
                 'content' => '<h2>Model-first thinking</h2><p>Start with the content, not the UI. Use relations instead of repeating fields, and keep one source of truth for every concept.</p>',
                 'featured-image' => $media['cover-2.jpg'], 'category' => $categories['Tutorials'], 'author' => $authors['Alex Rivera'],
                 'tags' => $tags['CMS'].','.$tags['Design'], 'slider' => 1,
             ],
             [
-                'title' => 'Testing Laravel Applications', 'url' => 'testing-laravel-applications', 'excerpt' => 'Feature tests, Pest or PHPUnit, factories and a CI pipeline that actually catches regressions.',
+                'title' => 'Testing Laravel Applications', 'slug' => 'testing-laravel-applications', 'excerpt' => 'Feature tests, Pest or PHPUnit, factories and a CI pipeline that actually catches regressions.',
                 'content' => '<h2>Ship with confidence</h2><p>Write tests for the behaviour your users depend on. We show a feature test for the content API from request to response.</p>',
                 'featured-image' => $media['cover-4.jpg'], 'category' => $categories['Tutorials'], 'author' => $authors['Jane Doe'],
                 'tags' => $tags['Laravel'].','.$tags['Testing'], 'featured' => 1,
             ],
             [
-                'title' => 'What\u2019s New in PHP 8.5', 'url' => 'what-s-new-in-php-8-5', 'excerpt' => 'Property hooks are here — plus the smaller quality-of-life improvements that make PHP 8.5 the best version yet.',
+                'title' => 'What\u2019s New in PHP 8.5', 'slug' => 'what-s-new-in-php-8-5', 'excerpt' => 'Property hooks are here — plus the smaller quality-of-life improvements that make PHP 8.5 the best version yet.',
                 'content' => '<h2>PHP keeps getting better</h2><p>Property hooks, <code>new</code> without parentheses in more places, and a faster engine. Upgrade guides included.</p>',
                 'featured-image' => $media['cover-1.jpg'], 'category' => $categories['News'], 'author' => $authors['John Smith'],
                 'tags' => (string) $tags['PHP'], 'slider' => 1,
             ],
             [
-                'title' => 'Review: Vue DevTools Essentials', 'url' => 'review-vue-devtools-essentials', 'excerpt' => 'The timeline, component inspector and pinia panel — the DevTools features you are not using yet.',
+                'title' => 'Review: Vue DevTools Essentials', 'slug' => 'review-vue-devtools-essentials', 'excerpt' => 'The timeline, component inspector and pinia panel — the DevTools features you are not using yet.',
                 'content' => '<h2>Debug faster</h2><p>DevTools is more than a component tree. Master the timeline tab and the router panel to halve your debugging time.</p>',
                 'featured-image' => $media['cover-2.jpg'], 'category' => $categories['Reviews'], 'author' => $authors['Alex Rivera'],
                 'tags' => (string) $tags['Vue'], 'recommended' => 1,
             ],
             [
-                'title' => 'A Practical Guide to API Design', 'url' => 'a-practical-guide-to-api-design', 'excerpt' => 'REST, filtering, pagination and versioning — design an API your frontend team will thank you for.',
+                'title' => 'A Practical Guide to API Design', 'slug' => 'a-practical-guide-to-api-design', 'excerpt' => 'REST, filtering, pagination and versioning — design an API your frontend team will thank you for.',
                 'content' => '<h2>Design for consumers</h2><p>Consistent errors, cursor pagination, sparse fieldsets and meaningful status codes: the boring details that matter most.</p>',
                 'featured-image' => $media['cover-3.jpg'], 'category' => $categories['Tutorials'], 'author' => $authors['Jane Doe'],
                 'tags' => $tags['Laravel'].','.$tags['Security'], 'featured' => 1,
@@ -483,7 +483,7 @@ class DemoProjectsSeeder extends Seeder
         /* --- Chinese structure (categories + translated tags) --- */
         $zhCategories = [];
         foreach ([['新闻', 'news-zh'], ['教程', 'tutorials-zh'], ['评测', 'reviews-zh']] as $i => [$zhTitle, $zhUrl]) {
-            $zhCategories[$zhTitle] = $this->addContent($project, $c['categories'], ['title' => $zhTitle, 'url' => $zhUrl], published: true, daysAgo: 19 - $i, locale: 'zh')->id;
+            $zhCategories[$zhTitle] = $this->addContent($project, $c['categories'], ['title' => $zhTitle, 'slug' => $zhUrl], published: true, daysAgo: 19 - $i, locale: 'zh')->id;
         }
         $zhCategoryByEn = [
             'News' => $zhCategories['新闻'], 'Tutorials' => $zhCategories['教程'], 'Reviews' => $zhCategories['评测'],
@@ -499,70 +499,70 @@ class DemoProjectsSeeder extends Seeder
         /* --- Chinese articles (10) --- */
         foreach ([
             [
-                'title' => 'Aine CMS 入门指南', 'url' => 'aine-cms-getting-started-zh',
+                'title' => 'Aine CMS 入门指南', 'slug' => 'aine-cms-getting-started-zh',
                 'excerpt' => '本文介绍如何安装 Aine、用 CMS 模板创建第一个项目，并通过 REST API 提供内容。',
                 'content' => '<h2>什么是 Aine？</h2><p>Aine 是一个用 Laravel 和 Vue.js 构建的<strong>自托管无头 CMS</strong>。</p><h3>核心概念</h3><ol><li><strong>项目</strong>——相互隔离的内容空间。</li><li><strong>集合</strong>——内容模型（文章、分类、作者……）。</li><li><strong>字段</strong>——从文本到媒体、关联共 15 种字段类型。</li></ol><p>本文是<em>中文版</em>内容，通过切换前台语言即可看到。</p>',
                 'featured-image' => $media['cover-1.jpg'], 'category' => $zhCategoryByEn['Tutorials'], 'author' => $authors['Jane Doe'],
                 'tags' => $tags['Laravel'].','.$tags['CMS'], 'slider' => 1, 'featured' => 1,
             ],
             [
-                'title' => '2026 年十大 Laravel 扩展包', 'url' => 'top-10-laravel-packages-2026-zh',
+                'title' => '2026 年十大 Laravel 扩展包', 'slug' => 'top-10-laravel-packages-2026-zh',
                 'excerpt' => '我们精选了今年最实用的 Laravel 扩展包：从权限管理到 Webhook 投递，一应俱全。',
                 'content' => '<h2>榜单</h2><ol><li>Spatie Laravel Permission（权限管理）</li><li>Spatie Laravel Webhook Server（Webhook 投递）</li><li>Laravel Sanctum（API 认证）</li><li>Intervention Image（图片处理）</li></ol><p>一篇<em>评测</em>分类的中文文章，配有封面图。</p>',
                 'featured-image' => $media['cover-4.jpg'], 'category' => $zhCategoryByEn['Reviews'], 'author' => $authors['John Smith'],
                 'tags' => $tags['Laravel'].','.$tags['PHP'], 'recommended' => 1,
             ],
             [
-                'title' => '精通 Eloquent 关联关系', 'url' => 'mastering-eloquent-relationships-zh',
+                'title' => '精通 Eloquent 关联关系', 'slug' => 'mastering-eloquent-relationships-zh',
                 'excerpt' => '一对多、反向关联与多态关联——带你实战 Eloquent 关联模式。',
                 'content' => '<h2>可扩展的关联</h2><p>Eloquent 让关联数据变得轻松。本文介绍 <strong>hasMany</strong>、<strong>belongsTo</strong> 和多态关联，以及 N+1 查询等常见陷阱。</p><pre>Article::with(\'author\', \'tags\')->get();</pre>',
                 'featured-image' => $media['cover-3.jpg'], 'category' => $zhCategoryByEn['Tutorials'], 'author' => $authors['Jane Doe'],
                 'tags' => $tags['Laravel'].','.$tags['PHP'], 'featured' => 1,
             ],
             [
-                'title' => 'PHP 8.5 新特性速览', 'url' => 'what-s-new-in-php-8-5-zh',
+                'title' => 'PHP 8.5 新特性速览', 'slug' => 'what-s-new-in-php-8-5-zh',
                 'excerpt' => '属性钩子来了——还有让 PHP 8.5 成为史上最好版本的诸多改进。',
                 'content' => '<h2>PHP 越来越好</h2><p>属性钩子（property hooks）、更多场景的 <code>new</code> 简写，以及更快的引擎。</p>',
                 'featured-image' => $media['cover-1.jpg'], 'category' => $zhCategoryByEn['News'], 'author' => $authors['John Smith'],
                 'tags' => (string) $tags['PHP'], 'slider' => 1,
             ],
             [
-                'title' => 'Vue 3 组合式函数实战', 'url' => 'vue-3-composables-in-practice-zh',
+                'title' => 'Vue 3 组合式函数实战', 'slug' => 'vue-3-composables-in-practice-zh',
                 'excerpt' => '用 Vue 3 组合式函数提取和复用有状态的逻辑——从 useFetch 到完整的功能模块。',
                 'content' => '<h2>组合式函数无处不在</h2><p>组合式函数是 Vue 3 的核心。学习如何编写 <code>useFetch</code>、<code>useLocalStorage</code> 以及让组件保持简洁的特性级组合式函数。</p>',
                 'featured-image' => $media['cover-2.jpg'], 'category' => $zhCategoryByEn['Tutorials'], 'author' => $authors['Alex Rivera'],
                 'tags' => (string) $tags['Vue'], 'slider' => 1,
             ],
             [
-                'title' => '社区聚焦：Aine 在生产环境', 'url' => 'community-spotlight-aine-in-production-zh',
+                'title' => '社区聚焦：Aine 在生产环境', 'slug' => 'community-spotlight-aine-in-production-zh',
                 'excerpt' => '三个团队分享他们如何在生产环境运行 Aine——流量、多项目架构与经验教训。',
                 'content' => '<h2>真实部署案例</h2><p>从新闻门户到 SaaS 文档站，了解团队如何让数百个集合保持快速与稳定。</p>',
                 'featured-image' => $media['cover-1.jpg'], 'category' => $zhCategoryByEn['News'], 'author' => $authors['John Smith'],
                 'tags' => (string) $tags['CMS'], 'featured' => 1,
             ],
             [
-                'title' => '无头 CMS 安全最佳实践', 'url' => 'security-best-practices-headless-cms-zh',
+                'title' => '无头 CMS 安全最佳实践', 'slug' => 'security-best-practices-headless-cms-zh',
                 'excerpt' => '令牌、CORS、白名单与限流——安全暴露内容 API 的检查清单。',
                 'content' => '<h2>加固你的系统</h2><ul><li>定期轮换 API 令牌。</li><li>为浏览器客户端使用域名白名单。</li><li>绝不记录密钥。</li></ul>',
                 'featured-image' => $media['cover-4.jpg'], 'category' => $zhCategoryByEn['News'], 'author' => $authors['Jane Doe'],
                 'tags' => $tags['PHP'].','.$zhTagByEn['Security'], 'recommended' => 1,
             ],
             [
-                'title' => '设计可扩展的内容模型', 'url' => 'designing-content-models-that-scale-zh',
+                'title' => '设计可扩展的内容模型', 'slug' => 'designing-content-models-that-scale-zh',
                 'excerpt' => '集合、字段与关联就是你的数据结构——像设计数据库一样设计它们。',
                 'content' => '<h2>模型优先的思考</h2><p>从内容出发而非界面。用关联代替重复字段，让每个概念只有一个事实来源。</p>',
                 'featured-image' => $media['cover-2.jpg'], 'category' => $zhCategoryByEn['Tutorials'], 'author' => $authors['Alex Rivera'],
                 'tags' => $tags['CMS'].','.$zhTagByEn['Design'], 'slider' => 1,
             ],
             [
-                'title' => 'Laravel 应用测试', 'url' => 'testing-laravel-applications-zh',
+                'title' => 'Laravel 应用测试', 'slug' => 'testing-laravel-applications-zh',
                 'excerpt' => '功能测试、Pest 或 PHPUnit、工厂与真正能捕获回归的 CI 流水线。',
                 'content' => '<h2>放心交付</h2><p>为用户依赖的行为编写测试。我们展示从请求到响应的内容 API 功能测试。</p>',
                 'featured-image' => $media['cover-4.jpg'], 'category' => $zhCategoryByEn['Tutorials'], 'author' => $authors['Jane Doe'],
                 'tags' => $tags['Laravel'].','.$zhTagByEn['Testing'], 'featured' => 1,
             ],
             [
-                'title' => '评测：2026 年最佳代码编辑器', 'url' => 'review-best-code-editors-2026-zh',
+                'title' => '评测：2026 年最佳代码编辑器', 'slug' => 'review-best-code-editors-2026-zh',
                 'excerpt' => '我们让五款编辑器经历了一个月的日常 PHP 与 Vue 开发，最终胜者非常明确。',
                 'content' => '<h2>参赛选手</h2><ol><li>VS Code</li><li>PhpStorm</li><li>Neovim</li><li>Sublime Text</li><li>Zed</li></ol><p>剧透：胜者就是你最熟悉的那款。</p>',
                 'featured-image' => $media['cover-3.jpg'], 'category' => $zhCategoryByEn['Reviews'], 'author' => $authors['John Smith'],
@@ -653,7 +653,7 @@ class DemoProjectsSeeder extends Seeder
         /* --- Categories / Tags / Locations --- */
         $categories = [];
         foreach ([['Restaurants', 'restaurants'], ['Cafes', 'cafes'], ['Hotels', 'hotels'], ['Shopping', 'shopping'], ['Services', 'services'], ['Health & Beauty', 'health-beauty'], ['Automotive', 'automotive']] as $i => [$title, $url]) {
-            $categories[$title] = $this->addContent($project, $c['categories'], ['title' => $title, 'url' => $url], published: true, daysAgo: 30 - $i)->id;
+            $categories[$title] = $this->addContent($project, $c['categories'], ['title' => $title, 'slug' => $url], published: true, daysAgo: 30 - $i)->id;
         }
 
         $tags = [];
@@ -663,7 +663,7 @@ class DemoProjectsSeeder extends Seeder
 
         $locations = [];
         foreach ([['Downtown', 'downtown'], ['Riverside', 'riverside'], ['Old Town', 'old-town'], ['Northside', 'northside'], ['West End', 'west-end'], ['Airport District', 'airport-district']] as $i => [$name, $url]) {
-            $locations[$name] = $this->addContent($project, $c['locations'], ['name' => $name, 'url' => $url], published: true, daysAgo: 28 - $i)->id;
+            $locations[$name] = $this->addContent($project, $c['locations'], ['name' => $name, 'slug' => $url], published: true, daysAgo: 28 - $i)->id;
         }
 
         /* --- Listings --- */
@@ -703,7 +703,7 @@ class DemoProjectsSeeder extends Seeder
             $galleryIds = array_map(fn ($g) => $media[$g], $gallery);
 
             $listingIds[] = $this->addContent($project, $c['listings'], [
-                'title' => $title, 'url' => $url, 'description' => $desc,
+                'title' => $title, 'slug' => $url, 'description' => $desc,
                 'category' => $categories[$cat], 'location' => $locations[$loc],
                 'tags' => implode(',', $tagIds),
                 'logo' => $media[$logo], 'gallery' => implode(',', $galleryIds),
@@ -757,7 +757,7 @@ class DemoProjectsSeeder extends Seeder
             ['餐厅', 'restaurants-zh'], ['咖啡馆', 'cafes-zh'], ['酒店', 'hotels-zh'], ['购物', 'shopping-zh'],
             ['服务', 'services-zh'], ['健康美容', 'health-beauty-zh'], ['汽车', 'automotive-zh'],
         ] as $i => [$zhTitle, $zhUrl]) {
-            $zhCategories[$zhTitle] = $this->addContent($project, $c['categories'], ['title' => $zhTitle, 'url' => $zhUrl], published: true, daysAgo: 30 - $i, locale: 'zh')->id;
+            $zhCategories[$zhTitle] = $this->addContent($project, $c['categories'], ['title' => $zhTitle, 'slug' => $zhUrl], published: true, daysAgo: 30 - $i, locale: 'zh')->id;
         }
         $zhCategoryByEn = [
             'Restaurants' => $zhCategories['餐厅'], 'Cafes' => $zhCategories['咖啡馆'], 'Hotels' => $zhCategories['酒店'],
@@ -782,7 +782,7 @@ class DemoProjectsSeeder extends Seeder
             ['市中心', 'downtown-zh'], ['河畔', 'riverside-zh'], ['老城区', 'old-town-zh'], ['北区', 'northside-zh'],
             ['西区', 'west-end-zh'], ['机场区', 'airport-district-zh'],
         ] as $i => [$zhName, $zhUrl]) {
-            $zhLocations[$zhName] = $this->addContent($project, $c['locations'], ['name' => $zhName, 'url' => $zhUrl], published: true, daysAgo: 28 - $i, locale: 'zh')->id;
+            $zhLocations[$zhName] = $this->addContent($project, $c['locations'], ['name' => $zhName, 'slug' => $zhUrl], published: true, daysAgo: 28 - $i, locale: 'zh')->id;
         }
         $zhLocationByEn = [
             'Downtown' => $zhLocations['市中心'], 'Riverside' => $zhLocations['河畔'], 'Old Town' => $zhLocations['老城区'],
@@ -819,7 +819,7 @@ class DemoProjectsSeeder extends Seeder
         foreach ($zhListingData as $i => [$title, $url, $desc, $cat, $loc, $tagNames, $phone, $email, $website, $address, $hours, $price, $featured]) {
             $tagIds = array_map(fn ($t) => $zhTags[$t], $tagNames);
             $zhListingIds[] = $this->addContent($project, $c['listings'], [
-                'title' => $title, 'url' => $url, 'description' => $desc,
+                'title' => $title, 'slug' => $url, 'description' => $desc,
                 'category' => $zhCategoryByEn[$cat], 'location' => $zhLocationByEn[$loc],
                 'tags' => implode(',', $tagIds),
                 'logo' => $media[$i < 5 ? 'logo-'.(($i % 4) + 1).'.png' : (($i + 1) % 4 == 0 ? 'logo-4.png' : 'logo-'.((($i + 1) % 4) + 1).'.png')],
