@@ -532,13 +532,15 @@
                                                             <th
                                                                 scope="col"
                                                                 class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                                                                v-for="field in relationRecords[field.name].collection.fields"
+                                                                :class="{ 'w-full': index === 0 }"
+                                                                v-for="(field, index) in relationRecords[field.name].collection.fields"
                                                                 :key="field.id"
                                                                 v-show="
                                                                     field.type != 'richtext' &&
                                                                     field.type != 'password' &&
                                                                     field.type != 'media' &&
                                                                     field.type != 'json' &&
+                                                                    field.type != 'block' &&
                                                                     field.type != 'relation' &&
                                                                     !JSON.parse(field.options).hideInContentList
                                                                 "
@@ -566,23 +568,25 @@
                                                                 </span>
                                                             </td>
                                                             <td class="pl-2 py-4 text-sm text-center w-px">
-                                                                <span v-if="item.published_at !== null" class="text-gray-500 text-sm rounded-md bg-green-200 px-3 py-1">
+                                                                <span v-if="item.published_at !== null" class="text-gray-500 text-sm rounded-md bg-green-200 px-3 py-1 whitespace-nowrap">
                                                                     {{ __('published') }}
                                                                 </span>
-                                                                <span v-else class="text-gray-500 text-sm rounded-md bg-gray-200 px-3 py-1"> {{ __('draft') }} </span>
+                                                                <span v-else class="text-gray-500 text-sm rounded-md bg-gray-200 px-3 py-1 whitespace-nowrap"> {{ __('draft') }} </span>
                                                             </td>
                                                             <td class="px-6 py-2 text-sm w-px whitespace-nowrap text-gray-600">
                                                                 {{ $filters.date(item.created_at, "D MMM YYYY, H:mm") }}
                                                             </td>
                                                             <td
-                                                                class="px-6 py-2 text-sm min-w-full whitespace-nowrap"
-                                                                v-for="field in relationRecords[field.name].collection.fields"
+                                                                class="px-6 py-2 text-sm whitespace-nowrap"
+                                                                :class="{ 'w-full': index === 0, 'w-auto': index !== 0 }"
+                                                                v-for="(field, index) in relationRecords[field.name].collection.fields"
                                                                 :key="field.id"
                                                                 v-show="
                                                                     field.type != 'richtext' &&
                                                                     field.type != 'password' &&
                                                                     field.type != 'media' &&
                                                                     field.type != 'json' &&
+                                                                    field.type != 'block' &&
                                                                     field.type != 'relation' &&
                                                                     !JSON.parse(field.options).hideInContentList
                                                                 "
