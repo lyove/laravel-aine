@@ -103,7 +103,8 @@ class ContentQueryService
         string $query,
         int $limit = 20,
         int $offset = 0,
-        ?string $state = null
+        ?string $state = null,
+        ?string $locale = null
     ): array {
         $collection = Collection::where('project_id', $project->id)
             ->where('slug', $slug)
@@ -124,14 +125,18 @@ class ContentQueryService
             ->pluck('content_id')
             ->unique();
 
+        $contentIdsQuery = Content::whereIn('id', $contentIds);
+
+        if ($locale !== null && $locale !== '') {
+            $contentIdsQuery->where('locale', $locale);
+        }
+
         if ($state === 'only_draft') {
-            $contentIds = Content::whereIn('id', $contentIds)
-                ->whereNull('published_at')
+            $contentIds = $contentIdsQuery->whereNull('published_at')
                 ->whereNull('draft_parent_id')
                 ->pluck('id');
         } else {
-            $contentIds = Content::whereIn('id', $contentIds)
-                ->whereNotNull('published_at')
+            $contentIds = $contentIdsQuery->whereNotNull('published_at')
                 ->whereNull('draft_parent_id')
                 ->pluck('id');
         }

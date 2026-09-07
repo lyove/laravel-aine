@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Collection;
 use App\Models\Content;
 use App\Models\ContentMeta;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -55,8 +56,11 @@ class FeedController extends Controller
             return $response;
         }
 
+        $locale = $this->resolveFeedLocale($request, $project);
+
         $contents = Content::with('collection:id,slug')
             ->where('project_id', $project->id)
+            ->when($locale !== null, fn ($q) => $q->where('locale', $locale))
             ->whereNotNull('published_at')
             ->whereNull('draft_parent_id')
             ->when($request->get('collection'), function ($q) use ($project, $request) {
@@ -109,8 +113,11 @@ class FeedController extends Controller
             return $response;
         }
 
+        $locale = $this->resolveFeedLocale($request, $project);
+
         $contents = Content::with('collection:id,slug')
             ->where('project_id', $project->id)
+            ->when($locale !== null, fn ($q) => $q->where('locale', $locale))
             ->whereNotNull('published_at')
             ->whereNull('draft_parent_id')
             ->orderByDesc('updated_at')
@@ -211,6 +218,27 @@ class FeedController extends Controller
             ->exists();
 
         return $isDirectory ? 'directory' : 'content';
+    }
+
+    /**
+     * Resolve the language scope for feeds: the explicit `locale` request
+     * parameter wins, otherwise the project's default locale. Feeds never
+     * mix every locale into one document unless `locale=all` is passed.
+     *
+     * @return string|null  Resolved locale, or null when `all` was requested
+     *                      (no language scope).
+     */
+    private function resolveFeedLocale(Request $request, Project $project): ?string
+    {
+        $locale = (string) $request->get('locale');
+        if ($locale === 'all') {
+            return null;
+        }
+        if ($locale !== '') {
+            return $locale;
+        }
+
+        return (string) ($project->default_locale ?: 'en');
     }
 
     private function metaString(int $contentId, string $field): string

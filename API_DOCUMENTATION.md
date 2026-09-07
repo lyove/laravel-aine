@@ -255,8 +255,9 @@ Origin: https://your-frontend.com
 | `first` | bool | 否 | false | 只返回第一条记录（`data` 为对象） |
 | `state` | string | 否 | - | `only_draft` 仅返回草稿；**默认（含不传或其他值）只返回已发布内容** |
 | `timestamps` | bool | 否 | false | 是否返回 `created_at` / `updated_at` / `published_at` 字段 |
+| `locale` | string | 否 | 项目默认语言 | 返回的语言。**默认只返回单一语言**：显式 `locale` 参数 > `filters.locale` > 项目 `default_locale`，不会混排所有语言的内容。传 `all`（如 `?locale=all`）时显式返回**全部语言** |
 
-> **locale 过滤**：内容按语言存储，可通过 `filters.locale=zh` 过滤指定语言（`locale` 是内容表的直接列，不是自定义字段）。
+> **locale 过滤**：内容按语言存储。所有内容**读取**接口（列表、单条、关联、搜索、门户、sitemap/feed）默认只返回**单一语言**的内容——显式传入 `locale` 参数（如 `?locale=zh`）时按该语言返回，否则使用项目的默认语言 `default_locale`。前端也可继续用 `filters.locale=zh`（`locale` 是内容表的直接列，不是自定义字段），二者等价；同时传入时 `locale` 参数优先。传 `locale=all`（或 `filters.locale=all`）可显式拉取全部语言的内容。
 
 ### 查询参数（单条内容）
 
@@ -265,6 +266,8 @@ Origin: https://your-frontend.com
 | `timestamps` | bool | 否 | false | 是否返回时间戳字段 |
 
 > **注意**：单条内容接口同样默认只返回**已发布**内容——草稿通过该接口访问会返回 404。
+>
+> **语言**：单条内容同样按单一语言返回。默认使用项目默认语言；如需读取其他语言下的记录，传入 `?locale=zh` 或 `filters.locale=zh`（其他语言记录的 ID 不会在默认语言下返回）。
 
 ### 查询参数（门户内容 portal）
 
@@ -273,6 +276,8 @@ Origin: https://your-frontend.com
 | `collection` | string | 否 | `articles` | 门户骨架使用的集合 slug |
 
 > `portal` 一次返回分类（含各自置顶条目与标签）、标记/精选/最新条目、页面等多组数据，供首页、精选、最新等门户页面渲染。
+>
+> **语言**：portal 内所有子查询与列表接口一致，默认只返回项目默认语言；传入 `?locale=zh` 或 `filters.locale=zh` 时按指定语言返回。
 
 ### 查询参数（搜索 search）
 
@@ -284,6 +289,8 @@ Origin: https://your-frontend.com
 | `state` | string | 否 | - | `only_draft` 仅搜草稿；默认只搜已发布内容 |
 
 > 搜索接口额外受 `api-search` 限流（已登录 60 次/分钟、匿名 20 次/分钟），超出返回 `429`。
+>
+> **语言**：搜索默认只在项目默认语言范围内匹配；传入 `?locale=zh` 或 `filters.locale=zh` 时只搜索该语言的内容。
 
 ### 请求体参数（创建 / 更新内容）
 
@@ -853,11 +860,21 @@ curl -H "Authorization: Bearer your_token" \
 
 ### Q9: 如何按语言获取内容？
 
-**A**: 使用 `filters.locale=zh`（或 `en` 等），例如：
+**A**: 所有内容读取接口**默认只返回项目默认语言**的内容；按其他语言获取时，传 `locale` 参数（与 `filters.locale` 等价）：
 
 ```bash
+# 指定语言（等价写法）
+curl "https://backend.com/api/project/my-blog/articles?locale=zh"
 curl "https://backend.com/api/project/my-blog/articles?filters.locale=zh"
+
+# 不传任何语言参数时，返回项目 default_locale 的语言内容
+curl "https://backend.com/api/project/my-blog/articles"
+
+# 显式拉取全部语言的内容（覆盖单语言默认行为）
+curl "https://backend.com/api/project/my-blog/articles?locale=all"
 ```
+
+列表、单条、关联、搜索、门户、sitemap/feed 接口行为一致。
 
 ### Q10: 为什么列表接口默认看不到刚创建的草稿？
 

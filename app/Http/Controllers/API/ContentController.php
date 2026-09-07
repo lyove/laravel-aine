@@ -113,11 +113,14 @@ class ContentController extends Controller
             $selectFields = array_merge($selectFields, ['created_at', 'updated_at', 'published_at']);
         }
 
+        $locale = $this->resolveLocale($request, $project);
+
         $content = Content::query()->with(['meta', 'collection.fields'])
             ->where('project_id', $project->id)
             ->where('collection_id', $collection->id)
             ->whereNotNull('published_at')
             ->whereNull('draft_parent_id')
+            ->when($locale !== null, fn ($q) => $q->where('locale', $locale))
             ->select($selectFields)->find($slug_id);
 
         if (! $content) return $this->notFound('Not found');
@@ -177,9 +180,12 @@ class ContentController extends Controller
             return $this->notFound('No relation field found from collection "' . $relatedSlug . '" to collection "' . $slug . '".');
         }
 
+        $locale = $this->resolveLocale($request, $project);
+
         $content = Content::query()->with(['meta', 'collection.fields'])
             ->where('project_id', $project->id)->where('collection_id', $relatedCollection->id)
-            ->whereNull('draft_parent_id');
+            ->whereNull('draft_parent_id')
+            ->when($locale !== null, fn ($q) => $q->where('locale', $locale));
 
         $metaThroughRelation = ContentMeta::where('project_id', $project->id)
             ->where('collection_id', $relatedCollection->id)
@@ -266,7 +272,8 @@ class ContentController extends Controller
             $project, $slug, $query,
             (int) ($request->get('limit') ?: 20),
             (int) ($request->get('offset') ?: 0),
-            $request->get('state')
+            $request->get('state'),
+            $this->resolveLocale($request, $project)
         );
 
         $responseData = [];
@@ -559,12 +566,15 @@ class ContentController extends Controller
         $collection = Collection::where('project_id', $project->id)->where('slug', $slug)->first();
         if (! $collection) return $this->notFound('Collection not found');
 
+        $locale = $this->resolveLocale($request, $project);
+
         $content = Content::query()->with(['meta', 'collection.fields'])
             ->where('project_id', $project->id)->where('collection_id', $collection->id)
-            ->whereNull('draft_parent_id');
+            ->whereNull('draft_parent_id')
+            ->when($locale !== null, fn ($q) => $q->where('locale', $locale));
 
         // --- filters (dot-notation: filters.locale=zh, filters.title=contains.x) ---
-        $this->parseFilters($request, $collection, $content);
+        $this->parseFilters($request, $collection, $content, $locale);
 
         // --- sort ---
         if ($request->has('sort')) {
@@ -620,6 +630,29 @@ class ContentController extends Controller
     // =================================================================
     // Helpers
     // =================================================================
+
+    /**
+     * Resolve the language scope for public content queries.
+     *
+     * @return string|null  Resolved locale, or null when `all` was requested
+     *                      (no language scope).
+     */
+    private function resolveLocale(Request $request, Project $project): ?string
+    {
+        $locale = $request->get('locale');
+        if (is_string($locale) && $locale !== '') {
+            return $locale === 'all' ? null : $locale;
+        }
+
+        $filters = $request->input('filters', []);
+        if (is_array($filters) && isset($filters['locale'])
+            && is_string($filters['locale']) && $filters['locale'] !== ''
+            && ! str_contains($filters['locale'], '.')) {
+            return $filters['locale'] === 'all' ? null : $filters['locale'];
+        }
+
+        return (string) ($project->default_locale ?: 'en');
+    }
 
     private function relationValueMatcher($id): \Closure
     {
@@ -766,7 +799,7 @@ class ContentController extends Controller
      * Parse all `filters.*` query params and the `or` clause, applying them
      * to the given query builder.
      */
-    private function parseFilters(Request $request, Collection $collection, $query): void
+    private function parseFilters(Request $request, Collection $collection, $query, ?string $locale = null): void
     {
         $filters = $request->input('filters', []);
         if (! is_array($filters)) {
@@ -775,12 +808,12 @@ class ContentController extends Controller
 
         foreach ($this->flattenFilters($filters) as $fieldPath => $value) {
             $parsed = $this->parseFilterOperator((string) $value);
-            $this->applyFieldFilter($query, $collection, $fieldPath, $parsed['operator'], $parsed['value']);
+            $this->applyFieldFilter($query, $collection, $fieldPath, $parsed['operator'], $parsed['value'], $locale);
         }
 
         // OR clause: or=title.contains.vue,excerpt.contains.vue
         if ($request->has('or')) {
-            $this->applyOrFilters($query, $collection, (string) $request->get('or'));
+            $this->applyOrFilters($query, $collection, (string) $request->get('or'), $locale);
         }
     }
 
@@ -829,8 +862,12 @@ class ContentController extends Controller
      *   - Relation filters via dotted path: category.url → category is a
      *     relation field, url is the target field in the related collection
      */
-    private function applyFieldFilter($query, Collection $collection, string $field, string $operator, $value): void
+    private function applyFieldFilter($query, Collection $collection, string $field, string $operator, $value, ?string $locale = null): void
     {
+        if ($field === 'locale' && (string) $value === 'all') {
+            return;
+        }
+
         $segments = explode('.', $field);
         if (count($segments) > 1) {
             $firstField = $segments[0];
@@ -839,7 +876,7 @@ class ContentController extends Controller
 
             if ($fieldDef && $fieldDef->type === 'relation') {
                 $targetField = implode('.', array_slice($segments, 1));
-                $this->applyRelationFilter($query, $collection, $firstField, $targetField, $operator, $value);
+                $this->applyRelationFilter($query, $collection, $firstField, $targetField, $operator, $value, $locale);
                 return;
             }
         }
@@ -935,7 +972,7 @@ class ContentController extends Controller
      * the target field condition, then match the main collection's relation
      * meta value against those IDs (supports comma-separated relation values).
      */
-    private function applyRelationFilter($query, Collection $collection, string $relationField, string $targetField, string $operator, $value): void
+    private function applyRelationFilter($query, Collection $collection, string $relationField, string $targetField, string $operator, $value, ?string $locale = null): void
     {
         $fieldDef = $collection->fields->firstWhere('slug', $relationField)
             ?? $collection->fields->firstWhere('name', $relationField);
@@ -957,6 +994,10 @@ class ContentController extends Controller
         // Find matching IDs in the related collection
         $relatedQuery = Content::where('project_id', $collection->project_id)
             ->where('collection_id', $relatedCollection->id);
+
+        if ($locale !== null && $locale !== '') {
+            $relatedQuery->where('locale', $locale);
+        }
 
         if (in_array($targetField, self::DIRECT_COLUMNS, true)) {
             $isDate = in_array($targetField, ['created_at', 'updated_at', 'published_at'], true);
@@ -1003,14 +1044,14 @@ class ContentController extends Controller
      *
      * Relation detection is handled by applyFieldFilter automatically.
      */
-    private function applyOrFilters($query, Collection $collection, string $orClause): void
+    private function applyOrFilters($query, Collection $collection, string $orClause, ?string $locale = null): void
     {
         $conditions = array_filter(array_map('trim', explode(',', $orClause)));
         if (empty($conditions)) {
             return;
         }
 
-        $query->where(function ($outer) use ($collection, $conditions) {
+        $query->where(function ($outer) use ($collection, $conditions, $locale) {
             foreach ($conditions as $condition) {
                 $segments = explode('.', $condition);
                 if (count($segments) < 2) {
@@ -1034,8 +1075,8 @@ class ContentController extends Controller
                     continue;
                 }
 
-                $outer->orWhere(function ($subQuery) use ($collection, $field, $operator, $value) {
-                    $this->applyFieldFilter($subQuery, $collection, $field, $operator, $value);
+                $outer->orWhere(function ($subQuery) use ($collection, $field, $operator, $value, $locale) {
+                    $this->applyFieldFilter($subQuery, $collection, $field, $operator, $value, $locale);
                 });
             }
         });
