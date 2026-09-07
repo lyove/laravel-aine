@@ -31,8 +31,10 @@ class PublicCacheInvalidationTest extends TestCase
 
     private Project $project;
     private Collection $articles;
+    private Collection $pages;
     private Content $enArticle;
     private Content $zhArticle;
+    private Content $enPage;
 
     protected function setUp(): void
     {
@@ -48,8 +50,12 @@ class PublicCacheInvalidationTest extends TestCase
         $this->articles = Collection::create(['name' => 'Articles', 'slug' => 'articles', 'project_id' => $this->project->id, 'order' => 1]);
         $this->addField($this->articles, 'title', 'text');
 
+        $this->pages = Collection::create(['name' => 'Pages', 'slug' => 'pages', 'project_id' => $this->project->id, 'order' => 2]);
+        $this->addField($this->pages, 'title', 'text');
+
         $this->enArticle = $this->addContent($this->articles->id, 'en', ['title' => 'Hello EN']);
         $this->zhArticle = $this->addContent($this->articles->id, 'zh', ['title' => '你好 ZH']);
+        $this->enPage = $this->addContent($this->pages->id, 'en', ['title' => 'Welcome Page']);
     }
 
     private function addField(Collection $collection, string $name, string $type): void
@@ -196,5 +202,89 @@ class PublicCacheInvalidationTest extends TestCase
 
         // The next identical request must return the updated title.
         $this->getJson('/api/project/blog/articles?locale=zh')->assertJsonPath('data.0.title', '更新后的中文标题');
+    }
+
+    // =================================================================
+    // Per-collection cache versions
+    // =================================================================
+
+    public function test_bump_is_scoped_per_collection(): void
+    {
+        PublicCache::bump(1, 'articles');
+        PublicCache::bump(1, 'articles');
+        PublicCache::bump(1, 'pages');
+
+        $this->assertSame(2, PublicCache::version(1, 'articles'));
+        $this->assertSame(1, PublicCache::version(1, 'pages'));
+        $this->assertSame(0, PublicCache::version(1));          // project-wide version untouched
+        $this->assertSame(0, PublicCache::version(1, 'unknown'));
+    }
+
+    public function test_listener_bumps_the_collection_of_content_model(): void
+    {
+        (new BumpPublicCache())->handle(new ContentUpdated([
+            'source' => 'User',
+            'content' => $this->enArticle,
+        ]));
+
+        $this->assertSame(1, PublicCache::version($this->project->id, 'articles'));
+        $this->assertSame(0, PublicCache::version($this->project->id, 'pages'));
+        $this->assertSame(0, PublicCache::version($this->project->id));
+    }
+
+    public function test_listener_bumps_the_collection_of_array_content(): void
+    {
+        (new BumpPublicCache())->handle(new ContentDeleted([
+            'source' => 'User',
+            'content' => [
+                'project_id' => $this->project->id,
+                'collection_id' => $this->pages->id,
+                'item_id' => $this->enPage->id,
+            ],
+        ]));
+
+        $this->assertSame(1, PublicCache::version($this->project->id, 'pages'));
+        $this->assertSame(0, PublicCache::version($this->project->id, 'articles'));
+        $this->assertSame(0, PublicCache::version($this->project->id));
+    }
+
+    public function test_content_edit_invalidates_only_its_own_collection_cache(): void
+    {
+        // Warm both collections' list caches.
+        $this->getJson('/api/project/blog/articles')->assertJsonPath('data.0.title', 'Hello EN');
+        $this->getJson('/api/project/blog/pages')->assertJsonPath('data.0.title', 'Welcome Page');
+
+        // Edit the article title in the DB without dispatching any event.
+        $this->enArticle->meta()->where('field_name', 'title')->update(['value' => 'Edited EN title']);
+
+        // Nothing bumped yet → both still serve their cached entries.
+        $this->getJson('/api/project/blog/articles')->assertJsonPath('data.0.title', 'Hello EN');
+        $this->getJson('/api/project/blog/pages')->assertJsonPath('data.0.title', 'Welcome Page');
+
+        // Dispatch the real update event for the article.
+        ContentUpdated::dispatch(['source' => 'User', 'content' => $this->enArticle->fresh()]);
+
+        // The articles cache is rebuilt…
+        $this->getJson('/api/project/blog/articles')->assertJsonPath('data.0.title', 'Edited EN title');
+
+        // …while the pages cache is untouched (per-collection isolation).
+        $this->getJson('/api/project/blog/pages')->assertJsonPath('data.0.title', 'Welcome Page');
+    }
+
+    public function test_project_level_bump_invalidates_every_collection_cache(): void
+    {
+        // Warm both collections' list caches.
+        $this->getJson('/api/project/blog/articles')->assertJsonPath('data.0.title', 'Hello EN');
+        $this->getJson('/api/project/blog/pages')->assertJsonPath('data.0.title', 'Welcome Page');
+
+        // Edit the page title in the DB silently.
+        $this->enPage->meta()->where('field_name', 'title')->update(['value' => 'New Page Title']);
+
+        // A project-wide bump (what locale management does) must invalidate
+        // the caches of every collection.
+        PublicCache::bump($this->project->id);
+
+        $this->getJson('/api/project/blog/articles')->assertJsonPath('data.0.title', 'Hello EN');
+        $this->getJson('/api/project/blog/pages')->assertJsonPath('data.0.title', 'New Page Title');
     }
 }

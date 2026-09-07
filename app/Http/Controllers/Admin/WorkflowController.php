@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Aine\AuditLogger;
+use App\Aine\PublicCache;
 use App\Events\ContentPublished;
 use App\Events\ContentUpdated;
 use App\Http\Controllers\Controller;
@@ -11,7 +12,6 @@ use App\Models\Project;
 use App\Services\Content\ContentMutationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Exceptions\UnauthorizedException;
 
 class WorkflowController extends Controller
@@ -72,7 +72,7 @@ class WorkflowController extends Controller
             $publishedContent = $content->fresh();
         }
 
-        $this->bumpPublicCacheVersion($publishedContent->project_id);
+        $this->bumpPublicCacheVersion($publishedContent->project_id, $publishedContent->collection?->slug);
         event(new ContentPublished(['source' => 'User', 'content' => $publishedContent]));
 
         AuditLogger::log('publish', 'content', $publishedContent->id, 'Content #' . $publishedContent->id, [
@@ -103,7 +103,7 @@ class WorkflowController extends Controller
         $content->updated_by = Auth::id();
         $content->save();
 
-        $this->bumpPublicCacheVersion($content->project_id);
+        $this->bumpPublicCacheVersion($content->project_id, $content->collection?->slug);
         event(new ContentUpdated(['source' => 'User', 'content' => $content->fresh()]));
 
         return response()->json(['success' => true, 'message' => 'Rejected.', 'data' => ['workflow_state' => $content->workflow_state, 'reviewer_comment' => $content->reviewer_comment]]);
@@ -127,12 +127,9 @@ class WorkflowController extends Controller
         }
     }
 
-    private function bumpPublicCacheVersion(?int $projectId): void
+    private function bumpPublicCacheVersion(?int $projectId, ?string $collectionSlug = null): void
     {
         if ($projectId === null) return;
-        try {
-            $key = 'public_content_version:' . $projectId;
-            Cache::put($key, (int) Cache::get($key, 0) + 1, 7 * 86400);
-        } catch (\Throwable $e) { /* best-effort */ }
+        PublicCache::bump($projectId, $collectionSlug);
     }
 }

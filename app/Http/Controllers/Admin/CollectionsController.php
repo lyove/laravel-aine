@@ -291,7 +291,7 @@ class CollectionsController extends Controller
             }
         }
 
-        PublicCache::bump($project->id);
+        PublicCache::bump($project->id, $collection->slug);
 
         return response()->json([
             'message' => 'Schema imported.',
@@ -324,7 +324,7 @@ class CollectionsController extends Controller
         $collection->meta()->forceDelete();
 
         if($collection->delete()){
-            PublicCache::bump($project->id);
+            PublicCache::bump($project->id, $collection->slug);
 
             AuditLogger::log('delete', 'collection', $collection_id, $collection->name ?? null, null, $project->id);
             return response([], 200);

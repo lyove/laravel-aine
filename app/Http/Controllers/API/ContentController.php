@@ -63,7 +63,7 @@ class ContentController extends Controller
         if (! $project) return $this->notFound('Project not found');
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
-        $cacheKey = $this->publicCacheKey($project, 'list', $slug, $request);
+        $cacheKey = $this->publicCacheKey($project, 'list', $slug, $request, [$slug]);
         return $this->rememberPublicJson($cacheKey, function () use ($uuid, $slug, $request) {
             return $this->resolveContentListByUuid($uuid, $slug, $request);
         }, $project->public_api);
@@ -86,7 +86,7 @@ class ContentController extends Controller
         if (! $project) return response(['error' => 'Project not found!'], 404);
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
-        $cacheKey = $this->publicCacheKey($project, 'single', $slug . '/' . $slug_id, $request);
+        $cacheKey = $this->publicCacheKey($project, 'single', $slug . '/' . $slug_id, $request, [$slug]);
         return $this->rememberPublicJson($cacheKey, function () use ($uuid, $slug, $slug_id, $request) {
             return $this->resolveContentByUuid($uuid, $slug, $slug_id, $request);
         }, $project->public_api);
@@ -141,7 +141,7 @@ class ContentController extends Controller
         if (! $project) return $this->notFound('Project not found');
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
-        $cacheKey = $this->publicCacheKey($project, 'related', $slug . '/' . $slug_id . '/' . $relatedSlug, $request);
+        $cacheKey = $this->publicCacheKey($project, 'related', $slug . '/' . $slug_id . '/' . $relatedSlug, $request, [$slug, $relatedSlug]);
         return $this->rememberPublicJson($cacheKey, function () use ($project, $slug, $slug_id, $relatedSlug, $request) {
             return $this->resolveContentByRelation($project, $slug, $slug_id, $relatedSlug, $request);
         }, $project->public_api);
@@ -468,7 +468,7 @@ class ContentController extends Controller
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
         $collectionSlug = $request->get('collection', 'articles');
-        $cacheKey = $this->publicCacheKey($project, 'portal', $collectionSlug, $request);
+        $cacheKey = $this->publicCacheKey($project, 'portal', $collectionSlug, $request, [$collectionSlug]);
 
         return $this->rememberPublicJson($cacheKey, function () use ($project, $collectionSlug, $request) {
             return $this->resolvePortalContent($project, $collectionSlug, $request);
@@ -728,22 +728,40 @@ class ContentController extends Controller
         return $response;
     }
 
-    private function publicCacheKey($project, $endpoint, $slugPath, Request $request)
+    private function publicCacheKey($project, $endpoint, $slugPath, Request $request, array $collections = [])
     {
         $query = $request->query();
         $this->ksortRecursive($query);
 
         return implode(':', [
-            'public_content', $this->publicCacheVersion($project->id), $project->id,
+            'public_content', $this->cacheVersions($project->id, $collections), $project->id,
             $request->getSchemeAndHttpHost(), $endpoint, $slugPath,
             $this->resolveLocale($request, $project) ?? 'all',
             md5(json_encode($query)),
         ]);
     }
 
-    private function publicCacheVersion($projectId): int
+    /**
+     * Version component of a public cache key: the project-wide version
+     * always, plus the per-collection version of every collection the
+     * response depends on. A project-level bump (locale management, …)
+     * changes every key; a collection bump only changes keys that embed
+     * that collection's version, so editing one collection no longer
+     * invalidates the cached responses of the other collections.
+     *
+     * @param int $projectId
+     * @param array $collections  Collection slugs the response depends on.
+     * @return string
+     */
+    private function cacheVersions(int $projectId, array $collections): string
     {
-        return PublicCache::version((int) $projectId);
+        $parts = ['p'.PublicCache::version($projectId)];
+
+        foreach (array_unique(array_filter($collections)) as $slug) {
+            $parts[] = $slug.'@'.PublicCache::version($projectId, $slug);
+        }
+
+        return implode('|', $parts);
     }
 
     private function cacheGet($key, $default = null)

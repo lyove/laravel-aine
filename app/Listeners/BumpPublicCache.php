@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Aine\PublicCache;
+use App\Models\Collection;
 use App\Models\Content;
 
 /**
@@ -29,12 +30,20 @@ class BumpPublicCache
 
         // Most events carry a Content model; hard deletes may carry a plain
         // array (project_id, collection_id, item_id) instead.
-        $projectId = $content instanceof Content
-            ? $content->project_id
-            : ($content['project_id'] ?? null);
+        if ($content instanceof Content) {
+            $projectId = $content->project_id;
+            $collectionSlug = $content->collection?->slug;
+        } else {
+            $projectId = $content['project_id'] ?? null;
+            $collectionSlug = null;
+            $collectionId = $content['collection_id'] ?? null;
+            if ($collectionId) {
+                $collectionSlug = Collection::where('id', (int) $collectionId)->value('slug');
+            }
+        }
 
         if ($projectId) {
-            PublicCache::bump((int) $projectId);
+            PublicCache::bump((int) $projectId, $collectionSlug ?: null);
         }
     }
 }
