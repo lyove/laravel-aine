@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Aine\PublicCache;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Collection;
@@ -100,6 +101,8 @@ class CollectionFieldsController extends Controller
         $field->order = $field->id;
         $field->save();
 
+        PublicCache::bump($project->id);
+
         AuditLogger::log('create', 'field', $field->id, $field->label, ['collection_id' => $collection->id], $project->id);
 
         return response($field, 200);
@@ -191,6 +194,8 @@ class CollectionFieldsController extends Controller
             'validations' => json_encode($validations),
         ]);
 
+        PublicCache::bump($project->id);
+
         AuditLogger::log('update', 'field', $field->id, $field->label, ['collection_id' => $collection->id], $project->id);
 
         return response($field, 200);
@@ -221,6 +226,8 @@ class CollectionFieldsController extends Controller
                 $field->save();
             }
         }
+
+        PublicCache::bump($project->id);
     }
 
     /**
@@ -245,6 +252,8 @@ class CollectionFieldsController extends Controller
         $field = CollectionField::where('project_id', $project->id)->where('collection_id', $collection->id)->where('id', $field_id)->firstOrFail();
 
         if($field->delete()){
+            PublicCache::bump($project->id);
+
             AuditLogger::log('delete', 'field', $field_id, $field->label ?? null, ['collection_id' => $collection->id], $project->id);
             return response([], 200);
         } else {

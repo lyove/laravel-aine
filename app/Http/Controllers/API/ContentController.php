@@ -732,9 +732,12 @@ class ContentController extends Controller
     {
         $query = $request->query();
         $this->ksortRecursive($query);
+
         return implode(':', [
             'public_content', $this->publicCacheVersion($project->id), $project->id,
-            $request->getSchemeAndHttpHost(), $endpoint, $slugPath, md5(json_encode($query)),
+            $request->getSchemeAndHttpHost(), $endpoint, $slugPath,
+            $this->resolveLocale($request, $project) ?? 'all',
+            md5(json_encode($query)),
         ]);
     }
 

@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\Collection;
 use App\Models\CollectionField;
 use App\Aine\AuditLogger;
+use App\Aine\PublicCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -290,6 +291,8 @@ class CollectionsController extends Controller
             }
         }
 
+        PublicCache::bump($project->id);
+
         return response()->json([
             'message' => 'Schema imported.',
             'collection_id' => $collection->id,
@@ -321,6 +324,8 @@ class CollectionsController extends Controller
         $collection->meta()->forceDelete();
 
         if($collection->delete()){
+            PublicCache::bump($project->id);
+
             AuditLogger::log('delete', 'collection', $collection_id, $collection->name ?? null, null, $project->id);
             return response([], 200);
         } else {

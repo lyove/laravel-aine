@@ -11,7 +11,12 @@ use App\Events\ContentTrashed;
 use App\Events\ContentUnpublished;
 use App\Events\ContentUpdated;
 use App\Listeners\BumpPublicCache;
+use App\Models\Collection;
+use App\Models\CollectionField;
 use App\Models\Content;
+use App\Models\ContentMeta;
+use App\Models\Project;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
@@ -22,10 +27,63 @@ use Tests\TestCase;
  */
 class PublicCacheInvalidationTest extends TestCase
 {
+    use RefreshDatabase;
+
+    private Project $project;
+    private Collection $articles;
+    private Content $enArticle;
+    private Content $zhArticle;
+
     protected function setUp(): void
     {
         parent::setUp();
         Cache::flush();
+
+        $this->project = Project::create([
+            'name' => 'Blog', 'slug' => 'blog',
+            'status' => 1, 'public_api' => 1,
+            'default_locale' => 'en', 'locales' => 'en,zh',
+        ]);
+
+        $this->articles = Collection::create(['name' => 'Articles', 'slug' => 'articles', 'project_id' => $this->project->id, 'order' => 1]);
+        $this->addField($this->articles, 'title', 'text');
+
+        $this->enArticle = $this->addContent($this->articles->id, 'en', ['title' => 'Hello EN']);
+        $this->zhArticle = $this->addContent($this->articles->id, 'zh', ['title' => '你好 ZH']);
+    }
+
+    private function addField(Collection $collection, string $name, string $type): void
+    {
+        CollectionField::create([
+            'type' => $type, 'label' => ucfirst($name), 'name' => $name,
+            'options' => json_encode([
+                'slug' => [], 'media' => [], 'relation' => [], 'enumeration' => [], 'hideInContentList' => false,
+            ]),
+            'validations' => json_encode(['required' => ['status' => false, 'message' => null]]),
+            'project_id' => $this->project->id, 'collection_id' => $collection->id, 'order' => 1,
+        ]);
+    }
+
+    private function addContent(int $collectionId, string $locale, array $fields): Content
+    {
+        $content = Content::create([
+            'project_id' => $this->project->id,
+            'collection_id' => $collectionId,
+            'locale' => $locale,
+            'published_at' => now(),
+        ]);
+
+        foreach ($fields as $name => $value) {
+            ContentMeta::create([
+                'project_id' => $this->project->id,
+                'collection_id' => $collectionId,
+                'content_id' => $content->id,
+                'field_name' => $name,
+                'value' => $value,
+            ]);
+        }
+
+        return $content;
     }
 
     public function test_version_starts_at_zero(): void
@@ -97,5 +155,46 @@ class PublicCacheInvalidationTest extends TestCase
         Event::assertListening(ContentPublished::class, BumpPublicCache::class);
         Event::assertListening(ContentUnpublished::class, BumpPublicCache::class);
         Event::assertListening(ContentRestored::class, BumpPublicCache::class);
+    }
+
+    // =================================================================
+    // Feature-level: the public API response cache follows its inputs
+    // =================================================================
+
+    public function test_param_change_yields_fresh_cache_entry(): void
+    {
+        // Two different language inputs must never share a cache entry.
+        $this->getJson('/api/project/blog/articles')->assertJsonPath('data.0.locale', 'en');
+        $this->getJson('/api/project/blog/articles?locale=zh')->assertJsonPath('data.0.locale', 'zh');
+        $this->getJson('/api/project/blog/articles')->assertJsonPath('data.0.locale', 'en');
+    }
+
+    public function test_default_locale_change_is_reflected_immediately(): void
+    {
+        // Warm the no-param cache entry under default_locale=en.
+        $this->getJson('/api/project/blog/articles')->assertJsonPath('data.0.locale', 'en');
+
+        // Backend switches the project's default language
+        // (Admin\ProjectsController::changeDefaultLocale does exactly this).
+        $this->project->update(['default_locale' => 'zh']);
+
+        // The very next identical request must return zh. The language is an
+        // input to the response, so the cache entry must change with it.
+        $this->getJson('/api/project/blog/articles')->assertJsonPath('data.0.locale', 'zh');
+    }
+
+    public function test_content_edit_invalidates_cached_language_response(): void
+    {
+        // Warm the zh cache entry.
+        $this->getJson('/api/project/blog/articles?locale=zh')->assertJsonPath('data.0.title', '你好 ZH');
+
+        // Backend edits the zh content (mirrors the admin update path, which
+        // dispatches ContentUpdated -> BumpPublicCache).
+        $meta = $this->zhArticle->meta()->where('field_name', 'title')->first();
+        $meta->update(['value' => '更新后的中文标题']);
+        ContentUpdated::dispatch(['source' => 'User', 'content' => $this->zhArticle->fresh()]);
+
+        // The next identical request must return the updated title.
+        $this->getJson('/api/project/blog/articles?locale=zh')->assertJsonPath('data.0.title', '更新后的中文标题');
     }
 }

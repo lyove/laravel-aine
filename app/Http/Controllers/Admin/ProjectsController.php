@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Aine\AuditLogger;
 use App\Aine\ProjectTemplates;
+use App\Aine\PublicCache;
 use App\Http\Controllers\Controller;
 use App\Models\Collection;
 use App\Models\CollectionField;
@@ -304,6 +305,8 @@ class ProjectsController extends Controller
         }
 
         $project->save();
+
+        PublicCache::bump($project->id);
     }
 
     /**
@@ -318,6 +321,8 @@ class ProjectsController extends Controller
 
         $project->default_locale = $request->get('locale');
         $project->save();
+
+        PublicCache::bump($project->id);
     }
 
     /**
@@ -344,6 +349,8 @@ class ProjectsController extends Controller
         }
         $project->locales = rtrim($localesStr, ',');
         $project->save();
+
+        PublicCache::bump($project->id);
     }
 
     /**
