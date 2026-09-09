@@ -767,7 +767,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DsLXNwde.js",
+    "file": "assets/app-DehIs3Bw.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -782,13 +782,13 @@
       "resources/js/frontend/views/cms/TagPage.vue",
       "resources/js/frontend/views/cms/SectionPage.vue",
       "resources/js/frontend/views/cms/ArticleDetail.vue",
-      "resources/js/frontend/views/directory/ListingDetail.vue",
       "resources/js/frontend/views/cms/PageDetail.vue",
       "resources/js/frontend/views/cms/PagesList.vue",
       "resources/js/frontend/views/directory/Archive.vue",
       "resources/js/frontend/views/directory/CategoryPage.vue",
       "resources/js/frontend/views/directory/TagPage.vue",
-      "resources/js/frontend/views/directory/SectionPage.vue"
+      "resources/js/frontend/views/directory/SectionPage.vue",
+      "resources/js/frontend/views/directory/ListingDetail.vue"
     ]
   },
   "resources/js/form.js": {
@@ -808,7 +808,7 @@
     ]
   },
   "resources/js/frontend/views/Home.vue": {
-    "file": "assets/Home-CPCShKvp.js",
+    "file": "assets/Home-YTiS5SrR.js",
     "name": "Home",
     "src": "resources/js/frontend/views/Home.vue",
     "isDynamicEntry": true,
@@ -821,7 +821,7 @@
     ]
   },
   "resources/js/frontend/views/cms/Archive.vue": {
-    "file": "assets/Archive-CBaL_H-M.js",
+    "file": "assets/Archive-BlU0prEt.js",
     "name": "Archive",
     "src": "resources/js/frontend/views/cms/Archive.vue",
     "isDynamicEntry": true,
@@ -835,7 +835,7 @@
     ]
   },
   "resources/js/frontend/views/cms/ArticleDetail.vue": {
-    "file": "assets/ArticleDetail-B7P43rVZ.js",
+    "file": "assets/ArticleDetail-A0nbgX0v.js",
     "name": "ArticleDetail",
     "src": "resources/js/frontend/views/cms/ArticleDetail.vue",
     "isDynamicEntry": true,
@@ -852,7 +852,7 @@
     ]
   },
   "resources/js/frontend/views/cms/CategoryPage.vue": {
-    "file": "assets/CategoryPage-C37KEtDF.js",
+    "file": "assets/CategoryPage-jag5w0J0.js",
     "name": "CategoryPage",
     "src": "resources/js/frontend/views/cms/CategoryPage.vue",
     "isDynamicEntry": true,
@@ -865,7 +865,7 @@
     ]
   },
   "resources/js/frontend/views/cms/PageDetail.vue": {
-    "file": "assets/PageDetail-D6nbyHjZ.js",
+    "file": "assets/PageDetail-CNpe8B8W.js",
     "name": "PageDetail",
     "src": "resources/js/frontend/views/cms/PageDetail.vue",
     "isDynamicEntry": true,
@@ -881,7 +881,7 @@
     ]
   },
   "resources/js/frontend/views/cms/PagesList.vue": {
-    "file": "assets/PagesList-DHhaQ7k4.js",
+    "file": "assets/PagesList-CoKITirQ.js",
     "name": "PagesList",
     "src": "resources/js/frontend/views/cms/PagesList.vue",
     "isDynamicEntry": true,
@@ -893,7 +893,7 @@
     ]
   },
   "resources/js/frontend/views/cms/SectionPage.vue": {
-    "file": "assets/SectionPage-C8eM2Jqp.js",
+    "file": "assets/SectionPage-XgSp1IBv.js",
     "name": "SectionPage",
     "src": "resources/js/frontend/views/cms/SectionPage.vue",
     "isDynamicEntry": true,
@@ -906,7 +906,7 @@
     ]
   },
   "resources/js/frontend/views/cms/TagPage.vue": {
-    "file": "assets/TagPage-Cf8ANjt9.js",
+    "file": "assets/TagPage-BndZesO4.js",
     "name": "TagPage",
     "src": "resources/js/frontend/views/cms/TagPage.vue",
     "isDynamicEntry": true,
@@ -919,7 +919,7 @@
     ]
   },
   "resources/js/frontend/views/directory/Archive.vue": {
-    "file": "assets/Archive-CS_iDQjg.js",
+    "file": "assets/Archive-BUYXfe4v.js",
     "name": "Archive",
     "src": "resources/js/frontend/views/directory/Archive.vue",
     "isDynamicEntry": true,
@@ -933,7 +933,7 @@
     ]
   },
   "resources/js/frontend/views/directory/CategoryPage.vue": {
-    "file": "assets/CategoryPage-1gpadp5x.js",
+    "file": "assets/CategoryPage-BRxazZcN.js",
     "name": "CategoryPage",
     "src": "resources/js/frontend/views/directory/CategoryPage.vue",
     "isDynamicEntry": true,
@@ -946,7 +946,7 @@
     ]
   },
   "resources/js/frontend/views/directory/ListingDetail.vue": {
-    "file": "assets/ListingDetail-DpqErlNl.js",
+    "file": "assets/ListingDetail-Bw2n1Yev.js",
     "name": "ListingDetail",
     "src": "resources/js/frontend/views/directory/ListingDetail.vue",
     "isDynamicEntry": true,
@@ -957,7 +957,7 @@
     ]
   },
   "resources/js/frontend/views/directory/SectionPage.vue": {
-    "file": "assets/SectionPage-DEjC0tGP.js",
+    "file": "assets/SectionPage-CLPMbbSv.js",
     "name": "SectionPage",
     "src": "resources/js/frontend/views/directory/SectionPage.vue",
     "isDynamicEntry": true,
@@ -970,7 +970,7 @@
     ]
   },
   "resources/js/frontend/views/directory/TagPage.vue": {
-    "file": "assets/TagPage-DVJQbMh9.js",
+    "file": "assets/TagPage-CdZ5Wfcv.js",
     "name": "TagPage",
     "src": "resources/js/frontend/views/directory/TagPage.vue",
     "isDynamicEntry": true,
