@@ -23,7 +23,7 @@
                         <small class="text-gray-500 font-normal"> {{ __('/ Update Content') }}</small>
                     </div>
                     <div class="flex">
-                        <ui-button type="button" color="white" hover="indigo-50" class="mr-2 relative" @click="showRevisions = true">
+                        <ui-button type="button" color="gray-200" hover="gray-300" class="mr-2 relative" @click="showRevisions = true">
                             <i class="fa fa-history mr-1"></i>{{ __('History') }}
                             <span v-if="revisionCount > 0" class="absolute -top-1 -right-1 bg-indigo-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                                 {{ revisionCount }}

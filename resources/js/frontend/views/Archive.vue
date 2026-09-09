@@ -25,6 +25,13 @@
             {{ subtitle }}
         </p>
 
+        <img
+            v-if="mode === 'category' && entity && entity.image && entity.image.full_url"
+            :src="entity.image.full_url"
+            :alt="heading || entity.title"
+            class="mb-8 aspect-[16/9] w-full rounded-xl object-cover"
+        />
+
         <content-tabs v-if="project === 'cms'" active="articles" class="mb-8" />
 
         <div v-if="loading" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -98,6 +105,7 @@ export default {
             slug: null,
             heading: null,
             entityId: null,
+            entity: null,
             items: [],
             offset: 0,
             hasMore: true,
@@ -126,9 +134,6 @@ export default {
         },
     },
     watch: {
-        // The same Archive component instance is reused when switching
-        // between the CMS (/content) and the Directory (/directory) system —
-        // reload whenever ANY of the defining props change.
         project() {
             this.loadArchive();
         },
@@ -146,9 +151,6 @@ export default {
     },
     methods: {
         async loadArchive() {
-            // Guard against out-of-order responses when switching quickly:
-            // only the latest load may apply its result. (Initialize the
-            // counter so the first load is seq 1, never NaN.)
             const seq = (this._loadSeq = (this._loadSeq || 0) + 1);
 
             this.loading = true;
@@ -156,14 +158,15 @@ export default {
             this.offset = 0;
             this.hasMore = true;
             this.slug = this.param;
+            this.entity = null;
 
             try {
                 if (this.mode === "category") {
-                    await this.resolveEntity(COLLECTIONS.categories, "url");
+                    await this.resolveEntity(COLLECTIONS.categories, "slug");
                 } else if (this.mode === "tag") {
                     await this.resolveEntity(COLLECTIONS.tags, "tag");
                 } else if (this.mode === "location") {
-                    await this.resolveEntity("locations", "url");
+                    await this.resolveEntity("locations", "slug");
                 }
 
                 if (["category", "tag", "location"].includes(this.mode) && !this.entityId) {
@@ -174,7 +177,7 @@ export default {
                 await this.fetchPage();
 
                 if (seq !== this._loadSeq) {
-                    return; // a newer load superseded this one
+                    return;
                 }
             } catch (error) {
                 console.error("Failed to load archive:", error);
@@ -203,6 +206,7 @@ export default {
             if (match) {
                 this.heading = this.mode === "tag" ? match.tag : (match.title || match.name);
                 this.entityId = match.id;
+                this.entity = match;
             }
         },
 
@@ -304,8 +308,6 @@ export default {
             try {
                 await this.fetchPage();
                 if (seq !== this._loadSeq) {
-                    // The view was navigated away / reloaded while loading —
-                    // discard the stale append by reloading the current view.
                     this.loadArchive();
                 }
             } catch (error) {

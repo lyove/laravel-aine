@@ -36,12 +36,22 @@
                 } else {
                     let bgcolor = 'bg-'+this.color;
                     let arr = this.color.split('-');
-                    let hover = this.hover == null ? 'bg-'+arr[0]+'-'+(parseInt(arr[1]) + 200) : 'bg-'+this.hover;
-                    let active = 'bg-'+arr[0]+'-'+(parseInt(arr[1]) + 200);
-                    let focus = 'border-'+arr[0]+'-'+(parseInt(arr[1]) - 100);
+                    let shade = parseInt(arr[1]);
+                    let hover = '';
+                    let active = '';
+                    if (this.hover != null) {
+                        hover = 'bg-'+this.hover;
+                    }
+                    if (!isNaN(shade)) {
+                        if (this.hover == null) {
+                            hover = 'bg-'+arr[0]+'-'+(shade + 200);
+                        }
+                        active = 'bg-'+arr[0]+'-'+(shade + 200);
+                    }
+                    let focus = 'border-'+arr[0]+'-'+(shade - 100);
                     let focusShadow = 'shadow-outline-'+arr[0];
 
-                    cls = bgcolor+' hover:'+hover+' active:'+active;
+                    cls = bgcolor + (hover ? ' hover:'+hover : '') + (active ? ' active:'+active : '');
                 }
 
                 if(this.padding === null) {
@@ -54,7 +64,8 @@
             },
             textColor(){
                 // Light/white backgrounds need dark text; everything else keeps white.
-                if (this.color === 'white' || this.color.endsWith('-50') || this.color.endsWith('-100')) {
+                // -200 and lighter shades are light backgrounds → dark text.
+                if (this.color === 'white' || this.color.endsWith('-50') || this.color.endsWith('-100') || this.color.endsWith('-200')) {
                     return 'text-gray-700';
                 }
                 return 'text-white';

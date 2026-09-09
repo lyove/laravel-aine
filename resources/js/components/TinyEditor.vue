@@ -23,7 +23,7 @@
             </template>
             <template #footer>
                 <button
-                    class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+                    class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded text-gray-600 hover:text-gray-800"
                     @click="closeSsmlModal"
                 >{{ __('Cancel') }}</button>
                 <button

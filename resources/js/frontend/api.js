@@ -229,7 +229,6 @@ const endpoints = {
   },
 };
 
-
 /* ------------------------------------------------------------------ *
  * Locale scoping
  * ------------------------------------------------------------------ */
@@ -387,20 +386,35 @@ function buildUrl(config) {
   const base = `/api/project/${project}`;
 
   if (resource === "media") {
-    if (action === "upload") return `${base}/media/upload`;
-    if (id) return `${base}/media/${id}`;
+    if (action === "upload") {
+      return `${base}/media/upload`;
+    }
+    if (id) {
+      return `${base}/media/${id}`;
+    }
     return `${base}/media`;
   }
 
-  if (action === "portal") return `${base}/portal`;
-  if (!collection) return base;
+  if (action === "portal") {
+    return `${base}/portal`;
+  }
 
   if (source && id && related) {
     return `${base}/${source}/${id}/${related}`;
   }
-  if (action === "search") return `${base}/${collection}/search`;
-  if (action === "update" && id) return `${base}/${collection}/update/${id}`;
-  if (id) return `${base}/${collection}/${id}`;
+  if (!collection) {
+    return base;
+  }
+
+  if (action === "search") {
+    return `${base}/${collection}/search`;
+  }
+  if (action === "update" && id) {
+    return `${base}/${collection}/update/${id}`;
+  }
+  if (id) {
+    return `${base}/${collection}/${id}`;
+  }
   return `${base}/${collection}`;
 }
 

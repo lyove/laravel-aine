@@ -20,6 +20,14 @@
 
         <template v-else>
             <h1 class="mb-4 text-3xl font-bold leading-tight text-gray-900 sm:text-4xl">{{ page.title }}</h1>
+
+            <img
+                v-if="page.image && page.image.full_url"
+                :src="page.image.full_url"
+                :alt="page.title"
+                class="mb-8 aspect-[16/9] w-full rounded-xl object-cover"
+            />
+
             <SsmlContent class="page-body text-base leading-relaxed text-gray-800" :content="page.content" />
         </template>
     </div>
