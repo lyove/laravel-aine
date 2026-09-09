@@ -64,10 +64,10 @@
 </template>
 
 <script>
-import { formatDate } from "../../utils/filters";
-import { api } from "../api";
-import { PROJECTS } from "../config";
-import SsmlContent from "../../components/SsmlContent.vue";
+import { formatDate } from "../../../utils/filters";
+import { api } from "../../api";
+import { PROJECTS } from "../../config";
+import SsmlContent from "../../../components/SsmlContent.vue";
 
 export default {
     name: "ArticleDetail",

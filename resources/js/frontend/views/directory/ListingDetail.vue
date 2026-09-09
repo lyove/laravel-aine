@@ -135,8 +135,8 @@
 </template>
 
 <script>
-import { api } from "../api";
-import { PROJECTS } from "../config";
+import { api } from "../../api";
+import { PROJECTS } from "../../config";
 
 export default {
     name: "ListingDetail",

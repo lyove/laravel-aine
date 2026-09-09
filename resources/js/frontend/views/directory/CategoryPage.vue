@@ -1,19 +1,26 @@
 <template>
     <div class="mx-auto w-full max-w-6xl px-4 py-10">
+        <img
+            v-if="entity && entity.image && entity.image.full_url"
+            :src="entity.image.full_url"
+            :alt="heading || entity.title"
+            class="mb-8 aspect-[16/9] w-full rounded-xl object-cover"
+        />
+
         <!-- Breadcrumb -->
         <nav class="mb-6 flex flex-wrap items-center gap-2 text-sm text-gray-500">
             <router-link to="/" class="hover:text-indigo-600">{{ siteName || "Home" }}</router-link>
             <span>›</span>
             <router-link :to="projectConfig.path" class="hover:text-indigo-600">{{ projectConfig.label }}</router-link>
             <span>›</span>
-            <span>Tags</span>
+            <span>Categories</span>
             <span>›</span>
-            <span v-if="heading" class="text-gray-900">#{{ heading }}</span>
-            <span v-else class="text-gray-400">#{{ slug }}</span>
+            <span v-if="heading" class="text-gray-900">{{ heading }}</span>
+            <span v-else class="text-gray-400">{{ slug }}</span>
         </nav>
 
         <h1 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            #{{ heading || projectConfig.label }}
+            {{ heading || projectConfig.label }}
         </h1>
         <p class="mb-8 text-gray-500">
             {{ subtitle }}
@@ -25,7 +32,7 @@
 
         <div v-else-if="!items.length" class="py-16 text-center">
             <h2 class="text-xl font-bold text-gray-900">No items here yet</h2>
-            <p class="mt-2 text-sm text-gray-500">Nothing has been published with this tag.</p>
+            <p class="mt-2 text-sm text-gray-500">Nothing has been published in this category.</p>
             <router-link :to="projectConfig.path" class="mt-4 inline-block text-sm font-medium text-indigo-600 hover:opacity-80">
                 Browse all →
             </router-link>
@@ -61,14 +68,14 @@
 </template>
 
 <script>
-import { api } from "../api";
-import { PROJECTS, COLLECTIONS, ARCHIVE_PAGE_SIZE } from "../config";
-import { useFrontendStore } from "../store";
-import ArticleCard from "../components/ArticleCard.vue";
-import ListingCard from "../components/ListingCard.vue";
+import { api } from "../../api";
+import { PROJECTS, COLLECTIONS, ARCHIVE_PAGE_SIZE } from "../../config";
+import { useFrontendStore } from "../../store";
+import ArticleCard from "../../components/ArticleCard.vue";
+import ListingCard from "../../components/ListingCard.vue";
 
 export default {
-    name: "TagPage",
+    name: "CategoryPage",
     components: {
         ArticleCard,
         ListingCard,
@@ -84,6 +91,7 @@ export default {
             slug: null,
             heading: null,
             entityId: null,
+            entity: null,
             items: [],
             offset: 0,
             hasMore: true,
@@ -103,35 +111,35 @@ export default {
             return this.$route.params.slug || null;
         },
         subtitle() {
-            return `All ${this.projectConfig.contentCollection} tagged #${this.heading || this.slug}.`;
+            return `All ${this.projectConfig.contentCollection} in ${this.heading || "this category"}.`;
         },
     },
     watch: {
         project() {
-            this.loadTag();
+            this.loadCategory();
         },
         param() {
-            this.loadTag();
+            this.loadCategory();
         },
     },
     async mounted() {
         const store = useFrontendStore();
         this.siteName = store.settings.name || "Home";
-        this.loadTag();
+        this.loadCategory();
     },
     methods: {
-        async loadTag() {
-            const seq = this._loadSeq = (this._loadSeq || 0) + 1;
+        async loadCategory() {
+            const seq = (this._loadSeq = (this._loadSeq || 0) + 1);
 
             this.loading = true;
             this.items = [];
             this.offset = 0;
             this.hasMore = true;
             this.slug = this.param;
-            this.heading = null;
+            this.entity = null;
 
             try {
-                await this.resolveEntity(COLLECTIONS.tags, "tag");
+                await this.resolveEntity(COLLECTIONS.categories, "slug");
 
                 if (!this.entityId) {
                     this.hasMore = false;
@@ -144,7 +152,7 @@ export default {
                     return;
                 }
             } catch (error) {
-                console.error("Failed to load tag:", error);
+                console.error("Failed to load category:", error);
                 this.hasMore = false;
             } finally {
                 if (seq === this._loadSeq) {
@@ -158,16 +166,13 @@ export default {
                 type: "get",
                 project: this.projectConfig.identifier,
                 collection: collectionSlug,
-                params: {
-                    _skipLocale: true,
-                    filters: { locale: "all" },
-                },
             });
-            const match = (list || []).find((t) => (t[matchField] || "").toLowerCase().replace(/\s+/g, "-") === this.slug);
+            const match = (list || []).find((c) => c[matchField] === this.slug);
 
             if (match) {
-                this.heading = match.tag || match.name;
+                this.heading = match.title || match.name;
                 this.entityId = match.id;
+                this.entity = match;
             }
         },
 
@@ -176,7 +181,7 @@ export default {
             const data = await api.request({
                 type: "get",
                 project: cfg.identifier,
-                source: COLLECTIONS.tags,
+                source: COLLECTIONS.categories,
                 id: this.entityId,
                 related: cfg.contentCollection,
                 params: {
@@ -184,6 +189,7 @@ export default {
                     limit: ARCHIVE_PAGE_SIZE,
                     sort: "published_at:desc",
                     timestamps: true,
+                    state: "only_published",
                 },
             });
 
@@ -198,7 +204,7 @@ export default {
             try {
                 await this.fetchPage();
                 if (seq !== this._loadSeq) {
-                    this.loadTag();
+                    this.loadCategory();
                 }
             } catch (error) {
                 console.error("Failed to load more:", error);

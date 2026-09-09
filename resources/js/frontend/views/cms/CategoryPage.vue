@@ -1,16 +1,26 @@
 <template>
     <div class="mx-auto w-full max-w-6xl px-4 py-10">
+        <img
+            v-if="entity && entity.image && entity.image.full_url"
+            :src="entity.image.full_url"
+            :alt="heading || entity.title"
+            class="mb-8 aspect-[16/9] w-full rounded-xl object-cover"
+        />
+
         <!-- Breadcrumb -->
         <nav class="mb-6 flex flex-wrap items-center gap-2 text-sm text-gray-500">
             <router-link to="/" class="hover:text-indigo-600">{{ siteName || "Home" }}</router-link>
             <span>›</span>
             <router-link :to="projectConfig.path" class="hover:text-indigo-600">{{ projectConfig.label }}</router-link>
             <span>›</span>
-            <span class="text-gray-900">{{ modeMeta.label }}</span>
+            <span>Categories</span>
+            <span>›</span>
+            <span v-if="heading" class="text-gray-900">{{ heading }}</span>
+            <span v-else class="text-gray-400">{{ slug }}</span>
         </nav>
 
         <h1 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            {{ modeMeta.label }}
+            {{ heading || projectConfig.label }}
         </h1>
         <p class="mb-8 text-gray-500">
             {{ subtitle }}
@@ -22,7 +32,7 @@
 
         <div v-else-if="!items.length" class="py-16 text-center">
             <h2 class="text-xl font-bold text-gray-900">No items here yet</h2>
-            <p class="mt-2 text-sm text-gray-500">Nothing has been published here yet.</p>
+            <p class="mt-2 text-sm text-gray-500">Nothing has been published in this category.</p>
             <router-link :to="projectConfig.path" class="mt-4 inline-block text-sm font-medium text-indigo-600 hover:opacity-80">
                 Browse all →
             </router-link>
@@ -58,20 +68,14 @@
 </template>
 
 <script>
-import { api } from "../api";
-import { PROJECTS, ARCHIVE_PAGE_SIZE } from "../config";
-import { useFrontendStore } from "../store";
-import ArticleCard from "../components/ArticleCard.vue";
-import ListingCard from "../components/ListingCard.vue";
-
-const MODE_META = {
-    slider: { label: "Slider" },
-    featured: { label: "Featured" },
-    recommended: { label: "Recommended" },
-};
+import { api } from "../../api";
+import { PROJECTS, COLLECTIONS, ARCHIVE_PAGE_SIZE } from "../../config";
+import { useFrontendStore } from "../../store";
+import ArticleCard from "../../components/ArticleCard.vue";
+import ListingCard from "../../components/ListingCard.vue";
 
 export default {
-    name: "SectionPage",
+    name: "CategoryPage",
     components: {
         ArticleCard,
         ListingCard,
@@ -81,13 +85,13 @@ export default {
             type: String,
             default: "cms", // "cms" | "directory"
         },
-        mode: {
-            type: String,
-            default: "featured", // "slider" | "featured" | "recommended"
-        },
     },
     data() {
         return {
+            slug: null,
+            heading: null,
+            entityId: null,
+            entity: null,
             items: [],
             offset: 0,
             hasMore: true,
@@ -103,44 +107,52 @@ export default {
         cardComponent() {
             return this.project === "directory" ? ListingCard : ArticleCard;
         },
-        modeMeta() {
-            return MODE_META[this.mode] || MODE_META.featured;
+        param() {
+            return this.$route.params.slug || null;
         },
         subtitle() {
-            const label = this.modeMeta.label.toLowerCase();
-            return `All ${label} ${this.projectConfig.contentCollection}.`;
+            return `All ${this.projectConfig.contentCollection} in ${this.heading || "this category"}.`;
         },
     },
     watch: {
         project() {
-            this.loadItems();
+            this.loadCategory();
         },
-        mode() {
-            this.loadItems();
+        param() {
+            this.loadCategory();
         },
     },
     async mounted() {
         const store = useFrontendStore();
         this.siteName = store.settings.name || "Home";
-        this.loadItems();
+        this.loadCategory();
     },
     methods: {
-        async loadItems() {
-            const seq = this._loadSeq = (this._loadSeq || 0) + 1;
+        async loadCategory() {
+            const seq = (this._loadSeq = (this._loadSeq || 0) + 1);
 
             this.loading = true;
             this.items = [];
             this.offset = 0;
             this.hasMore = true;
+            this.slug = this.param;
+            this.entity = null;
 
             try {
+                await this.resolveEntity(COLLECTIONS.categories, "slug");
+
+                if (!this.entityId) {
+                    this.hasMore = false;
+                    return;
+                }
+
                 await this.fetchPage();
 
                 if (seq !== this._loadSeq) {
                     return;
                 }
             } catch (error) {
-                console.error("Failed to load section:", error);
+                console.error("Failed to load category:", error);
                 this.hasMore = false;
             } finally {
                 if (seq === this._loadSeq) {
@@ -149,21 +161,35 @@ export default {
             }
         },
 
+        async resolveEntity(collectionSlug, matchField) {
+            const list = await api.request({
+                type: "get",
+                project: this.projectConfig.identifier,
+                collection: collectionSlug,
+            });
+            const match = (list || []).find((c) => c[matchField] === this.slug);
+
+            if (match) {
+                this.heading = match.title || match.name;
+                this.entityId = match.id;
+                this.entity = match;
+            }
+        },
+
         async fetchPage() {
             const cfg = this.projectConfig;
-            const filters = {};
-            filters[this.mode] = "1";
-
             const data = await api.request({
                 type: "get",
                 project: cfg.identifier,
-                collection: cfg.contentCollection,
+                source: COLLECTIONS.categories,
+                id: this.entityId,
+                related: cfg.contentCollection,
                 params: {
-                    filters: filters,
                     offset: this.offset,
                     limit: ARCHIVE_PAGE_SIZE,
                     sort: "published_at:desc",
                     timestamps: true,
+                    state: "only_published",
                 },
             });
 
@@ -178,7 +204,7 @@ export default {
             try {
                 await this.fetchPage();
                 if (seq !== this._loadSeq) {
-                    this.loadItems();
+                    this.loadCategory();
                 }
             } catch (error) {
                 console.error("Failed to load more:", error);

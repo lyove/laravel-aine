@@ -34,8 +34,8 @@
 </template>
 
 <script>
-import { useFrontendStore } from "../store";
-import SsmlContent from "../../components/SsmlContent.vue";
+import { useFrontendStore } from "../../store";
+import SsmlContent from "../../../components/SsmlContent.vue";
 
 export default {
     name: "PageDetail",

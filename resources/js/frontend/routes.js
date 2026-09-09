@@ -2,14 +2,20 @@ import { createRouter, createWebHistory } from "vue-router";
 import { useFrontendStore } from "./store";
 
 const Home = () => import("./views/Home.vue");
-const Archive = () => import("./views/Archive.vue");
-const CategoryPage = () => import("./views/CategoryPage.vue");
-const TagPage = () => import("./views/TagPage.vue");
-const SectionPage = () => import("./views/SectionPage.vue");
-const ArticleDetail = () => import("./views/ArticleDetail.vue");
-const ListingDetail = () => import("./views/ListingDetail.vue");
-const PageDetail = () => import("./views/PageDetail.vue");
-const PagesList = () => import("./views/PagesList.vue");
+
+const CMSArchive = () => import("./views/cms/Archive.vue");
+const CMSCategoryPage = () => import("./views/cms/CategoryPage.vue");
+const CMSTagPage = () => import("./views/cms/TagPage.vue");
+const CMSSectionPage = () => import("./views/cms/SectionPage.vue");
+const CMSArticleDetail = () => import("./views/cms/ArticleDetail.vue");
+const CMSPageDetail = () => import("./views/cms/PageDetail.vue");
+const CMSPagesList = () => import("./views/cms/PagesList.vue");
+
+const DirectoryArchive = () => import("./views/directory/Archive.vue");
+const DirectoryCategoryPage = () => import("./views/directory/CategoryPage.vue");
+const DirectoryTagPage = () => import("./views/directory/TagPage.vue");
+const DirectorySectionPage = () => import("./views/directory/SectionPage.vue");
+const DirectoryListingDetail = () => import("./views/directory/ListingDetail.vue");
 
 /**
  * Routes
@@ -23,23 +29,23 @@ const routes = [
     { path: "/", name: "home", component: Home },
 
     // ---- CMS system (/content) ----
-    { path: "/content", name: "content.index", component: Archive, props: { project: "cms", mode: "all" } },
-    { path: "/content/pages", name: "content.pages", component: PagesList },
-    { path: "/content/slider", name: "content.slider", component: SectionPage, props: { project: "cms", mode: "slider" } },
-    { path: "/content/featured", name: "content.featured", component: SectionPage, props: { project: "cms", mode: "featured" } },
-    { path: "/content/recommended", name: "content.recommended", component: SectionPage, props: { project: "cms", mode: "recommended" } },
-    { path: "/content/category/:slug", name: "content.category", component: CategoryPage, props: { project: "cms" } },
-    { path: "/content/tag/:slug", name: "content.tag", component: TagPage, props: { project: "cms" } },
-    { path: "/content/:category/:article", name: "content.article", component: ArticleDetail },
-    { path: "/content/:slug", name: "content.page", component: PageDetail },
+    { path: "/content", name: "content.index", component: CMSArchive, props: { project: "cms", mode: "all" } },
+    { path: "/content/pages", name: "content.pages", component: CMSPagesList },
+    { path: "/content/slider", name: "content.slider", component: CMSSectionPage, props: { project: "cms", mode: "slider" } },
+    { path: "/content/featured", name: "content.featured", component: CMSSectionPage, props: { project: "cms", mode: "featured" } },
+    { path: "/content/recommended", name: "content.recommended", component: CMSSectionPage, props: { project: "cms", mode: "recommended" } },
+    { path: "/content/category/:slug", name: "content.category", component: CMSCategoryPage, props: { project: "cms" } },
+    { path: "/content/tag/:slug", name: "content.tag", component: CMSTagPage, props: { project: "cms" } },
+    { path: "/content/:category/:article", name: "content.article", component: CMSArticleDetail },
+    { path: "/content/:slug", name: "content.page", component: CMSPageDetail },
 
     // ---- Directory system (/directory) ----
-    { path: "/directory", name: "directory.index", component: Archive, props: { project: "directory", mode: "all" } },
-    { path: "/directory/featured", name: "directory.featured", component: SectionPage, props: { project: "directory", mode: "featured" } },
-    { path: "/directory/category/:slug", name: "directory.category", component: CategoryPage, props: { project: "directory" } },
-    { path: "/directory/tag/:slug", name: "directory.tag", component: TagPage, props: { project: "directory" } },
-    { path: "/directory/location/:slug", name: "directory.location", component: Archive, props: { project: "directory", mode: "location" } },
-    { path: "/directory/:category/:listing", name: "directory.listing", component: ListingDetail },
+    { path: "/directory", name: "directory.index", component: DirectoryArchive, props: { project: "directory", mode: "all" } },
+    { path: "/directory/featured", name: "directory.featured", component: DirectorySectionPage, props: { project: "directory", mode: "featured" } },
+    { path: "/directory/category/:slug", name: "directory.category", component: DirectoryCategoryPage, props: { project: "directory" } },
+    { path: "/directory/tag/:slug", name: "directory.tag", component: DirectoryTagPage, props: { project: "directory" } },
+    { path: "/directory/location/:slug", name: "directory.location", component: DirectoryArchive, props: { project: "directory", mode: "location" } },
+    { path: "/directory/:category/:listing", name: "directory.listing", component: DirectoryListingDetail },
 ];
 
 const router = createRouter({
