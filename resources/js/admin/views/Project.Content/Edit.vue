@@ -525,26 +525,6 @@
                                                             <th scope="col" class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                                                 <div class="w-full flex justify-between item-center">{{ __('Created At') }}</div>
                                                             </th>
-                                                            <th
-                                                                scope="col"
-                                                                class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                                                                :class="{ 'w-full': index === 0 }"
-                                                                v-for="(relField, index) in relationRecords[field.name].collection.fields"
-                                                                :key="relField.id"
-                                                                v-show="
-                                                                    relField.type != 'richtext' &&
-                                                                    relField.type != 'password' &&
-                                                                    relField.type != 'media' &&
-                                                                    relField.type != 'json' &&
-                                                                    relField.type != 'block' &&
-                                                                    relField.type != 'relation' &&
-                                                                    !JSON.parse(relField.options).hideInContentList
-                                                                "
-                                                            >
-                                                                <div class="w-full flex justify-between item-center">
-                                                                    {{ relField.label }}
-                                                                </div>
-                                                            </th>
                                                         </tr>
                                                     </thead>
 
@@ -557,7 +537,7 @@
                                                             </td>
                                                             <td class="pl-2 py-4 text-sm text-center w-px whitespace-nowrap">
                                                                 <span class="text-gray-500 text-sm rounded-md bg-gray-200 px-3 py-1">
-                                                                    {{ relationRecords[field.name].collection.name }}
+                                                                    {{ relationDisplayName(item, relationRecords[field.name].collection.fields) || relationRecords[field.name].collection.name }}
                                                                 </span>
                                                             </td>
                                                             <td class="pl-2 py-4 text-sm text-center w-px">
@@ -566,32 +546,6 @@
                                                             </td>
                                                             <td class="px-6 py-2 text-sm w-px whitespace-nowrap text-gray-600">
                                                                 {{ $filters.date(item.created_at, "D MMM YYYY, H:mm") }}
-                                                            </td>
-                                                            <td
-                                                                class="px-6 py-2 text-sm whitespace-nowrap"
-                                                                :class="{ 'w-full': index === 0, 'w-auto': index !== 0 }"
-                                                                v-for="(relField, index) in relationRecords[field.name].collection.fields"
-                                                                :key="relField.id"
-                                                                v-show="
-                                                                    relField.type != 'richtext' &&
-                                                                    relField.type != 'password' &&
-                                                                    relField.type != 'media' &&
-                                                                    relField.type != 'json' &&
-                                                                    relField.type != 'block' &&
-                                                                    relField.type != 'relation' &&
-                                                                    !JSON.parse(relField.options).hideInContentList
-                                                                "
-                                                            >
-                                                                <span v-for="meta in item.meta" :key="meta.id">
-                                                                    <span v-if="meta.field_name == relField.name">
-                                                                        <span v-if="relField.type == 'date'">{{ $filters.date(meta.value) }}</span>
-                                                                        <span v-else-if="relField.type == 'longtext'" :title="meta.value">
-                                                                            {{ meta.value.substring(0, 20) }}
-                                                                            <span v-if="meta.value.length > 20">...</span>
-                                                                        </span>
-                                                                        <span v-else>{{ meta.value }}</span>
-                                                                    </span>
-                                                                </span>
                                                             </td>
                                                         </tr>
                                                     </tbody>
@@ -1194,6 +1148,34 @@ export default {
 
         closeRelationModal() {
             this.openRelationModal = false;
+        },
+
+        isVisibleRelField(relField) {
+            if (relField === undefined || relField === null) {
+                return false;
+            }
+
+            if (["richtext", "password", "media", "json", "block", "relation"].includes(relField.type)) {
+                return false;
+            }
+
+            try {
+                return !JSON.parse(relField.options).hideInContentList;
+            } catch (e) {
+                return true;
+            }
+        },
+
+        relationDisplayName(item, fields) {
+            const first = (fields || []).find((f) => this.isVisibleRelField(f));
+
+            if (!first) {
+                return null;
+            }
+
+            const meta = (item.meta || []).find((m) => m.field_name == first.name);
+
+            return meta ? meta.value : null;
         },
 
         async addSelectedRelation(data, field_name = null, clone = false) {
