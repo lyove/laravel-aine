@@ -285,9 +285,15 @@ const CONTROL_PARAMS = [
 ];
 
 function formatVal(val) {
-  if (Array.isArray(val)) return val.join(",");
-  if (typeof val === "boolean") return val ? 1 : 0;
-  if (val === null || val === undefined) return "";
+  if (Array.isArray(val)) {
+    return val.join(",");
+  }
+  if (typeof val === "boolean") {
+    return val ? 1 : 0;
+  }
+  if (val === null || val === undefined) {
+    return "";
+  }
   return String(val);
 }
 
@@ -497,11 +503,15 @@ function createEndpointMethod(endpointConfig) {
     if (needsId) {
       config.id = args[0];
       const payload = args[1] || {};
-      if (config.type === "get") config.params = payload;
+      if (config.type === "get") {
+        config.params = payload;
+      }
       else config.data = payload;
     } else {
       const payload = args[0] || {};
-      if (config.type === "get") config.params = payload;
+      if (config.type === "get") {
+        config.params = payload;
+      }
       else config.data = payload;
     }
 

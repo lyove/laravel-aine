@@ -3,6 +3,8 @@ import { useFrontendStore } from "./store";
 
 const Home = () => import("./views/Home.vue");
 const Archive = () => import("./views/Archive.vue");
+const CategoryPage = () => import("./views/CategoryPage.vue");
+const TagPage = () => import("./views/TagPage.vue");
 const ArticleDetail = () => import("./views/ArticleDetail.vue");
 const ListingDetail = () => import("./views/ListingDetail.vue");
 const PageDetail = () => import("./views/PageDetail.vue");
@@ -24,16 +26,16 @@ const routes = [
     { path: "/content/pages", name: "content.pages", component: PagesList },
     { path: "/content/featured", name: "content.featured", component: Archive, props: { project: "cms", mode: "featured" } },
     { path: "/content/recommended", name: "content.recommended", component: Archive, props: { project: "cms", mode: "recommended" } },
-    { path: "/content/category/:slug", name: "content.category", component: Archive, props: { project: "cms", mode: "category" } },
-    { path: "/content/tag/:slug", name: "content.tag", component: Archive, props: { project: "cms", mode: "tag" } },
+    { path: "/content/category/:slug", name: "content.category", component: CategoryPage, props: { project: "cms" } },
+    { path: "/content/tag/:slug", name: "content.tag", component: TagPage, props: { project: "cms" } },
     { path: "/content/:category/:article", name: "content.article", component: ArticleDetail },
     { path: "/content/:slug", name: "content.page", component: PageDetail },
 
     // ---- Directory system (/directory) ----
     { path: "/directory", name: "directory.index", component: Archive, props: { project: "directory", mode: "all" } },
     { path: "/directory/featured", name: "directory.featured", component: Archive, props: { project: "directory", mode: "featured" } },
-    { path: "/directory/category/:slug", name: "directory.category", component: Archive, props: { project: "directory", mode: "category" } },
-    { path: "/directory/tag/:slug", name: "directory.tag", component: Archive, props: { project: "directory", mode: "tag" } },
+    { path: "/directory/category/:slug", name: "directory.category", component: CategoryPage, props: { project: "directory" } },
+    { path: "/directory/tag/:slug", name: "directory.tag", component: TagPage, props: { project: "directory" } },
     { path: "/directory/location/:slug", name: "directory.location", component: Archive, props: { project: "directory", mode: "location" } },
     { path: "/directory/:category/:listing", name: "directory.listing", component: ListingDetail },
 ];

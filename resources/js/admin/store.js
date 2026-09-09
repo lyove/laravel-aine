@@ -19,7 +19,9 @@ import {
  */
 function markUiReady() {
     const el = document.getElementById('admin');
-    if (el) el.removeAttribute('data-ui-pending');
+    if (el) {
+        el.removeAttribute('data-ui-pending');
+    }
 }
 
 /**
@@ -41,7 +43,9 @@ function loadCachedUiBase() {
 
 function saveCachedUiBase(baseLocale) {
     try {
-        if (baseLocale) localStorage.setItem(UI_BASE_CACHE_KEY, baseLocale);
+        if (baseLocale) {
+            localStorage.setItem(UI_BASE_CACHE_KEY, baseLocale);
+        }
         else localStorage.removeItem(UI_BASE_CACHE_KEY);
     } catch (error) {
         // Storage unavailable: the cache is a nicety, never fatal.
@@ -54,25 +58,13 @@ export const useAdminStore = defineStore('admin', {
         settings: {},
         currentProject: null,
         currentCollection: null,
-        // True while the router is navigating to another route (lazy chunk
-        // + async guard data still loading). The Layout shell shows a
-        // transition overlay while this is set, so route switches never
-        // flash a half-rendered page.
         routeLoading: false,
-        // Timestamp of the last successful project load; the router guard
-        // uses it to decide when a silent background refresh is needed.
         currentProjectLoadedAt: 0,
         topbarContent: null,
         columnSettings: [],
-        // The admin UI language equals the globally configured default
-        // (Localization → "Set as default"); there is no per-user choice.
         uiLocale: BASE_LOCALE,
         uiBaseLocale: BASE_LOCALE,
-        // Monotonic counter so stale async responses (project dicts fetched
-        // for a previous language) are discarded after a faster switch.
         _localeSeq: 0,
-        // Monotonic counter for project loads: discards late-arriving
-        // background refreshes / failures after a project switch.
         _projectSeq: 0,
     }),
 
@@ -86,14 +78,13 @@ export const useAdminStore = defineStore('admin', {
          */
         async refreshUiLocale() {
             const seq = ++this._localeSeq;
-            // The UI is authored in English and dictionary keys are English
-            // source strings, so the engine base is always English — never
-            // the database base_locale.
             const dict = await setLocale(this.uiLocale, BASE_LOCALE);
-            if (seq !== this._localeSeq) return;
-            if (dict && Object.keys(dict).length) saveCachedUiDict(this.uiLocale, dict);
-            // Base-language UI: fetch its dictionary too so edited English
-            // strings override the built-in labels.
+            if (seq !== this._localeSeq) {
+                return;
+            }
+            if (dict && Object.keys(dict).length) {
+                saveCachedUiDict(this.uiLocale, dict);
+            }
             if (this.uiLocale === BASE_LOCALE) {
                 await this.loadBaseUiDict();
             }
@@ -107,11 +98,6 @@ export const useAdminStore = defineStore('admin', {
         async initUiLocale(expectedBase = null) {
             const seq = ++this._localeSeq;
 
-            // Phase 1 — synchronous, no network. Apply the cached dictionary
-            // for the global default language in the same task as the app
-            // mount, so a page refresh never flashes the base language
-            // before translations arrive. The shell is revealed immediately;
-            // the fresh dictionary below then refreshes the cache.
             const bootBase = expectedBase || loadCachedUiBase() || BASE_LOCALE;
             if (bootBase !== BASE_LOCALE) {
                 const cached = loadCachedUiDict(bootBase);
@@ -121,9 +107,6 @@ export const useAdminStore = defineStore('admin', {
                     markUiReady();
                 }
             } else {
-                // Base-language UI: cached English overrides apply
-                // synchronously too (edited strings from the Translations
-                // page).
                 const cached = loadCachedUiDict(BASE_LOCALE);
                 if (cached) {
                     setBaseUiDict(cached);
@@ -131,22 +114,24 @@ export const useAdminStore = defineStore('admin', {
                 }
             }
 
-            // Phase 2 — network: authoritative locale list + fresh dictionary.
             await this.loadUiLocales();
-            if (seq !== this._localeSeq) return;
+            if (seq !== this._localeSeq) {
+                return;
+            }
 
             this.uiLocale = this.uiBaseLocale || BASE_LOCALE;
-            // Cold start (nothing cached): the app stays hidden until this
-            // resolves, so even the very first paint is in the right
-            // language. Cache hit: refreshes the dictionary and re-translates
-            // if translations changed.
             const dict = await setLocale(this.uiLocale, BASE_LOCALE);
-            if (seq !== this._localeSeq) return;
-            if (dict && Object.keys(dict).length) saveCachedUiDict(this.uiLocale, dict);
-            // Base-language UI: also load its overlay dictionary.
+            if (seq !== this._localeSeq) {
+                return;
+            }
+            if (dict && Object.keys(dict).length) {
+                saveCachedUiDict(this.uiLocale, dict);
+            }
             if (this.uiLocale === BASE_LOCALE) {
                 await this.loadBaseUiDict();
-                if (seq !== this._localeSeq) return;
+                if (seq !== this._localeSeq) {
+                    return;
+                }
             }
 
             markUiReady();
@@ -162,7 +147,9 @@ export const useAdminStore = defineStore('admin', {
             try {
                 const { data } = await axios.get('translations/dict', { params: { locale: BASE_LOCALE } });
                 const dict = (data && data.dict) || {};
-                if (Object.keys(dict).length) saveCachedUiDict(BASE_LOCALE, dict);
+                if (Object.keys(dict).length) {
+                    saveCachedUiDict(BASE_LOCALE, dict);
+                }
                 setBaseUiDict(dict);
                 return dict;
             } catch (error) {
@@ -176,7 +163,6 @@ export const useAdminStore = defineStore('admin', {
                 const { data } = await axios.get('translations/locales');
                 if (data) {
                     this.uiBaseLocale = data.base_locale || BASE_LOCALE;
-                    // The UI language always follows the global default.
                     this.uiLocale = this.uiBaseLocale;
                     if (Array.isArray(data.locales) && data.locales.length) {
                         locales = data.locales;
@@ -196,34 +182,39 @@ export const useAdminStore = defineStore('admin', {
             }
             const seq = this._localeSeq;
 
-            // Synchronous: a cached dictionary for this project + language
-            // applies immediately (before the page renders), so refreshing a
-            // project page never flashes its untranslated strings either.
             const cached = loadCachedProjectDict(projectId, this.uiLocale);
-            if (cached) setProjectDict(cached);
+            if (cached) {
+                setProjectDict(cached);
+            }
 
             try {
                 const { data } = await axios.get(
                     `projects/settings/translations/${projectId}/dict`,
                     { params: { locale: this.uiLocale } }
                 );
-                // Double guard: the language seq protects against fast locale
-                // switches, the project id against a project switch while this
-                // fire-and-forget request was in flight (its late response
-                // must never overwrite the dictionary of the current project).
-                if (seq !== this._localeSeq) return {};
-                if (this.currentProject?.id !== projectId) return {};
+                if (seq !== this._localeSeq) {
+                    return {};
+                }
+                if (this.currentProject?.id !== projectId) {
+                    return {};
+                }
                 const dict = (data && data.dict) || {};
                 setProjectDict(dict);
-                if (Object.keys(dict).length) saveCachedProjectDict(projectId, this.uiLocale, dict);
+                if (Object.keys(dict).length) {
+                    saveCachedProjectDict(projectId, this.uiLocale, dict);
+                }
                 return dict;
             } catch (error) {
-                if (seq !== this._localeSeq) return {};
-                if (this.currentProject?.id !== projectId) return {};
+                if (seq !== this._localeSeq) {
+                    return {};
+                }
+                if (this.currentProject?.id !== projectId) {
+                    return {};
+                }
                 console.warn('Failed to load project translations:', error);
-                // Keep the cached dictionary (if any) so the page stays
-                // translated; only clear when there was nothing to fall back on.
-                if (!cached) setProjectDict({});
+                if (!cached) {
+                    setProjectDict({});
+                }
                 return {};
             }
         },
@@ -243,27 +234,18 @@ export const useAdminStore = defineStore('admin', {
                 return;
             }
             try {
-                // `silent: true` (background re-validation) skips the
-                // NProgress bar via the axios interceptors.
                 const response = await axios.get('projects/' + projectId, { silent: options.silent });
-                // Discard late-arriving responses (e.g. a silent refresh that
-                // raced a switch to another project) so they never overwrite
-                // newer state.
-                if (seq !== this._projectSeq) return;
+                if (seq !== this._projectSeq) {
+                    return;
+                }
                 this.currentProject = response.data;
                 this.currentProjectLoadedAt = Date.now();
-                // The translation dictionary is not on the critical path for
-                // rendering the page shell — load it in the background.
                 this.loadProjectTranslationsDict();
             } catch (error) {
                 console.error('Failed to load project:', error);
-                // Stale failure from an older load: never touch newer state.
-                if (seq !== this._projectSeq) return;
-                // On a background refresh failure keep whatever data we had
-                // (a fresh foreground load has nothing cached anyway) and
-                // reset the timestamp so the next navigation retries. When
-                // the cached project is kept, its translation dictionary
-                // stays valid too.
+                if (seq !== this._projectSeq) {
+                    return;
+                }
                 this.currentProjectLoadedAt = 0;
                 if (this.currentProject?.id !== projectId) {
                     this.currentProject = null;

@@ -92,7 +92,9 @@ let toastTimer = null;
 let toastStyleInjected = false;
 
 function injectToastStyle() {
-  if (toastStyleInjected || typeof document === "undefined") return;
+  if (toastStyleInjected || typeof document === "undefined") {
+    return;
+  }
   toastStyleInjected = true;
   const style = document.createElement("style");
   style.textContent = `
@@ -104,7 +106,9 @@ function injectToastStyle() {
 }
 
 function showToast(message, level = "error") {
-  if (typeof document === "undefined") return;
+  if (typeof document === "undefined") {
+    return;
+  }
   injectToastStyle();
   if (!toastNode) {
     toastNode = document.createElement("div");

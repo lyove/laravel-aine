@@ -102,7 +102,9 @@ export const useFrontendStore = defineStore("frontend", {
          * Switch the displayed language and persist the choice.
          */
         setLocale(locale) {
-            if (!locale || locale === this.locale) return;
+            if (!locale || locale === this.locale) {
+                return;
+            }
             this.locale = locale;
             localStorage.setItem(STORAGE_KEY, locale);
             setApiLocale(locale);
@@ -122,7 +124,9 @@ export const useFrontendStore = defineStore("frontend", {
         cmsProject: (state) => state.projectsInfo[PROJECTS.cms.identifier] || null,
         cmsProjectLocales: (state) => {
             const p = state.projectsInfo[PROJECTS.cms.identifier];
-            if (p && Array.isArray(p.locales) && p.locales.length) return p.locales;
+            if (p && Array.isArray(p.locales) && p.locales.length) {
+                return p.locales;
+            }
             return ["en"];
         },
         defaultLocale: (state) => {

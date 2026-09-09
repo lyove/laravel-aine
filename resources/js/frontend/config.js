@@ -7,7 +7,9 @@
  */
 
 const meta = (name) => {
-    if (typeof document === "undefined") return null;
+    if (typeof document === "undefined") {
+        return null;
+    }
     const el = document.querySelector(`meta[name="${name}"]`);
     return el ? el.content : null;
 };

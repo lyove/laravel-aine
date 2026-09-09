@@ -767,7 +767,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-LT-lwThy.js",
+    "file": "assets/app-nOg_OQAH.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -778,6 +778,8 @@
     "dynamicImports": [
       "resources/js/frontend/views/Home.vue",
       "resources/js/frontend/views/Archive.vue",
+      "resources/js/frontend/views/CategoryPage.vue",
+      "resources/js/frontend/views/TagPage.vue",
       "resources/js/frontend/views/ArticleDetail.vue",
       "resources/js/frontend/views/ListingDetail.vue",
       "resources/js/frontend/views/PageDetail.vue",
@@ -801,7 +803,7 @@
     ]
   },
   "resources/js/frontend/views/Archive.vue": {
-    "file": "assets/Archive-CpSvIrcI.js",
+    "file": "assets/Archive-2fpGUutV.js",
     "name": "Archive",
     "src": "resources/js/frontend/views/Archive.vue",
     "isDynamicEntry": true,
@@ -815,7 +817,7 @@
     ]
   },
   "resources/js/frontend/views/ArticleDetail.vue": {
-    "file": "assets/ArticleDetail-DzSp2Xyg.js",
+    "file": "assets/ArticleDetail-CN6qZi8K.js",
     "name": "ArticleDetail",
     "src": "resources/js/frontend/views/ArticleDetail.vue",
     "isDynamicEntry": true,
@@ -831,8 +833,21 @@
       "assets/ArticleDetail-DoCRPoNx.css"
     ]
   },
+  "resources/js/frontend/views/CategoryPage.vue": {
+    "file": "assets/CategoryPage-stCWsAVH.js",
+    "name": "CategoryPage",
+    "src": "resources/js/frontend/views/CategoryPage.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js",
+      "_ListingCard-TE6lURa3.js",
+      "__plugin-vue_export-helper-B3G5kp-g.js",
+      "_vue-router-K0Nby0fQ.js",
+      "_filters-BZdh0rWa.js"
+    ]
+  },
   "resources/js/frontend/views/Home.vue": {
-    "file": "assets/Home-Ch-Fl5AV.js",
+    "file": "assets/Home-CDSglWI7.js",
     "name": "Home",
     "src": "resources/js/frontend/views/Home.vue",
     "isDynamicEntry": true,
@@ -845,7 +860,7 @@
     ]
   },
   "resources/js/frontend/views/ListingDetail.vue": {
-    "file": "assets/ListingDetail-CJ0OlkHb.js",
+    "file": "assets/ListingDetail-vIfMCcy5.js",
     "name": "ListingDetail",
     "src": "resources/js/frontend/views/ListingDetail.vue",
     "isDynamicEntry": true,
@@ -856,7 +871,7 @@
     ]
   },
   "resources/js/frontend/views/PageDetail.vue": {
-    "file": "assets/PageDetail-BxikfXrW.js",
+    "file": "assets/PageDetail-CDGvdSgr.js",
     "name": "PageDetail",
     "src": "resources/js/frontend/views/PageDetail.vue",
     "isDynamicEntry": true,
@@ -872,7 +887,7 @@
     ]
   },
   "resources/js/frontend/views/PagesList.vue": {
-    "file": "assets/PagesList-BA2Nas5p.js",
+    "file": "assets/PagesList-CLdm6naC.js",
     "name": "PagesList",
     "src": "resources/js/frontend/views/PagesList.vue",
     "isDynamicEntry": true,
@@ -881,6 +896,19 @@
       "_ContentTabs-i61RprEX.js",
       "__plugin-vue_export-helper-B3G5kp-g.js",
       "_vue-router-K0Nby0fQ.js"
+    ]
+  },
+  "resources/js/frontend/views/TagPage.vue": {
+    "file": "assets/TagPage-q_zLvxuu.js",
+    "name": "TagPage",
+    "src": "resources/js/frontend/views/TagPage.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js",
+      "_ListingCard-TE6lURa3.js",
+      "__plugin-vue_export-helper-B3G5kp-g.js",
+      "_vue-router-K0Nby0fQ.js",
+      "_filters-BZdh0rWa.js"
     ]
   },
   "resources/js/vendor/fontawesome-pro/webfonts/fa-brands-400.ttf": {

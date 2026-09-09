@@ -82,7 +82,9 @@ window.axios.interceptors.request.use(
     (error) => {
         if (!error.config || !error.config.silent) {
             pendingRequests = Math.max(0, pendingRequests - 1);
-            if (pendingRequests === 0) NProgress.done();
+            if (pendingRequests === 0) {
+                NProgress.done();
+            }
         }
         return Promise.reject(error);
     }
@@ -92,7 +94,9 @@ window.axios.interceptors.response.use(
     (response) => {
         if (!response.config || !response.config.silent) {
             pendingRequests = Math.max(0, pendingRequests - 1);
-            if (pendingRequests === 0) NProgress.done();
+            if (pendingRequests === 0) {
+                NProgress.done();
+            }
         }
         return response;
     },
@@ -115,7 +119,9 @@ window.axios.interceptors.response.use(
 
         if (!error.config || !error.config.silent) {
             pendingRequests = Math.max(0, pendingRequests - 1);
-            if (pendingRequests === 0) NProgress.done();
+            if (pendingRequests === 0) {
+                NProgress.done();
+            }
         }
         return Promise.reject(error);
     }

@@ -53,7 +53,9 @@ let localeSeq = 0;
 function readCache(key) {
     try {
         const raw = localStorage.getItem(key);
-        if (!raw) return null;
+        if (!raw) {
+            return null;
+        }
         const value = JSON.parse(raw);
         return value && typeof value === "object" ? value : null;
     } catch (error) {
@@ -74,7 +76,9 @@ export function loadCachedUiDict(locale) {
 }
 
 export function saveCachedUiDict(locale, dict) {
-    if (locale && dict) writeCache("aine_ui_dict_" + locale, dict);
+    if (locale && dict) {
+        writeCache("aine_ui_dict_" + locale, dict);
+    }
 }
 
 export function loadCachedProjectDict(projectId, locale) {
@@ -137,10 +141,14 @@ export async function setLocale(locale, baseLocale = BASE_LOCALE, preloadedDict 
     } else {
         try {
             const { data } = await axios.get("translations/dict", { params: { locale } });
-            if (seq !== localeSeq) return {}; // superseded by a newer switch
+            if (seq !== localeSeq) {
+                return {};
+            } // superseded by a newer switch
             dict = (data && data.dict) || {};
         } catch (error) {
-            if (seq !== localeSeq) return {}; // superseded by a newer switch
+            if (seq !== localeSeq) {
+                return {};
+            } // superseded by a newer switch
             console.warn("Failed to load translations:", error);
             return {}; // keep the current language state untouched on failure
         }
@@ -161,7 +169,9 @@ export async function setLocale(locale, baseLocale = BASE_LOCALE, preloadedDict 
  * (setLocale() owns state.dict then).
  */
 export function setBaseUiDict(dict) {
-    if (state.active) return;
+    if (state.active) {
+        return;
+    }
     state.dict = dict || {};
     dictView.ui = state.dict;
 }
@@ -182,7 +192,9 @@ const NAMED_RE = /\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g;
  * Each `{name}` is replaced by `params[name]` (missing → emptied).
  */
 function fillPlaceholders(translation, params) {
-    if (params == null) return translation;
+    if (params == null) {
+        return translation;
+    }
     if (typeof params === "object") {
         return translation.replace(NAMED_RE, (_, name) => {
             const v = params[name];
@@ -206,9 +218,13 @@ function fillPlaceholders(translation, params) {
  *   {{ __('{total} records, {from} - {to} showing', { total, from, to }) }}
  */
 export function __(key, ...args) {
-    if (!key || typeof key !== "string") return key;
+    if (!key || typeof key !== "string") {
+        return key;
+    }
     const translation = dictView.project[key] || dictView.ui[key];
-    if (!translation || translation === key) return key;
+    if (!translation || translation === key) {
+        return key;
+    }
     if (args.length) {
         // The first arg is the params object; later args are ignored (kept
         // for forward-compat with future overloads).
