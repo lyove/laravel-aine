@@ -6,14 +6,11 @@
             <span>›</span>
             <router-link :to="projectConfig.path" class="hover:text-indigo-600">{{ projectConfig.label }}</router-link>
             <span>›</span>
-            <span>Tags</span>
-            <span>›</span>
-            <span v-if="heading" class="text-gray-900">#{{ heading }}</span>
-            <span v-else class="text-gray-400">#{{ slug }}</span>
+            <span class="text-gray-900">{{ modeMeta.label }}</span>
         </nav>
 
         <h1 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            #{{ heading || projectConfig.label }}
+            {{ modeMeta.label }}
         </h1>
         <p class="mb-8 text-gray-500">
             {{ subtitle }}
@@ -25,7 +22,7 @@
 
         <div v-else-if="!items.length" class="py-16 text-center">
             <h2 class="text-xl font-bold text-gray-900">No items here yet</h2>
-            <p class="mt-2 text-sm text-gray-500">Nothing has been published with this tag.</p>
+            <p class="mt-2 text-sm text-gray-500">Nothing has been published here yet.</p>
             <router-link :to="projectConfig.path" class="mt-4 inline-block text-sm font-medium text-indigo-600 hover:opacity-80">
                 Browse all →
             </router-link>
@@ -62,13 +59,19 @@
 
 <script>
 import { api } from "../api";
-import { PROJECTS, COLLECTIONS, ARCHIVE_PAGE_SIZE } from "../config";
+import { PROJECTS, ARCHIVE_PAGE_SIZE } from "../config";
 import { useFrontendStore } from "../store";
 import ArticleCard from "../components/ArticleCard.vue";
 import ListingCard from "../components/ListingCard.vue";
 
+const MODE_META = {
+    slider: { label: "Slider" },
+    featured: { label: "Featured" },
+    recommended: { label: "Recommended" },
+};
+
 export default {
-    name: "TagPage",
+    name: "SectionPage",
     components: {
         ArticleCard,
         ListingCard,
@@ -78,12 +81,13 @@ export default {
             type: String,
             default: "cms", // "cms" | "directory"
         },
+        mode: {
+            type: String,
+            default: "featured", // "slider" | "featured" | "recommended"
+        },
     },
     data() {
         return {
-            slug: null,
-            heading: null,
-            entityId: null,
             items: [],
             offset: 0,
             hasMore: true,
@@ -99,52 +103,44 @@ export default {
         cardComponent() {
             return this.project === "directory" ? ListingCard : ArticleCard;
         },
-        param() {
-            return this.$route.params.slug || null;
+        modeMeta() {
+            return MODE_META[this.mode] || MODE_META.featured;
         },
         subtitle() {
-            return `All ${this.projectConfig.contentCollection} tagged #${this.heading || this.slug}.`;
+            const label = this.modeMeta.label.toLowerCase();
+            return `All ${label} ${this.projectConfig.contentCollection}.`;
         },
     },
     watch: {
         project() {
-            this.loadTag();
+            this.loadItems();
         },
-        param() {
-            this.loadTag();
+        mode() {
+            this.loadItems();
         },
     },
     async mounted() {
         const store = useFrontendStore();
         this.siteName = store.settings.name || "Home";
-        this.loadTag();
+        this.loadItems();
     },
     methods: {
-        async loadTag() {
+        async loadItems() {
             const seq = this._loadSeq = (this._loadSeq || 0) + 1;
 
             this.loading = true;
             this.items = [];
             this.offset = 0;
             this.hasMore = true;
-            this.slug = this.param;
-            this.heading = null;
 
             try {
-                await this.resolveEntity(COLLECTIONS.tags, "tag");
-
-                if (!this.entityId) {
-                    this.hasMore = false;
-                    return;
-                }
-
                 await this.fetchPage();
 
                 if (seq !== this._loadSeq) {
                     return;
                 }
             } catch (error) {
-                console.error("Failed to load tag:", error);
+                console.error("Failed to load section:", error);
                 this.hasMore = false;
             } finally {
                 if (seq === this._loadSeq) {
@@ -153,33 +149,17 @@ export default {
             }
         },
 
-        async resolveEntity(collectionSlug, matchField) {
-            const list = await api.request({
-                type: "get",
-                project: this.projectConfig.identifier,
-                collection: collectionSlug,
-                params: {
-                    _skipLocale: true,
-                    filters: { locale: "all" },
-                },
-            });
-            const match = (list || []).find((t) => (t[matchField] || "").toLowerCase().replace(/\s+/g, "-") === this.slug);
-
-            if (match) {
-                this.heading = match.tag || match.name;
-                this.entityId = match.id;
-            }
-        },
-
         async fetchPage() {
             const cfg = this.projectConfig;
+            const filters = {};
+            filters[this.mode] = "1";
+
             const data = await api.request({
                 type: "get",
                 project: cfg.identifier,
-                source: COLLECTIONS.tags,
-                id: this.entityId,
-                related: cfg.contentCollection,
+                collection: cfg.contentCollection,
                 params: {
+                    filters: filters,
                     offset: this.offset,
                     limit: ARCHIVE_PAGE_SIZE,
                     sort: "published_at:desc",
@@ -198,7 +178,7 @@ export default {
             try {
                 await this.fetchPage();
                 if (seq !== this._loadSeq) {
-                    this.loadTag();
+                    this.loadItems();
                 }
             } catch (error) {
                 console.error("Failed to load more:", error);

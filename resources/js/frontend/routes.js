@@ -5,6 +5,7 @@ const Home = () => import("./views/Home.vue");
 const Archive = () => import("./views/Archive.vue");
 const CategoryPage = () => import("./views/CategoryPage.vue");
 const TagPage = () => import("./views/TagPage.vue");
+const SectionPage = () => import("./views/SectionPage.vue");
 const ArticleDetail = () => import("./views/ArticleDetail.vue");
 const ListingDetail = () => import("./views/ListingDetail.vue");
 const PageDetail = () => import("./views/PageDetail.vue");
@@ -24,8 +25,9 @@ const routes = [
     // ---- CMS system (/content) ----
     { path: "/content", name: "content.index", component: Archive, props: { project: "cms", mode: "all" } },
     { path: "/content/pages", name: "content.pages", component: PagesList },
-    { path: "/content/featured", name: "content.featured", component: Archive, props: { project: "cms", mode: "featured" } },
-    { path: "/content/recommended", name: "content.recommended", component: Archive, props: { project: "cms", mode: "recommended" } },
+    { path: "/content/slider", name: "content.slider", component: SectionPage, props: { project: "cms", mode: "slider" } },
+    { path: "/content/featured", name: "content.featured", component: SectionPage, props: { project: "cms", mode: "featured" } },
+    { path: "/content/recommended", name: "content.recommended", component: SectionPage, props: { project: "cms", mode: "recommended" } },
     { path: "/content/category/:slug", name: "content.category", component: CategoryPage, props: { project: "cms" } },
     { path: "/content/tag/:slug", name: "content.tag", component: TagPage, props: { project: "cms" } },
     { path: "/content/:category/:article", name: "content.article", component: ArticleDetail },
@@ -33,7 +35,7 @@ const routes = [
 
     // ---- Directory system (/directory) ----
     { path: "/directory", name: "directory.index", component: Archive, props: { project: "directory", mode: "all" } },
-    { path: "/directory/featured", name: "directory.featured", component: Archive, props: { project: "directory", mode: "featured" } },
+    { path: "/directory/featured", name: "directory.featured", component: SectionPage, props: { project: "directory", mode: "featured" } },
     { path: "/directory/category/:slug", name: "directory.category", component: CategoryPage, props: { project: "directory" } },
     { path: "/directory/tag/:slug", name: "directory.tag", component: TagPage, props: { project: "directory" } },
     { path: "/directory/location/:slug", name: "directory.location", component: Archive, props: { project: "directory", mode: "location" } },
