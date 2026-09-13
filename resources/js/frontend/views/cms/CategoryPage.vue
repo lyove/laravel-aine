@@ -139,12 +139,7 @@ export default {
             this.entity = null;
 
             try {
-                // The URL carries the readable category slug, so the
-                // relation query goes through the explicit slug endpoint
-                // (/categories/slug/{slug}/articles) — no need to fetch the
-                // category list first just to translate slug → id.
                 await this.fetchPage();
-
                 if (seq !== this._loadSeq) {
                     return;
                 }
@@ -178,8 +173,6 @@ export default {
 
             this.items.push(...(data || []));
 
-            // Category heading/banner come from the first returned item's
-            // category object (relation is embedded in list items).
             if (!this.heading && this.items.length) {
                 const category = this.items[0].category;
                 if (category) {
