@@ -85,9 +85,8 @@ class ContentResource extends JsonResource
                             } elseif($field->type == 'number'){
                                 $result[$m->field_name] = (float)$m->value;
                             } elseif($field->type == 'media'){
-                                if($options->media->type == 1){
-                                    // Single-value media: read from the batch
-                                    // preloader (ContentSerializer::preload).
+                                $mediaType = $options->media->type ?? (str_contains((string) $m->value, ',') ? 2 : 1);
+                                if($mediaType == 1){
                                     $media = ContentSerializer::mediaFor($content->project_id, (int)$m->value);
                                     $result[$m->field_name] = new MediaResource($media);
                                 } else {
@@ -107,7 +106,9 @@ class ContentResource extends JsonResource
                                     continue;
                                 }
 
-                                if($options->relation->type == 1){
+                                $relationType = $options->relation->type ?? (str_contains((string) $m->value, ',') ? 2 : 1);
+
+                                if((int)$relationType == 1){
                                     $relation = ContentSerializer::relationFor($content->project_id, (int)$m->value);
 
                                     if ($relation === null) {

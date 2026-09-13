@@ -423,4 +423,47 @@ class ContentIdentifierTest extends TestCase
         $this->getJson('/api/project/blog/categories/slug/news-zh/articles')
             ->assertStatus(200);
     }
+
+    public function test_relation_field_without_type_option_does_not_500(): void
+    {
+        $categories = Collection::create([
+            'name' => 'Categories', 'slug' => 'categories',
+            'project_id' => $this->project->id, 'order' => 2,
+        ]);
+        $this->addField($categories, 'title', 'text', ['required' => true]);
+        $this->addField($categories, 'slug', 'slug', ['required' => true, 'unique' => true]);
+
+        CollectionField::create([
+            'type' => 'relation',
+            'label' => 'Category',
+            'name' => 'category',
+            'options' => json_encode([
+                'relation' => ['collection' => (string) $categories->id],
+                'slug' => [], 'media' => [], 'enumeration' => [],
+                'hideInContentList' => false,
+            ]),
+            'validations' => json_encode([
+                'required' => ['status' => false, 'message' => null],
+                'charcount' => ['status' => false, 'type' => '', 'min' => null, 'max' => null],
+                'unique' => ['status' => false, 'message' => null],
+            ]),
+            'project_id' => $this->project->id,
+            'collection_id' => $this->articles->id,
+            'order' => 3,
+        ]);
+
+        $category = $this->addContent($categories->id, 'en', [
+            'title' => 'News', 'slug' => 'news-zh',
+        ], now());
+
+        $article = $this->addContent($this->articles->id, 'en', [
+            'title' => 'Legacy Article', 'slug' => 'legacy-article',
+            'category' => (string) $category->id,
+        ], now());
+
+        $this->getJson('/api/project/blog/categories/slug/news-zh/articles')
+            ->assertStatus(200)
+            ->assertJsonPath('data.0.id', $article->id)
+            ->assertJsonPath('data.0.category.id', $category->id);
+    }
 }
