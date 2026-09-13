@@ -69,7 +69,7 @@
 
 <script>
 import { api } from "../../api";
-import { PROJECTS, COLLECTIONS, ARCHIVE_PAGE_SIZE } from "../../config";
+import { PROJECTS, ARCHIVE_PAGE_SIZE } from "../../config";
 import { useFrontendStore } from "../../store";
 import ArticleCard from "../../components/ArticleCard.vue";
 import ListingCard from "../../components/ListingCard.vue";
@@ -154,21 +154,12 @@ export default {
         },
 
         async fetchPage() {
-            const cfg = this.projectConfig;
-            const data = await api.request({
-                type: "get",
-                project: cfg.identifier,
-                source: COLLECTIONS.categories,
-                id: this.slug,
-                bySlug: true,
-                related: cfg.contentCollection,
-                params: {
-                    offset: this.offset,
-                    limit: ARCHIVE_PAGE_SIZE,
-                    sort: "published_at:desc",
-                    timestamps: true,
-                    state: "only_published",
-                },
+            const data = await api.getCategoryArticlesBySlug(this.slug, {
+                offset: this.offset,
+                limit: ARCHIVE_PAGE_SIZE,
+                sort: "published_at:desc",
+                timestamps: true,
+                state: "only_published",
             });
 
             this.items.push(...(data || []));

@@ -69,7 +69,7 @@
 
 <script>
 import { api } from "../../api";
-import { PROJECTS, COLLECTIONS, ARCHIVE_PAGE_SIZE } from "../../config";
+import { PROJECTS, ARCHIVE_PAGE_SIZE } from "../../config";
 import { useFrontendStore } from "../../store";
 import ArticleCard from "../../components/ArticleCard.vue";
 import ListingCard from "../../components/ListingCard.vue";
@@ -90,7 +90,6 @@ export default {
         return {
             slug: null,
             heading: null,
-            entityId: null,
             entity: null,
             items: [],
             offset: 0,
@@ -136,16 +135,10 @@ export default {
             this.offset = 0;
             this.hasMore = true;
             this.slug = this.param;
+            this.heading = null;
             this.entity = null;
 
             try {
-                await this.resolveEntity(COLLECTIONS.categories, "slug");
-
-                if (!this.entityId) {
-                    this.hasMore = false;
-                    return;
-                }
-
                 await this.fetchPage();
 
                 if (seq !== this._loadSeq) {
@@ -161,39 +154,25 @@ export default {
             }
         },
 
-        async resolveEntity(collectionSlug, matchField) {
-            const list = await api.request({
-                type: "get",
-                project: this.projectConfig.identifier,
-                collection: collectionSlug,
-            });
-            const match = (list || []).find((c) => c[matchField] === this.slug);
-
-            if (match) {
-                this.heading = match.title || match.name;
-                this.entityId = match.id;
-                this.entity = match;
-            }
-        },
-
         async fetchPage() {
-            const cfg = this.projectConfig;
-            const data = await api.request({
-                type: "get",
-                project: cfg.identifier,
-                source: COLLECTIONS.categories,
-                id: this.entityId,
-                related: cfg.contentCollection,
-                params: {
-                    offset: this.offset,
-                    limit: ARCHIVE_PAGE_SIZE,
-                    sort: "published_at:desc",
-                    timestamps: true,
-                    state: "only_published",
-                },
+            const data = await api.getCategoryListingsBySlug(this.slug, {
+                offset: this.offset,
+                limit: ARCHIVE_PAGE_SIZE,
+                sort: "published_at:desc",
+                timestamps: true,
+                state: "only_published",
             });
 
             this.items.push(...(data || []));
+
+            if (!this.heading && this.items.length) {
+                const category = this.items[0].category;
+                if (category) {
+                    this.heading = category.title || category.name || null;
+                    this.entity = category;
+                }
+            }
+
             this.offset += ARCHIVE_PAGE_SIZE;
             this.hasMore = (data || []).length === ARCHIVE_PAGE_SIZE;
         },

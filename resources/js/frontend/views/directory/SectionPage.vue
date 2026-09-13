@@ -150,21 +150,15 @@ export default {
         },
 
         async fetchPage() {
-            const cfg = this.projectConfig;
             const filters = {};
             filters[this.mode] = "1";
 
-            const data = await api.request({
-                type: "get",
-                project: cfg.identifier,
-                collection: cfg.contentCollection,
-                params: {
-                    filters: filters,
-                    offset: this.offset,
-                    limit: ARCHIVE_PAGE_SIZE,
-                    sort: "published_at:desc",
-                    timestamps: true,
-                },
+            const data = await api.getListings({
+                filters: filters,
+                offset: this.offset,
+                limit: ARCHIVE_PAGE_SIZE,
+                sort: "published_at:desc",
+                timestamps: true,
             });
 
             this.items.push(...(data || []));

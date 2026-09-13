@@ -77,7 +77,7 @@
 
 <script>
 import { api } from "../../api";
-import { PROJECTS, COLLECTIONS, ARCHIVE_PAGE_SIZE } from "../../config";
+import { PROJECTS, ARCHIVE_PAGE_SIZE } from "../../config";
 import { useFrontendStore } from "../../store";
 import ArticleCard from "../../components/ArticleCard.vue";
 import ListingCard from "../../components/ListingCard.vue";
@@ -161,13 +161,7 @@ export default {
             this.entity = null;
 
             try {
-                if (this.mode === "category") {
-                    await this.resolveEntity(COLLECTIONS.categories, "slug");
-                } else if (this.mode === "tag") {
-                    await this.resolveEntity(COLLECTIONS.tags, "tag");
-                } else if (this.mode === "location") {
-                    await this.resolveEntity("locations", "slug");
-                }
+                await this.resolveEntity();
 
                 if (["category", "tag", "location"].includes(this.mode) && !this.entityId) {
                     this.hasMore = false;
@@ -189,18 +183,21 @@ export default {
             }
         },
 
-        async resolveEntity(collectionSlug, matchField) {
-            const list = await api.request({
-                type: "get",
-                project: this.projectConfig.identifier,
-                collection: collectionSlug,
-            });
+        async resolveEntity() {
+            let list;
+            if (this.mode === "category") {
+                list = await api.getCategories();
+            } else if (this.mode === "tag") {
+                list = await api.getTags();
+            } else {
+                list = await api.getCmsLocations();
+            }
             let match = null;
 
             if (this.mode === "tag") {
                 match = (list || []).find((t) => (t.tag || "").toLowerCase().replace(/\s+/g, "-") === this.slug);
             } else {
-                match = (list || []).find((c) => c[matchField] === this.slug);
+                match = (list || []).find((c) => c.slug === this.slug);
             }
 
             if (match) {
@@ -211,89 +208,54 @@ export default {
         },
 
         async fetchPage() {
-            const cfg = this.projectConfig;
             let data;
 
             if (this.mode === "all") {
-                data = await api.request({
-                    type: "get",
-                    project: cfg.identifier,
-                    collection: cfg.contentCollection,
-                    params: {
-                        offset: this.offset,
-                        limit: ARCHIVE_PAGE_SIZE,
-                        sort: "published_at:desc",
-                        timestamps: true,
-                    },
+                data = await api.getArticles({
+                    offset: this.offset,
+                    limit: ARCHIVE_PAGE_SIZE,
+                    sort: "published_at:desc",
+                    timestamps: true,
                 });
             } else if (this.mode === "category") {
-                data = await api.request({
-                    type: "get",
-                    project: cfg.identifier,
-                    source: COLLECTIONS.categories,
-                    id: this.entityId,
-                    related: cfg.contentCollection,
-                    params: {
-                        offset: this.offset,
-                        limit: ARCHIVE_PAGE_SIZE,
-                        sort: "published_at:desc",
-                        timestamps: true,
-                        state: "only_published",
-                    },
+                data = await api.getCategoryArticles(this.entityId, {
+                    offset: this.offset,
+                    limit: ARCHIVE_PAGE_SIZE,
+                    sort: "published_at:desc",
+                    timestamps: true,
+                    state: "only_published",
                 });
             } else if (this.mode === "location") {
-                data = await api.request({
-                    type: "get",
-                    project: cfg.identifier,
-                    source: "locations",
-                    id: this.entityId,
-                    related: cfg.contentCollection,
-                    params: {
-                        offset: this.offset,
-                        limit: ARCHIVE_PAGE_SIZE,
-                        sort: "published_at:desc",
-                        timestamps: true,
-                        state: "only_published",
-                    },
+                data = await api.getCmsLocationArticles(this.entityId, {
+                    offset: this.offset,
+                    limit: ARCHIVE_PAGE_SIZE,
+                    sort: "published_at:desc",
+                    timestamps: true,
+                    state: "only_published",
                 });
             } else if (this.mode === "featured") {
-                data = await api.request({
-                    type: "get",
-                    project: cfg.identifier,
-                    collection: cfg.contentCollection,
-                    params: {
-                        filters: { featured: "1" },
-                        offset: this.offset,
-                        limit: ARCHIVE_PAGE_SIZE,
-                        sort: "published_at:desc",
-                        timestamps: true,
-                    },
+                data = await api.getArticles({
+                    filters: { featured: "1" },
+                    offset: this.offset,
+                    limit: ARCHIVE_PAGE_SIZE,
+                    sort: "published_at:desc",
+                    timestamps: true,
                 });
             } else if (this.mode === "recommended") {
-                data = await api.request({
-                    type: "get",
-                    project: cfg.identifier,
-                    collection: cfg.contentCollection,
-                    params: {
-                        filters: { recommended: "1" },
-                        offset: this.offset,
-                        limit: ARCHIVE_PAGE_SIZE,
-                        sort: "published_at:desc",
-                        timestamps: true,
-                    },
+                data = await api.getArticles({
+                    filters: { recommended: "1" },
+                    offset: this.offset,
+                    limit: ARCHIVE_PAGE_SIZE,
+                    sort: "published_at:desc",
+                    timestamps: true,
                 });
             } else {
-                data = await api.request({
-                    type: "get",
-                    project: cfg.identifier,
-                    collection: cfg.contentCollection,
-                    params: {
-                        filters: { tags: String(this.entityId) },
-                        offset: this.offset,
-                        limit: ARCHIVE_PAGE_SIZE,
-                        sort: "published_at:desc",
-                        timestamps: true,
-                    },
+                data = await api.getArticles({
+                    filters: { tags: String(this.entityId) },
+                    offset: this.offset,
+                    limit: ARCHIVE_PAGE_SIZE,
+                    sort: "published_at:desc",
+                    timestamps: true,
                 });
             }
 

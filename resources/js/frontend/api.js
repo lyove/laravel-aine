@@ -110,6 +110,22 @@ const endpoints = {
   },
 
   // =================================================================
+  // CMS project — locations
+  // =================================================================
+  getCmsLocations: {
+    type: "get",
+    project: cms,
+    collection: "locations",
+  },
+  getCmsLocationArticles: {
+    type: "get",
+    project: cms,
+    source: "locations",
+    id: true,
+    related: articles,
+  },
+
+  // =================================================================
   // CMS project — pages
   // =================================================================
   getPages: {
@@ -202,12 +218,36 @@ const endpoints = {
     bySlug: true,
     related: listings,
   },
+  getDirectoryTags: {
+    type: "get",
+    project: dir,
+    collection: COLLECTIONS.tags,
+  },
+  getDirectoryTagListings: {
+    type: "get",
+    project: dir,
+    source: COLLECTIONS.tags,
+    id: true,
+    related: listings,
+  },
+  getLocations: {
+    type: "get",
+    project: dir,
+    collection: "locations",
+  },
   getLocationListings: {
     type: "get",
     project: dir,
     source: "locations",
     id: true,
     related: listings,
+  },
+  getListingReviews: {
+    type: "get",
+    project: dir,
+    source: listings,
+    id: true,
+    related: "reviews",
   },
 
   // =================================================================

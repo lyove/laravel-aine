@@ -62,7 +62,7 @@
 
 <script>
 import { api } from "../../api";
-import { PROJECTS, COLLECTIONS, ARCHIVE_PAGE_SIZE } from "../../config";
+import { PROJECTS, ARCHIVE_PAGE_SIZE } from "../../config";
 import { useFrontendStore } from "../../store";
 import ArticleCard from "../../components/ArticleCard.vue";
 import ListingCard from "../../components/ListingCard.vue";
@@ -131,7 +131,7 @@ export default {
             this.heading = null;
 
             try {
-                await this.resolveEntity(COLLECTIONS.tags, "tag");
+                await this.resolveEntity();
 
                 if (!this.entityId) {
                     this.hasMore = false;
@@ -153,17 +153,12 @@ export default {
             }
         },
 
-        async resolveEntity(collectionSlug, matchField) {
-            const list = await api.request({
-                type: "get",
-                project: this.projectConfig.identifier,
-                collection: collectionSlug,
-                params: {
-                    _skipLocale: true,
-                    filters: { locale: "all" },
-                },
+        async resolveEntity() {
+            const list = await api.getDirectoryTags({
+                _skipLocale: true,
+                filters: { locale: "all" },
             });
-            const match = (list || []).find((t) => (t[matchField] || "").toLowerCase().replace(/\s+/g, "-") === this.slug);
+            const match = (list || []).find((t) => (t.tag || "").toLowerCase().replace(/\s+/g, "-") === this.slug);
 
             if (match) {
                 this.heading = match.tag || match.name;
@@ -172,19 +167,11 @@ export default {
         },
 
         async fetchPage() {
-            const cfg = this.projectConfig;
-            const data = await api.request({
-                type: "get",
-                project: cfg.identifier,
-                source: COLLECTIONS.tags,
-                id: this.entityId,
-                related: cfg.contentCollection,
-                params: {
-                    offset: this.offset,
-                    limit: ARCHIVE_PAGE_SIZE,
-                    sort: "published_at:desc",
-                    timestamps: true,
-                },
+            const data = await api.getDirectoryTagListings(this.entityId, {
+                offset: this.offset,
+                limit: ARCHIVE_PAGE_SIZE,
+                sort: "published_at:desc",
+                timestamps: true,
             });
 
             this.items.push(...(data || []));

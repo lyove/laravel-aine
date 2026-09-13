@@ -136,7 +136,6 @@
 
 <script>
 import { api } from "../../api";
-import { PROJECTS } from "../../config";
 
 export default {
     name: "ListingDetail",
@@ -179,13 +178,10 @@ export default {
                 this.item = await api.getListingBySlug(listingUrl, { timestamps: true });
 
                 if (this.item) {
-                    this.reviews = (await api.request({
-                        type: "get",
-                        project: PROJECTS.directory.identifier,
-                        source: PROJECTS.directory.contentCollection,
-                        id: this.item.id,
-                        related: "reviews",
-                        params: { sort: "created_at:desc", timestamps: true, state: "only_published" },
+                    this.reviews = (await api.getListingReviews(this.item.id, {
+                        sort: "created_at:desc",
+                        timestamps: true,
+                        state: "only_published",
                     })) || [];
                 }
             } catch (error) {
