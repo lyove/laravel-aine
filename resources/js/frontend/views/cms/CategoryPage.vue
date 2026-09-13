@@ -23,7 +23,7 @@
             {{ heading || projectConfig.label }}
         </h1>
         <p class="mb-8 text-gray-500">
-            {{ subtitle }}
+            {{ entity && entity.description ? entity.description : subtitle }}
         </p>
 
         <div v-if="loading" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

@@ -22,7 +22,7 @@
             {{ heading || (mode === 'featured' ? 'Featured' : mode === 'recommended' ? 'Recommended' : projectConfig.label) }}
         </h1>
         <p class="mb-8 text-gray-500">
-            {{ subtitle }}
+            {{ mode === 'category' && entity && entity.description ? entity.description : subtitle }}
         </p>
 
         <img

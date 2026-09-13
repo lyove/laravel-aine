@@ -349,8 +349,12 @@ class DemoProjectsSeeder extends Seeder
 
         /* --- Categories / Authors / Tags --- */
         $categories = [];
-        foreach ([['News', 'news'], ['Tutorials', 'tutorials'], ['Reviews', 'reviews']] as $i => [$title, $url]) {
-            $categories[$title] = $this->addContent($project, $c['categories'], ['title' => $title, 'slug' => $url], published: true, daysAgo: 19 - $i)->id;
+        foreach ([
+            ['News', 'news', 'The latest announcements, product updates and community news from the CMS ecosystem.'],
+            ['Tutorials', 'tutorials', 'Step-by-step guides and practical walkthroughs covering Laravel, Vue and headless CMS development.'],
+            ['Reviews', 'reviews', 'In-depth reviews of developer tools, editors, packages and services we use every day.'],
+        ] as $i => [$title, $url, $description]) {
+            $categories[$title] = $this->addContent($project, $c['categories'], ['title' => $title, 'slug' => $url, 'description' => $description], published: true, daysAgo: 19 - $i)->id;
         }
 
         $authors = [];
@@ -482,8 +486,12 @@ class DemoProjectsSeeder extends Seeder
 
         /* --- Chinese structure (categories + translated tags) --- */
         $zhCategories = [];
-        foreach ([['新闻', 'news-zh'], ['教程', 'tutorials-zh'], ['评测', 'reviews-zh']] as $i => [$zhTitle, $zhUrl]) {
-            $zhCategories[$zhTitle] = $this->addContent($project, $c['categories'], ['title' => $zhTitle, 'slug' => $zhUrl], published: true, daysAgo: 19 - $i, locale: 'zh')->id;
+        foreach ([
+            ['新闻', 'news-zh', '来自 CMS 生态的最新公告、产品更新与社区动态。'],
+            ['教程', 'tutorials-zh', '覆盖 Laravel、Vue 与无头 CMS 开发的循序渐进指南与实战教程。'],
+            ['评测', 'reviews-zh', '对我们日常使用的开发工具、编辑器、扩展包与服务的深度评测。'],
+        ] as $i => [$zhTitle, $zhUrl, $zhDescription]) {
+            $zhCategories[$zhTitle] = $this->addContent($project, $c['categories'], ['title' => $zhTitle, 'slug' => $zhUrl, 'description' => $zhDescription], published: true, daysAgo: 19 - $i, locale: 'zh')->id;
         }
         $zhCategoryByEn = [
             'News' => $zhCategories['新闻'], 'Tutorials' => $zhCategories['教程'], 'Reviews' => $zhCategories['评测'],
@@ -604,7 +612,7 @@ class DemoProjectsSeeder extends Seeder
         $this->seedProjectTranslations($project, [
             'Pages' => '页面', 'Articles' => '文章', 'Categories' => '分类', 'Authors' => '作者',
             'Tags' => '标签', 'Comments' => '评论', 'Globals' => '全局',
-            'Title' => '标题', 'Path' => '路径', 'Content' => '内容',
+            'Title' => '标题', 'Path' => '路径', 'Content' => '内容', 'Description' => '描述',
             'Excerpt' => '摘要', 'Featured Image' => '特色图片', 'Category' => '分类', 'Author' => '作者',
             'Slider' => '幻灯片', 'Featured' => '精选', 'Recommended' => '推荐',
             'Name' => '姓名', 'Info' => '简介', 'Avatar' => '头像',
@@ -652,8 +660,16 @@ class DemoProjectsSeeder extends Seeder
 
         /* --- Categories / Tags / Locations --- */
         $categories = [];
-        foreach ([['Restaurants', 'restaurants'], ['Cafes', 'cafes'], ['Hotels', 'hotels'], ['Shopping', 'shopping'], ['Services', 'services'], ['Health & Beauty', 'health-beauty'], ['Automotive', 'automotive']] as $i => [$title, $url]) {
-            $categories[$title] = $this->addContent($project, $c['categories'], ['title' => $title, 'slug' => $url], published: true, daysAgo: 30 - $i)->id;
+        foreach ([
+            ['Restaurants', 'restaurants', 'From fine dining to casual bistros — places worth booking a table for.'],
+            ['Cafes', 'cafes', 'Coffee, pastries and cosy corners for work, meetings or a slow morning.'],
+            ['Hotels', 'hotels', 'Boutique stays, grand classics and everything in between for your next trip.'],
+            ['Shopping', 'shopping', 'Independent stores and local favourites for books, plants, electronics and more.'],
+            ['Services', 'services', 'Gyms, repairs, tours and every service that keeps the city running.'],
+            ['Health & Beauty', 'health-beauty', 'Spas, salons and studios to help you relax, refresh and feel your best.'],
+            ['Automotive', 'automotive', 'Garages, showrooms and care for every kind of vehicle.'],
+        ] as $i => [$title, $url, $description]) {
+            $categories[$title] = $this->addContent($project, $c['categories'], ['title' => $title, 'slug' => $url, 'description' => $description], published: true, daysAgo: 30 - $i)->id;
         }
 
         $tags = [];
@@ -754,10 +770,15 @@ class DemoProjectsSeeder extends Seeder
         /* --- Chinese structure: categories, tags, locations --- */
         $zhCategories = [];
         foreach ([
-            ['餐厅', 'restaurants-zh'], ['咖啡馆', 'cafes-zh'], ['酒店', 'hotels-zh'], ['购物', 'shopping-zh'],
-            ['服务', 'services-zh'], ['健康美容', 'health-beauty-zh'], ['汽车', 'automotive-zh'],
-        ] as $i => [$zhTitle, $zhUrl]) {
-            $zhCategories[$zhTitle] = $this->addContent($project, $c['categories'], ['title' => $zhTitle, 'slug' => $zhUrl], published: true, daysAgo: 30 - $i, locale: 'zh')->id;
+            ['餐厅', 'restaurants-zh', '从高档餐厅到休闲小馆——值得订位的去处。'],
+            ['咖啡馆', 'cafes-zh', '咖啡、糕点与舒适角落，适合工作、会友或悠闲的早晨。'],
+            ['酒店', 'hotels-zh', '精品旅居、经典大饭店，下一次出行的一切选择。'],
+            ['购物', 'shopping-zh', '独立店铺与本地好店：图书、植物、电子产品等一应俱全。'],
+            ['服务', 'services-zh', '健身房、维修、游船——让城市运转起来的各种服务。'],
+            ['健康美容', 'health-beauty-zh', '水疗、沙龙与工作室，让你放松、焕新、状态满分。'],
+            ['汽车', 'automotive-zh', '维修厂、展厅与各类车辆的养护服务。'],
+        ] as $i => [$zhTitle, $zhUrl, $zhDescription]) {
+            $zhCategories[$zhTitle] = $this->addContent($project, $c['categories'], ['title' => $zhTitle, 'slug' => $zhUrl, 'description' => $zhDescription], published: true, daysAgo: 30 - $i, locale: 'zh')->id;
         }
         $zhCategoryByEn = [
             'Restaurants' => $zhCategories['餐厅'], 'Cafes' => $zhCategories['咖啡馆'], 'Hotels' => $zhCategories['酒店'],
