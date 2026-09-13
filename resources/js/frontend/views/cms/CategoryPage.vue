@@ -90,7 +90,6 @@ export default {
         return {
             slug: null,
             heading: null,
-            entityId: null,
             entity: null,
             items: [],
             offset: 0,
@@ -136,16 +135,14 @@ export default {
             this.offset = 0;
             this.hasMore = true;
             this.slug = this.param;
+            this.heading = null;
             this.entity = null;
 
             try {
-                await this.resolveEntity(COLLECTIONS.categories, "slug");
-
-                if (!this.entityId) {
-                    this.hasMore = false;
-                    return;
-                }
-
+                // The URL carries the readable category slug, so the
+                // relation query goes through the explicit slug endpoint
+                // (/categories/slug/{slug}/articles) — no need to fetch the
+                // category list first just to translate slug → id.
                 await this.fetchPage();
 
                 if (seq !== this._loadSeq) {
@@ -161,28 +158,14 @@ export default {
             }
         },
 
-        async resolveEntity(collectionSlug, matchField) {
-            const list = await api.request({
-                type: "get",
-                project: this.projectConfig.identifier,
-                collection: collectionSlug,
-            });
-            const match = (list || []).find((c) => c[matchField] === this.slug);
-
-            if (match) {
-                this.heading = match.title || match.name;
-                this.entityId = match.id;
-                this.entity = match;
-            }
-        },
-
         async fetchPage() {
             const cfg = this.projectConfig;
             const data = await api.request({
                 type: "get",
                 project: cfg.identifier,
                 source: COLLECTIONS.categories,
-                id: this.entityId,
+                id: this.slug,
+                bySlug: true,
                 related: cfg.contentCollection,
                 params: {
                     offset: this.offset,
@@ -194,6 +177,17 @@ export default {
             });
 
             this.items.push(...(data || []));
+
+            // Category heading/banner come from the first returned item's
+            // category object (relation is embedded in list items).
+            if (!this.heading && this.items.length) {
+                const category = this.items[0].category;
+                if (category) {
+                    this.heading = category.title || category.name || null;
+                    this.entity = category;
+                }
+            }
+
             this.offset += ARCHIVE_PAGE_SIZE;
             this.hasMore = (data || []).length === ARCHIVE_PAGE_SIZE;
         },

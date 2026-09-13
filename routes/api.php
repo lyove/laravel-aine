@@ -37,6 +37,7 @@ Route::middleware(['verify.domain.whitelist'])->prefix('project')->group(functio
     Route::post('/{project_identifier}/media/upload', [MediaController::class, 'uploadMedia'])->middleware('auth:sanctum', 'throttle:api-write');
 
     Route::get('/{project_identifier}/{slug}/slug/{slug_value}', [ContentController::class, 'getProjectContentBySlug']);
+    Route::get('/{project_identifier}/{slug}/slug/{slug_value}/{related_slug}', [ContentController::class, 'getProjectContentBySlugRelation']);
     Route::get('/{project_identifier}/{slug}/{slug_id}/{related_slug}', [ContentController::class, 'getProjectContentByRelation']);
     Route::get('/{project_identifier}/{slug}/search', [ContentController::class, 'searchContent'])->middleware('throttle:api-search');
     Route::get('/{project_identifier}/{slug}/{slug_id}', [ContentController::class, 'getProjectContentByID']);
@@ -61,6 +62,10 @@ Route::middleware(['validate.project.access', 'auth:sanctum'])->group(function (
     Route::post('/{uuid}/project-media/upload', [MediaController::class, 'uploadMedia'])->middleware('throttle:api-write');
 
     Route::get('/{uuid}/{slug}/slug/{slug_value}', [ContentController::class, 'getProjectContentBySlug']);
+    // Slug-source relation lookup — before the ID relation route (both are
+    // 4 segments) so "/slug/{slug_value}/{related_slug}" is not captured
+    // as {slug_id}/{related_slug}.
+    Route::get('/{uuid}/{slug}/slug/{slug_value}/{related_slug}', [ContentController::class, 'getProjectContentBySlugRelation']);
     Route::get('/{uuid}/{slug}/{slug_id}/{related_slug}', [ContentController::class, 'getProjectContentByRelation']);
     Route::get('/{uuid}/{slug}/search', [ContentController::class, 'searchContent'])->middleware('throttle:api-search');
     Route::get('/{uuid}/{slug}/{slug_id}', [ContentController::class, 'getProjectContentByID']);

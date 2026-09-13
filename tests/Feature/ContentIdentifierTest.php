@@ -362,4 +362,65 @@ class ContentIdentifierTest extends TestCase
             ->assertStatus(200)
             ->assertJsonPath('data.id', $media->id);
     }
+
+    // =================================================================
+    // Relation by slug: GET /{collection}/slug/{slug}/{related}
+    // =================================================================
+
+    public function test_relation_by_slug_resolves_the_same_as_by_id(): void
+    {
+        $categories = Collection::create([
+            'name' => 'Categories', 'slug' => 'categories',
+            'project_id' => $this->project->id, 'order' => 2,
+        ]);
+        $this->addField($categories, 'title', 'text', ['required' => true]);
+        $this->addField($categories, 'slug', 'slug', ['required' => true, 'unique' => true]);
+
+        CollectionField::create([
+            'type' => 'relation',
+            'label' => 'Category',
+            'name' => 'category',
+            'options' => json_encode([
+                'relation' => ['type' => 1, 'collection' => (string) $categories->id],
+                'slug' => [], 'media' => [], 'enumeration' => [],
+                'hideInContentList' => false,
+            ]),
+            'validations' => json_encode([
+                'required' => ['status' => false, 'message' => null],
+                'charcount' => ['status' => false, 'type' => '', 'min' => null, 'max' => null],
+                'unique' => ['status' => false, 'message' => null],
+            ]),
+            'project_id' => $this->project->id,
+            'collection_id' => $this->articles->id,
+            'order' => 3,
+        ]);
+
+        $category = $this->addContent($categories->id, 'en', [
+            'title' => 'News', 'slug' => 'news-zh',
+        ], now());
+
+        $article = $this->addContent($this->articles->id, 'en', [
+            'title' => 'Security Guide', 'slug' => 'security-guide',
+            'category' => (string) $category->id,
+        ], now());
+
+        // Slug-source relation endpoint resolves the source by slug.
+        $this->getJson('/api/project/blog/categories/slug/news-zh/articles')
+            ->assertStatus(200)
+            ->assertJsonPath('data.0.id', $article->id);
+
+        // ID relation endpoint returns the same list.
+        $this->getJson('/api/project/blog/categories/' . $category->id . '/articles')
+            ->assertStatus(200)
+            ->assertJsonPath('data.0.id', $article->id);
+
+        // Unknown source slug -> 404.
+        $this->getJson('/api/project/blog/categories/slug/does-not-exist/articles')
+            ->assertStatus(404);
+
+        // The literal slug relation route is not captured by the ID relation
+        // route (4 segments both) — a numeric-looking slug still resolves.
+        $this->getJson('/api/project/blog/categories/slug/news-zh/articles')
+            ->assertStatus(200);
+    }
 }

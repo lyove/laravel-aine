@@ -228,6 +228,48 @@ class ContentController extends Controller
         return $this->getContentByRelationByUuid($project->uuid, $slug, $slug_id, $related_slug, $request);
     }
 
+    // -----------------------------------------------------------------
+    // Content by relation — slug source variant
+    // GET /{collection}/slug/{slug_value}/{related_collection}
+    // Same relation query as the ID variant, but the source record is
+    // resolved by its slug field value instead of its numeric ID.
+    // -----------------------------------------------------------------
+
+    private function getContentBySlugRelationByUuid($uuid, $slug, $slug_value, $relatedSlug, Request $request)
+    {
+        $project = $request->attributes->get('resolved_project')
+            ?? Project::where('uuid', $uuid)->first();
+
+        if (! $project) return $this->notFound('Project not found');
+        if ($response = $this->authorizeProjectRead($project)) return $response;
+
+        $cacheKey = $this->publicCacheKey($project, 'related', $slug . '/slug/' . $slug_value . '/' . $relatedSlug, $request, [$slug, $relatedSlug]);
+        return $this->rememberPublicJson($cacheKey, function () use ($project, $slug, $slug_value, $relatedSlug, $request) {
+            return $this->resolveContentBySlugRelation($project, $slug, $slug_value, $relatedSlug, $request);
+        }, $project->public_api);
+    }
+
+    public function getProjectContentBySlugRelation($project_identifier, $slug, $slug_value, $related_slug, Request $request)
+    {
+        $project = $request->attributes->get('resolved_project');
+        if (! $project) return $this->notFound('Project not resolved');
+        return $this->getContentBySlugRelationByUuid($project->uuid, $slug, $slug_value, $related_slug, $request);
+    }
+
+    private function resolveContentBySlugRelation(Project $project, $slug, $slugValue, $relatedSlug, Request $request)
+    {
+        $sourceCollection = Collection::where('project_id', $project->id)->where('slug', $slug)->first();
+        if (! $sourceCollection) return $this->notFound('Source collection "' . $slug . '" not found in project');
+
+        $source = $this->contentBySlug(
+            $project, $sourceCollection, $slugValue,
+            $this->resolveLocale($request, $project), ['id']
+        );
+        if (! $source) return $this->notFound('No content with slug "' . $slugValue . '" in collection "' . $slug . '"');
+
+        return $this->resolveContentByRelation($project, $slug, $source->id, $relatedSlug, $request);
+    }
+
     private function resolveContentByRelation(Project $project, $slug, $slug_id, $relatedSlug, Request $request)
     {
         $sourceCollection = Collection::where('project_id', $project->id)->where('slug', $slug)->first();

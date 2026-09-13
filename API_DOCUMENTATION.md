@@ -168,7 +168,8 @@ Origin: https://your-frontend.com
 | -- | --- | --- | --- | --- | --- |
 | 2 | GET | `/api/project/{project_identifier}/{slug}` | 获取内容列表 | `filters`、`or`、`sort`、`offset`、`limit`、`count`、`first`、`state`、`timestamps`（均可选） | ✅ 白名单（+Token 若未开启 Public API） |
 | 3 | GET | `/api/project/{project_identifier}/{slug}/{slug_id}` | 获取单条内容（按 ID） | `slug_id`: int、`timestamps`（可选） | ✅ 同上 |
-| 3a | GET | `/api/project/{project_identifier}/{slug}/{slug_id}/{related_slug}` | 按关联内容查询（如分类下的文章） | `slug_id`: int（关联源**仅接受 ID**）、`related_slug`: string、同列表查询参数 | ✅ 同上 |
+| 3a | GET | `/api/project/{project_identifier}/{slug}/{slug_id}/{related_slug}` | 按关联内容查询（如分类下的文章，源按 ID） | `slug_id`: int（关联源**仅接受 ID**）、`related_slug`: string、同列表查询参数 | ✅ 同上 |
+| 3e | GET | `/api/project/{project_identifier}/{slug}/slug/{slug_value}/{related_slug}` | 按关联内容查询（源按 Slug） | `slug_value`: string（关联源 slug）、`related_slug`: string、同列表查询参数 | ✅ 同上 |
 | 3d | GET | `/api/project/{project_identifier}/{slug}/slug/{slug_value}` | 获取单条内容（按 Slug） | `slug_value`: string、`timestamps`（可选） | ✅ 同上 |
 | 3b | GET | `/api/project/{project_identifier}/portal` | 获取项目门户内容（首页/精选/最新等页面骨架） | `collection`: string（可选，默认 `articles`） | ✅ 同上 |
 | 3c | GET | `/api/project/{project_identifier}/{slug}/search` | 搜索集合内容 | `query`（必填 2-100 字符）、`limit`、`offset`、`state` | ✅ 同上 |
@@ -200,7 +201,8 @@ Origin: https://your-frontend.com
 | -- | --- | --- | --- | --- | --- |
 | 13 | GET | `/api/{uuid}/{slug}` | 获取内容列表 | 同列表查询参数 | ✅ UUID + Token |
 | 14 | GET | `/api/{uuid}/{slug}/{slug_id}` | 获取单条内容（按 ID） | `slug_id`: int、`timestamps`（可选） | ✅ UUID + Token |
-| 14a | GET | `/api/{uuid}/{slug}/{slug_id}/{related_slug}` | 按关联内容查询 | `slug_id`: int（关联源**仅接受 ID**）、同列表查询参数 | ✅ UUID + Token |
+| 14a | GET | `/api/{uuid}/{slug}/{slug_id}/{related_slug}` | 按关联内容查询（源按 ID） | `slug_id`: int（关联源**仅接受 ID**）、同列表查询参数 | ✅ UUID + Token |
+| 14e | GET | `/api/{uuid}/{slug}/slug/{slug_value}/{related_slug}` | 按关联内容查询（源按 Slug） | `slug_value`: string（关联源 slug）、同列表查询参数 | ✅ UUID + Token |
 | 14d | GET | `/api/{uuid}/{slug}/slug/{slug_value}` | 获取单条内容（按 Slug） | `slug_value`: string、`timestamps`（可选） | ✅ UUID + Token |
 | 14b | GET | `/api/{uuid}/{slug}/search` | 搜索集合内容 | `query`（必填 2-100 字符）、`limit`、`offset`、`state` | ✅ UUID + Token |
 | 15 | POST | `/api/{uuid}/{slug}` | 创建内容 | Body: object | ✅ UUID + Token（write） |
@@ -282,7 +284,8 @@ Origin: https://your-frontend.com
 > - 两条端点都返回**单个内容对象**（`data` 为对象而非数组），并遵循相同的语言作用域与「仅已发布」规则（草稿 404）。
 > - 二者互不干扰：数字型 slug（如 `9001`）只通过 `/slug/9001` 访问，`/9001` 是纯 ID 查询；slugs 值为 `search` 等内容同样只通过 `/slug/search` 访问（字面段 `slug` 已注册在关系路由之前，不会被截获）。
 > - slug 唯一性（同集合内唯一，跨语言同样唯一）保证按 slug 取单条结果确定。
-> - 写操作（#5/#6/#16/#17）与关联查询（#3a/#14a）的 `{slug_id}` **仅接受数字 ID**，不接受 slug。
+> - 写操作（#5/#6/#16/#17）的 `{slug_id}` **仅接受数字 ID**，不接受 slug。
+> - 关联查询有两条等效端点：ID 源（#3a/#14a，`{slug_id}` 仅 ID）与 slug 源（#3e/#14e，`/slug/{slug_value}/{related_slug}`）。页面 URL 只有可读 slug 时用 #3e，无需先查列表翻译 ID。
 
 ### 查询参数（门户内容 portal）
 
@@ -605,6 +608,21 @@ curl -H "Authorization: Bearer your_token" \
 | `slug` | `categories` | 源集合（分类） |
 | `slug_id` | `3` | 分类 ID |
 | `related_slug` | `articles` | 关联集合（文章） |
+
+**slug 源变体**（页面 URL 只有可读 slug 时，无需先查列表翻译 ID）：
+
+```bash
+curl -H "Origin: https://your-frontend.com" \
+     "https://backend.com/api/project/my-blog/categories/slug/news-zh/articles?limit=10&sort=published_at:desc"
+```
+
+| 路径参数 | 值 | 说明 |
+| --- | --- | --- |
+| `slug` | `categories` | 源集合（分类） |
+| `slug_value` | `news-zh` | 源记录的 slug 值（按源集合的 slug 字段匹配） |
+| `related_slug` | `articles` | 关联集合（文章） |
+
+两条端点返回**完全相同**的关联内容列表；未知 `slug_value` 返回 404。
 
 ### 关联计数
 

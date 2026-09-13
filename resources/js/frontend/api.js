@@ -78,6 +78,14 @@ const endpoints = {
     id: true,
     related: articles,
   },
+  getCategoryArticlesBySlug: {
+    type: "get",
+    project: cms,
+    source: COLLECTIONS.categories,
+    id: true,
+    bySlug: true,
+    related: articles,
+  },
 
   // =================================================================
   // CMS project — tags
@@ -184,6 +192,14 @@ const endpoints = {
     project: dir,
     source: COLLECTIONS.categories,
     id: true,
+    related: listings,
+  },
+  getCategoryListingsBySlug: {
+    type: "get",
+    project: dir,
+    source: COLLECTIONS.categories,
+    id: true,
+    bySlug: true,
     related: listings,
   },
   getLocationListings: {
@@ -419,6 +435,11 @@ function buildUrl(config) {
     return `${base}/portal`;
   }
 
+  // Slug-source relation: /{source}/slug/{slug_value}/{related}
+  // Must precede the ID relation branch (both share the same shape).
+  if (source && bySlug && related) {
+    return `${base}/${source}/slug/${id}/${related}`;
+  }
   if (source && id && related) {
     return `${base}/${source}/${id}/${related}`;
   }
