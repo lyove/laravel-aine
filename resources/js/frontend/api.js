@@ -25,6 +25,13 @@ const endpoints = {
     collection: articles,
     id: true,
   },
+  getArticleBySlug: {
+    type: "get",
+    project: cms,
+    collection: articles,
+    id: true,
+    bySlug: true,
+  },
   searchArticles: {
     type: "get",
     project: cms,
@@ -131,6 +138,13 @@ const endpoints = {
     project: dir,
     collection: listings,
     id: true,
+  },
+  getListingBySlug: {
+    type: "get",
+    project: dir,
+    collection: listings,
+    id: true,
+    bySlug: true,
   },
   searchListings: {
     type: "get",
@@ -388,7 +402,7 @@ function serializeQuery(params = {}) {
  * ------------------------------------------------------------------ */
 
 function buildUrl(config) {
-  const { project, collection, id, related, source, action, resource } = config;
+  const { project, collection, id, related, source, action, resource, bySlug } = config;
   const base = `/api/project/${project}`;
 
   if (resource === "media") {
@@ -417,6 +431,10 @@ function buildUrl(config) {
   }
   if (action === "update" && id) {
     return `${base}/${collection}/update/${id}`;
+  }
+  // Explicit slug lookup: /{collection}/slug/{slug_value}
+  if (bySlug && id) {
+    return `${base}/${collection}/slug/${id}`;
   }
   if (id) {
     return `${base}/${collection}/${id}`;

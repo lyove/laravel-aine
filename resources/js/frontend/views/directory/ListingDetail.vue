@@ -174,15 +174,9 @@ export default {
             this.item = null;
             this.reviews = [];
             const listingUrl = this.$route.params.listing;
-            const categoryUrl = this.$route.params.category;
 
             try {
-                const matches = await api.getListings({
-                    filters: { slug: listingUrl },
-                    timestamps: true,
-                });
-                const match = (matches || []).find((l) => (l.category ? l.category.slug : null) === categoryUrl);
-                this.item = match || (matches || [])[0] || null;
+                this.item = await api.getListingBySlug(listingUrl, { timestamps: true });
 
                 if (this.item) {
                     this.reviews = (await api.request({

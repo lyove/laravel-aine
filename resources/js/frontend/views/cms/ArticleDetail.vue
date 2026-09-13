@@ -102,15 +102,9 @@ export default {
             this.loading = true;
             this.item = null;
             const articleUrl = this.$route.params.article;
-            const categoryUrl = this.$route.params.category;
 
             try {
-                const matches = await api.getArticles({
-                    filters: { slug: articleUrl },
-                    timestamps: true,
-                });
-                const match = (matches || []).find((a) => (a.category ? a.category.slug : null) === categoryUrl);
-                this.item = match || (matches || [])[0] || null;
+                this.item = await api.getArticleBySlug(articleUrl, { timestamps: true });
             } catch (error) {
                 console.error("Failed to load article:", error);
                 this.item = null;

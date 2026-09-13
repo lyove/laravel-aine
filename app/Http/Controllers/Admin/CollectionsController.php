@@ -52,7 +52,7 @@ class CollectionsController extends Controller
 
         $request->validate([
             'name' => 'required',
-            'slug' => ['required','not_in:project-media', Rule::unique('collections')->where(function ($query) use ($project) {
+            'slug' => ['required','not_in:project-media,media,portal,sitemap.xml,feed.xml', Rule::unique('collections')->where(function ($query) use ($project) {
                 return $query->where('project_id', $project->id);
             })]
         ],[
@@ -149,7 +149,7 @@ class CollectionsController extends Controller
 
         $request->validate([
             'name' => 'required',
-            'slug' => ['required', 'not_in:project-media', Rule::unique('collections')->where(function ($query) use ($project) {
+            'slug' => ['required', 'not_in:project-media,media,portal,sitemap.xml,feed.xml', Rule::unique('collections')->where(function ($query) use ($project) {
                 return $query->where('project_id', $project->id);
             })->ignore($collection->id)]
         ], [

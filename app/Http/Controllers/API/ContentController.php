@@ -105,7 +105,7 @@ class ContentController extends Controller
         if (! $project) return response(['error' => 'Project not found!'], 404);
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
-        $collection = Collection::where('project_id', $project->id)->where('slug', $slug)->first();
+        $collection = Collection::with('fields')->where('project_id', $project->id)->where('slug', $slug)->first();
         if (! $collection) return response(['error' => 'Collection not found!'], 404);
 
         $selectFields = ['id', 'project_id', 'collection_id', 'locale'];
@@ -115,18 +115,92 @@ class ContentController extends Controller
 
         $locale = $this->resolveLocale($request, $project);
 
-        $content = Content::query()->with(['meta', 'collection.fields'])
-            ->where('project_id', $project->id)
-            ->where('collection_id', $collection->id)
-            ->whereNotNull('published_at')
-            ->whereNull('draft_parent_id')
-            ->when($locale !== null, fn ($q) => $q->where('locale', $locale))
-            ->select($selectFields)->find($slug_id);
+        $content = $this->publishedContentQuery($project, $collection, $locale, $selectFields)
+            ->find($slug_id);
 
         if (! $content) return $this->notFound('Not found');
 
         ContentSerializer::preload($content);
         return $this->success(new ContentResource($content), 'Success');
+    }
+
+    // =================================================================
+    // Content detail by slug
+    // =================================================================
+
+    private function getContentBySlugUuid($uuid, $slug, $slug_value, Request $request)
+    {
+        $project = Project::where('uuid', $uuid)->first();
+        if (! $project) return response(['error' => 'Project not found!'], 404);
+        if ($response = $this->authorizeProjectRead($project)) return $response;
+
+        $cacheKey = $this->publicCacheKey($project, 'single', $slug . '/slug/' . $slug_value, $request, [$slug]);
+        return $this->rememberPublicJson($cacheKey, function () use ($uuid, $slug, $slug_value, $request) {
+            return $this->resolveContentBySlugUuid($uuid, $slug, $slug_value, $request);
+        }, $project->public_api);
+    }
+
+    public function getProjectContentBySlug($project_identifier, $slug, $slug_value, Request $request)
+    {
+        $project = $request->attributes->get('resolved_project');
+        if (! $project) return $this->notFound('Project not resolved');
+        return $this->getContentBySlugUuid($project->uuid, $slug, $slug_value, $request);
+    }
+
+    private function resolveContentBySlugUuid($uuid, $slug, $slug_value, Request $request)
+    {
+        $project = Project::where('uuid', $uuid)->first();
+        if (! $project) return response(['error' => 'Project not found!'], 404);
+        if ($response = $this->authorizeProjectRead($project)) return $response;
+
+        $collection = Collection::with('fields')->where('project_id', $project->id)->where('slug', $slug)->first();
+        if (! $collection) return response(['error' => 'Collection not found!'], 404);
+
+        $selectFields = ['id', 'project_id', 'collection_id', 'locale'];
+        if ($request->has('timestamps')) {
+            $selectFields = array_merge($selectFields, ['created_at', 'updated_at', 'published_at']);
+        }
+
+        $locale = $this->resolveLocale($request, $project);
+
+        $content = $this->contentBySlug($project, $collection, $slug_value, $locale, $selectFields);
+
+        if (! $content) return $this->notFound('Not found');
+
+        ContentSerializer::preload($content);
+        return $this->success(new ContentResource($content), 'Success');
+    }
+
+    /**
+     * Resolve a single published content record by its slug meta value.
+     * The slug field is located by field type (type = "slug"); templates
+     * name it "slug", but custom collections may use another name.
+     */
+    private function contentBySlug(Project $project, Collection $collection, string $slug, ?string $locale, array $selectFields)
+    {
+        $slugField = $collection->fields->firstWhere('type', 'slug');
+        $slugFieldName = $slugField ? $slugField->name : 'slug';
+
+        return $this->publishedContentQuery($project, $collection, $locale, $selectFields)
+            ->whereHas('meta', function ($q) use ($slugFieldName, $slug) {
+                $q->where('field_name', $slugFieldName)->where('value', $slug);
+            })
+            ->first();
+    }
+
+    /**
+     * Base query for single-content lookups: scoped to project + collection,
+     * published only, locale-filtered and draft branches excluded.
+     */
+    private function publishedContentQuery(Project $project, Collection $collection, ?string $locale, array $selectFields)
+    {
+        return Content::query()->with(['meta', 'collection.fields'])
+            ->where('project_id', $project->id)
+            ->where('collection_id', $collection->id)
+            ->whereNotNull('published_at')
+            ->whereNull('draft_parent_id')
+            ->when($locale !== null, fn ($q) => $q->where('locale', $locale))
+            ->select($selectFields);
     }
 
     // =================================================================

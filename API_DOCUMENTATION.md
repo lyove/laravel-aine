@@ -167,13 +167,14 @@ Origin: https://your-frontend.com
 | # | 方法 | 接口路径 | 说明 | 参数 | 认证 |
 | -- | --- | --- | --- | --- | --- |
 | 2 | GET | `/api/project/{project_identifier}/{slug}` | 获取内容列表 | `filters`、`or`、`sort`、`offset`、`limit`、`count`、`first`、`state`、`timestamps`（均可选） | ✅ 白名单（+Token 若未开启 Public API） |
-| 3 | GET | `/api/project/{project_identifier}/{slug}/{slug_id}` | 获取单条内容 | `slug_id`: int、`timestamps`（可选） | ✅ 同上 |
-| 3a | GET | `/api/project/{project_identifier}/{slug}/{slug_id}/{related_slug}` | 按关联内容查询（如分类下的文章） | `slug_id`: int、`related_slug`: string、同列表查询参数 | ✅ 同上 |
+| 3 | GET | `/api/project/{project_identifier}/{slug}/{slug_id}` | 获取单条内容（按 ID） | `slug_id`: int、`timestamps`（可选） | ✅ 同上 |
+| 3a | GET | `/api/project/{project_identifier}/{slug}/{slug_id}/{related_slug}` | 按关联内容查询（如分类下的文章） | `slug_id`: int（关联源**仅接受 ID**）、`related_slug`: string、同列表查询参数 | ✅ 同上 |
+| 3d | GET | `/api/project/{project_identifier}/{slug}/slug/{slug_value}` | 获取单条内容（按 Slug） | `slug_value`: string、`timestamps`（可选） | ✅ 同上 |
 | 3b | GET | `/api/project/{project_identifier}/portal` | 获取项目门户内容（首页/精选/最新等页面骨架） | `collection`: string（可选，默认 `articles`） | ✅ 同上 |
 | 3c | GET | `/api/project/{project_identifier}/{slug}/search` | 搜索集合内容 | `query`（必填 2-100 字符）、`limit`、`offset`、`state` | ✅ 同上 |
 | 4 | POST | `/api/project/{project_identifier}/{slug}` | 创建内容 | Body: object（字段由集合定义） | ✅ 白名单 + Token（write） |
-| 5 | POST | `/api/project/{project_identifier}/{slug}/update/{slug_id}` | 更新内容 | `slug_id`: int、Body: object | ✅ 白名单 + Token（write） |
-| 6 | DELETE | `/api/project/{project_identifier}/{slug}/{slug_id}` | 删除内容 | `slug_id`: int | ✅ 白名单 + Token（write） |
+| 5 | POST | `/api/project/{project_identifier}/{slug}/update/{slug_id}` | 更新内容 | `slug_id`: int（**仅 ID**）、Body: object | ✅ 白名单 + Token（write） |
+| 6 | DELETE | `/api/project/{project_identifier}/{slug}/{slug_id}` | 删除内容 | `slug_id`: int（**仅 ID**） | ✅ 白名单 + Token（write） |
 
 #### 🖼️ 媒体库
 
@@ -198,12 +199,13 @@ Origin: https://your-frontend.com
 | # | 方法 | 接口路径 | 说明 | 参数 | 认证 |
 | -- | --- | --- | --- | --- | --- |
 | 13 | GET | `/api/{uuid}/{slug}` | 获取内容列表 | 同列表查询参数 | ✅ UUID + Token |
-| 14 | GET | `/api/{uuid}/{slug}/{slug_id}` | 获取单条内容 | `slug_id`: int、`timestamps`（可选） | ✅ UUID + Token |
-| 14a | GET | `/api/{uuid}/{slug}/{slug_id}/{related_slug}` | 按关联内容查询 | 同列表查询参数 | ✅ UUID + Token |
+| 14 | GET | `/api/{uuid}/{slug}/{slug_id}` | 获取单条内容（按 ID） | `slug_id`: int、`timestamps`（可选） | ✅ UUID + Token |
+| 14a | GET | `/api/{uuid}/{slug}/{slug_id}/{related_slug}` | 按关联内容查询 | `slug_id`: int（关联源**仅接受 ID**）、同列表查询参数 | ✅ UUID + Token |
+| 14d | GET | `/api/{uuid}/{slug}/slug/{slug_value}` | 获取单条内容（按 Slug） | `slug_value`: string、`timestamps`（可选） | ✅ UUID + Token |
 | 14b | GET | `/api/{uuid}/{slug}/search` | 搜索集合内容 | `query`（必填 2-100 字符）、`limit`、`offset`、`state` | ✅ UUID + Token |
 | 15 | POST | `/api/{uuid}/{slug}` | 创建内容 | Body: object | ✅ UUID + Token（write） |
-| 16 | POST | `/api/{uuid}/{slug}/update/{slug_id}` | 更新内容 | `slug_id`: int、Body: object | ✅ UUID + Token（write） |
-| 17 | DELETE | `/api/{uuid}/{slug}/{slug_id}` | 删除内容 | `slug_id`: int | ✅ UUID + Token（write） |
+| 16 | POST | `/api/{uuid}/{slug}/update/{slug_id}` | 更新内容 | `slug_id`: int（**仅 ID**）、Body: object | ✅ UUID + Token（write） |
+| 17 | DELETE | `/api/{uuid}/{slug}/{slug_id}` | 删除内容 | `slug_id`: int（**仅 ID**） | ✅ UUID + Token（write） |
 
 #### 🖼️ 媒体库
 
@@ -237,7 +239,8 @@ Origin: https://your-frontend.com
 | `{uuid}` | string | 项目的唯一标识符（36 位 UUID） | `abc123-def456-7890` |
 | `{project_identifier}` | string | 项目标识符（UUID 或 slug） | `abc123-def456` 或 `my-blog` |
 | `{slug}` | string | 内容集合的名称 | `articles`, `pages`, `listings` |
-| `{slug_id}` | int | 内容的数字 ID | `1`, `123` |
+| `{slug_id}` | int | 内容的数字 ID（按 ID 取单条、关联查询、更新、删除均用此段） | `1`, `123` |
+| `{slug_value}` | string | 内容的 slug 值（仅用于按 slug 取单条的 `/slug/{slug_value}` 端点） | `security-best-practices-headless-cms-zh` |
 | `{media_id}` | int | 媒体文件的数字 ID | `1`, `123` |
 | `{media_name}` | string | 媒体文件的文件名 | `image.jpg` |
 | `{related_slug}` | string | 关联集合的名称（用于关联查询） | `articles`, `listings` |
@@ -268,6 +271,18 @@ Origin: https://your-frontend.com
 > **注意**：单条内容接口同样默认只返回**已发布**内容——草稿通过该接口访问会返回 404。
 >
 > **语言**：单条内容同样按单一语言返回。默认使用项目默认语言；如需读取其他语言下的记录，传入 `?locale=zh` 或 `filters.locale=zh`（其他语言记录的 ID 不会在默认语言下返回）。
+>
+> **按 ID / 按 Slug 双端点**：单条内容有两条独立、无歧义的端点（#3/#3d、#14/#14d），标识符类型由路径显式声明，不存在启发式推断——
+>
+> | 端点 | 标识符 | 说明 |
+> | --- | --- | --- |
+> | `GET /{collection}/{slug_id}` | 数字 ID | 主键精确查询，非数字值一律 404 |
+> | `GET /{collection}/slug/{slug_value}` | slug 字段值 | 按该集合 slug 类型字段匹配（模板中为 `slug` 字段） |
+>
+> - 两条端点都返回**单个内容对象**（`data` 为对象而非数组），并遵循相同的语言作用域与「仅已发布」规则（草稿 404）。
+> - 二者互不干扰：数字型 slug（如 `9001`）只通过 `/slug/9001` 访问，`/9001` 是纯 ID 查询；slugs 值为 `search` 等内容同样只通过 `/slug/search` 访问（字面段 `slug` 已注册在关系路由之前，不会被截获）。
+> - slug 唯一性（同集合内唯一，跨语言同样唯一）保证按 slug 取单条结果确定。
+> - 写操作（#5/#6/#16/#17）与关联查询（#3a/#14a）的 `{slug_id}` **仅接受数字 ID**，不接受 slug。
 
 ### 查询参数（门户内容 portal）
 
@@ -682,6 +697,10 @@ const articles = await api.getArticles({
 // 获取单条文章（GET by ID）
 const article = await api.getArticle(42, { timestamps: true });
 // → GET /api/project/my-blog/articles/42
+
+// 获取单条文章（GET by Slug —— 前端详情页即用此方式）
+const articleBySlug = await api.getArticleBySlug('security-best-practices-headless-cms-zh', { timestamps: true });
+// → GET /api/project/my-blog/articles/slug/security-best-practices-headless-cms-zh
 
 // 搜索文章
 const results = await api.searchArticles({ query: 'laravel', limit: 20 });
