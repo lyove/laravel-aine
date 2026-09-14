@@ -28,6 +28,8 @@ use Spatie\Permission\Models\Role;
  */
 class DemoProjectsSeeder extends Seeder
 {
+    protected int $projectSequence = 0;
+
     public function run()
     {
         $this->call(AdminTranslationsSeeder::class);
@@ -35,7 +37,7 @@ class DemoProjectsSeeder extends Seeder
         $this->seedBaseData();
         $this->seedCmsProject();
         $this->seedDirectoryProject();
-        $this->seedSpeechProject();
+        $this->seedNoteProject();
     }
 
     /* ------------------------------------------------------------------ */
@@ -66,7 +68,7 @@ class DemoProjectsSeeder extends Seeder
             ['id' => 1],
             [
                 'name' => config('app.name', 'Aine'),
-                'description' => 'CMS Template + Business Directory Template + Speech Template',
+                'description' => 'CMS Template + Business Directory Template + Note Template',
                 'version' => env('APP_VERSION', '2.0.0'),
             ]
         );
@@ -102,6 +104,8 @@ class DemoProjectsSeeder extends Seeder
         }
 
         $data['owner_id'] ??= User::whereHas('roles', fn ($q) => $q->where('name', 'super_admin'))->value('id');
+
+        $data['created_at'] ??= now()->addSeconds($this->projectSequence++);
 
         $project = Project::create($data);
 
@@ -322,6 +326,11 @@ class DemoProjectsSeeder extends Seeder
                 'http://localhost:5173',
             ],
         ]);
+
+        ProjectTranslation::updateOrCreate(
+            ['project_id' => $project->id, 'locale' => 'zh', 'source' => $project->description],
+            ['value' => '完整的内容管理系统——文章、分类、标签、评论与页面。']
+        );
 
         $c = ProjectTemplates::apply($project, ProjectTemplates::get(ProjectTemplates::CMS));
 
@@ -633,6 +642,11 @@ class DemoProjectsSeeder extends Seeder
             ],
         ]);
 
+        ProjectTranslation::updateOrCreate(
+            ['project_id' => $project->id, 'locale' => 'zh', 'source' => $project->description],
+            ['value' => '完整的商家目录——包含分类、标签、地点、点评、Logo 与相册的商家列表。']
+        );
+
         $c = ProjectTemplates::apply($project, ProjectTemplates::get(ProjectTemplates::BUSINESS_DIRECTORY));
 
         $media = $this->seedMedia($project, [
@@ -875,15 +889,15 @@ class DemoProjectsSeeder extends Seeder
     }
 
     /* ------------------------------------------------------------------ */
-    /* Demo Speech (Speech Template)                                       */
+    /* Demo Note (Note Template)                                             */
     /* ------------------------------------------------------------------ */
 
-    protected function seedSpeechProject(): void
+    protected function seedNoteProject(): void
     {
         $project = $this->createProject([
-            'name' => 'Speech',
-            'slug' => 'speech',
-            'description' => '普通话学习文本、演讲稿、绕口令与经典语句的内容平台。',
+            'name' => '笔记',
+            'slug' => 'note',
+            'description' => '云笔记平台',
             'default_locale' => 'zh',
             'locales' => 'zh,en',
             'disk' => 'local',
@@ -895,10 +909,20 @@ class DemoProjectsSeeder extends Seeder
             ],
         ]);
 
-        $c = ProjectTemplates::apply($project, ProjectTemplates::get(ProjectTemplates::SPEECH));
+        ProjectTranslation::updateOrCreate(
+            ['project_id' => $project->id, 'locale' => 'en', 'source' => $project->description],
+            ['value' => 'Cloud Notes Platform']
+        );
+
+        ProjectTranslation::updateOrCreate(
+            ['project_id' => $project->id, 'locale' => 'en', 'source' => $project->name],
+            ['value' => 'Note']
+        );
+
+        $c = ProjectTemplates::apply($project, ProjectTemplates::get(ProjectTemplates::NOTE));
 
         $media = $this->seedMedia($project, [
-            ['cover-putonghua.jpg', '普通话学习', [13, 148, 136], [14, 165, 233], 1200, 630, false],
+            ['cover-putonghua.jpg', '云笔记', [13, 148, 136], [14, 165, 233], 1200, 630, false],
             ['cover-yanjiang.jpg', '演讲稿', [217, 119, 6], [239, 68, 68], 1200, 630, false],
             ['cover-raokouling.jpg', '绕口令', [124, 58, 237], [236, 72, 153], 1200, 630, false],
             ['cover-jingdian.jpg', '经典语句', [37, 99, 235], [6, 182, 212], 1200, 630, false],
@@ -906,8 +930,8 @@ class DemoProjectsSeeder extends Seeder
 
         /* --- Pages --- */
         foreach ([
-            ['title' => '首页', 'slug' => 'home', 'content' => '<h1>欢迎来到普通话演讲学习平台</h1><p>这里汇集<strong>普通话学习文本、演讲稿、绕口令与经典语句</strong>，助你练好发音、开口自信。</p>'],
-            ['title' => '关于我们', 'slug' => 'about', 'content' => '<h2>关于普通话演讲学习平台</h2><p>本平台由 Aine 驱动，专注于普通话正音、演讲表达与语言素养提升，内容全部支持通过公共 API 接入你的网站或应用。</p>'],
+            ['title' => '首页', 'slug' => 'home', 'content' => '<h1>欢迎来到文本笔记平台</h1><p>这里汇集<strong>普通话学习文本、演讲稿、绕口令与经典语句</strong>，助你练好发音、开口自信。</p>'],
+            ['title' => '关于我们', 'slug' => 'about', 'content' => '<h2>关于文本笔记平台</h2><p>本平台由 Aine 驱动，专注于普通话正音、演讲表达与语言素养提升，内容全部支持通过公共 API 接入你的网站或应用。</p>'],
             ['title' => '学习指南', 'slug' => 'guide', 'content' => '<h2>如何用好这个平台</h2><ol><li>先做<strong>声母、韵母、声调</strong>的基础练习；</li><li>再通过<strong>绕口令</strong>强化口腔控制与吐字归音；</li><li>最后在<strong>演讲稿与经典语句</strong>中体会语感与表达。</li></ol>'],
         ] as $i => $data) {
             $this->addContent($project, $c['pages'], $data, published: true, daysAgo: 20 - $i, locale: 'zh');
@@ -966,17 +990,17 @@ class DemoProjectsSeeder extends Seeder
 
         /* --- Globals --- */
         foreach ([
-            ['label' => 'site-name', 'value' => '普通话演讲学习平台'],
-            ['label' => 'site-description', 'value' => '普通话学习文本、演讲稿、绕口令与经典语句'],
-            ['label' => 'footer-text', 'value' => '© 2026 普通话演讲学习平台 —— 基于 Aine 构建'],
-            ['label' => 'support-email', 'value' => 'support@speech.example'],
+            ['label' => 'site-name', 'value' => '文本内容平台'],
+            ['label' => 'site-description', 'value' => '文本内容平台。'],
+            ['label' => 'footer-text', 'value' => '© 2026 文本内容平台 —— 基于 Aine 构建'],
+            ['label' => 'support-email', 'value' => 'support@note.example'],
         ] as $i => $data) {
             $this->addContent($project, $c['globals'], $data, published: true, daysAgo: 15 - $i, locale: 'zh');
         }
 
         /* --- Project translations (zh, the base locale) --- */
         foreach ([
-            'Pages' => '页面', 'Posts' => '文章', 'Categories' => '分类', 'Tags' => '标签', 'Globals' => '全局',
+            'Pages' => '页面', 'Posts' => '日志', 'Categories' => '分类', 'Tags' => '标签', 'Globals' => '全局',
             'Title' => '标题', 'Path' => '路径', 'Content' => '内容', 'Image' => '图片',
             'Excerpt' => '摘要', 'Featured Image' => '特色图片', 'Category' => '分类', 'Tag' => '标签',
             'Slider' => '幻灯片', 'Featured' => '精选', 'Recommended' => '推荐',

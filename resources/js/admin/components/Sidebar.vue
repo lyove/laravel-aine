@@ -90,6 +90,15 @@
                 <span class="text-xs">{{ __('Setting') }}</span>
             </router-link>
             <router-link
+                v-if="checkRole(['super_admin'])"
+                :to="{ name: 'users' }"
+                :active-class="'bg-blue-500'"
+                class="admin__footer-menu-item flex flex-nowrap items-center px-8 py-4 hover:bg-blue-500 cursor-pointer"
+            >
+                <i class="admin__menu-item-icon pr-4 fas fa-users"></i>
+                <span class="text-xs">{{ __('Users') }}</span>
+            </router-link>
+            <router-link
                 :to="{ name: 'language' }"
                 :class="['admin__footer-menu-item flex flex-nowrap items-center px-8 py-4 hover:bg-blue-500 cursor-pointer', { 'bg-blue-500': isLanguageActive }]"
             >

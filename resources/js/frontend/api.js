@@ -8,10 +8,10 @@ import { PROJECTS, COLLECTIONS } from "./config";
 
 const cms = PROJECTS.cms.identifier;
 const directory = PROJECTS.directory.identifier;
-const speech = PROJECTS.speech.identifier;
+const note = PROJECTS.note.identifier;
 const articles = PROJECTS.cms.contentCollection;
 const listings = PROJECTS.directory.contentCollection;
-const posts = PROJECTS.speech.contentCollection;
+const posts = PROJECTS.note.contentCollection;
 
 const endpoints = {
   // =================================================================
@@ -263,45 +263,51 @@ const endpoints = {
   },
 
   // =================================================================
-  // Speech project — posts
+  // Note project — posts
   // =================================================================
-  getSpeechPosts: {
+  getNotePosts: {
     type: "get",
-    project: speech,
+    project: note,
     collection: posts,
   },
-  getSpeechPost: {
+  searchNotePosts: {
     type: "get",
-    project: speech,
+    project: note,
+    collection: posts,
+    action: "search",
+  },
+  getNotePost: {
+    type: "get",
+    project: note,
     collection: posts,
     id: true,
   },
-  getSpeechPostBySlug: {
+  getNotePostBySlug: {
     type: "get",
-    project: speech,
+    project: note,
     collection: posts,
     id: true,
     bySlug: true,
   },
 
   // =================================================================
-  // Speech project — categories
+  // Note project — categories
   // =================================================================
-  getSpeechCategories: {
+  getNoteCategories: {
     type: "get",
-    project: speech,
+    project: note,
     collection: COLLECTIONS.categories,
   },
-  getSpeechCategoryPosts: {
+  getNoteCategoryPosts: {
     type: "get",
-    project: speech,
+    project: note,
     source: COLLECTIONS.categories,
     id: true,
     related: posts,
   },
-  getSpeechCategoryPostsBySlug: {
+  getNoteCategoryPostsBySlug: {
     type: "get",
-    project: speech,
+    project: note,
     source: COLLECTIONS.categories,
     id: true,
     bySlug: true,
@@ -309,36 +315,36 @@ const endpoints = {
   },
 
   // =================================================================
-  // Speech project — tags
+  // Note project — tags
   // =================================================================
-  getSpeechTags: {
+  getNoteTags: {
     type: "get",
-    project: speech,
+    project: note,
     collection: COLLECTIONS.tags,
   },
-  getSpeechTagPosts: {
+  getNoteTagPosts: {
     type: "get",
-    project: speech,
+    project: note,
     source: COLLECTIONS.tags,
     id: true,
     related: posts,
   },
 
   // =================================================================
-  // Speech project — pages
+  // Note project — pages
   // =================================================================
-  getSpeechPages: {
+  getNotePages: {
     type: "get",
-    project: speech,
+    project: note,
     collection: COLLECTIONS.pages,
   },
 
   // =================================================================
-  // Speech project — portal
+  // Note project — portal
   // =================================================================
-  getSpeechPortal: {
+  getNotePortal: {
     type: "get",
-    project: speech,
+    project: note,
     action: "portal",
   },
 
@@ -380,9 +386,9 @@ const endpoints = {
     type: "get",
     project: directory,
   },
-  getSpeechProject: {
+  getNoteProject: {
     type: "get",
-    project: speech,
+    project: note,
   },
 };
 

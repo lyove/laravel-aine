@@ -44,12 +44,10 @@ class ProjectsController extends Controller
             return $q->where('name', 'LIKE', "%$searchItem%");
         });
 
-        $projects = $projects->orderBy('created_at', 'DESC')->get();
+        $projects = $projects->orderBy('created_at', 'ASC')->get();
 
         $projects->each(function (Project $project) use ($user) {
-            $project->my_role = $user->isSuperAdmin() && $user->projectRole($project) === null
-                ? ProjectUser::ROLE_OWNER
-                : $user->projectRole($project);
+            $project->presentFor($user);
         });
 
         return response($projects, 200);
@@ -146,9 +144,7 @@ class ProjectsController extends Controller
 
         $this->authorize('view', $project);
 
-        $project->my_role = $user->isSuperAdmin() && $user->projectRole($project) === null
-            ? ProjectUser::ROLE_OWNER
-            : $user->projectRole($project);
+        $project->presentFor($user);
 
         $project->s3 = false;
 
@@ -268,7 +264,7 @@ class ProjectsController extends Controller
 
         $this->authorize('updateSettings', $project);
 
-        return $project;
+        return $project->presentFor(auth()->user());
     }
 
     /**
@@ -361,12 +357,8 @@ class ProjectsController extends Controller
 
         $this->authorize('manageMembers', $project);
 
-        // Same my_role exposure as show(): keeps the settings UI's
-        // role-based menus working after this endpoint refreshes the page.
         $user = auth()->user();
-        $project->my_role = $user->isSuperAdmin() && $user->projectRole($project) === null
-            ? ProjectUser::ROLE_OWNER
-            : $user->projectRole($project);
+        $project->presentFor($user);
 
         $super_admins = User::whereHas('roles', function($q){ $q->where('name', 'super_admin'); })->get();
 
@@ -545,7 +537,7 @@ class ProjectsController extends Controller
 
         $this->authorize('updateSettings', $project);
 
-        $data['project'] = $project;
+        $data['project'] = $project->presentFor(auth()->user());
         $data['tokens'] = $project->tokens;
 
         return $data;
@@ -683,7 +675,7 @@ class ProjectsController extends Controller
 
         $this->authorize('updateSettings', $project);
 
-        return $project;
+        return $project->presentFor(auth()->user());
     }
 
     /**
@@ -806,7 +798,7 @@ class ProjectsController extends Controller
 
         $this->authorize('updateSettings', $project);
 
-        $data['project'] = $project;
+        $data['project'] = $project->presentFor(auth()->user());
         $data['webhook'] = Webhook::findOrFail($webhook_id);
         $data['logs'] = WebhookLog::where('webhook_id', $webhook_id)->paginate(25);
 

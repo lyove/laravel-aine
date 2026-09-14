@@ -190,7 +190,7 @@ export default {
         getComments() {
             this.loading = true;
             axios
-                .get(`/admin-api/content/comments/${this.project.id}`, {
+                .get(`content/comments/${this.project.id}`, {
                     params: { filter: this.filter },
                 })
                 .then((response) => {
@@ -264,7 +264,7 @@ export default {
 
         transition(comment, action, successText) {
             axios
-                .post(`/admin-api/content/comments/${action}/${this.project.id}/${comment.id}`)
+                .post(`content/comments/${action}/${this.project.id}/${comment.id}`)
                 .then((response) => {
                     const status = response.data && response.data.data ? response.data.data.status : null;
                     if (status) {
@@ -302,7 +302,7 @@ export default {
                 .then((result) => {
                     if (!result.isConfirmed) return;
                     axios
-                        .post(`/admin-api/content/comments/bulk/${this.project.id}`, {
+                        .post(`content/comments/bulk/${this.project.id}`, {
                             action: "delete",
                             ids: [comment.id],
                         })

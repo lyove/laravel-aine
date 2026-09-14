@@ -12,8 +12,8 @@
 - **Projects** — run multiple independent sites/apps from a single installation, each with its own collections, content, media, tokens, and domain whitelist.
 - **Collections & Fields** — build your schema visually: `text`, `longtext`, `richtext`, `slug`, `email`, `password`, `number`, `enumeration`, `boolean`, `color`, `date`, `time`, `media`, `relation`, `json`.
 - **Field options** — required/unique/character-count validations, repeatable fields, hidden-in-API, hide-in-list, placeholders and descriptions.
-- **Relations** — one-to-one / one-to-many between collections (e.g. category → articles, author → articles).
-- **Preset templates** — create a project from the **CMS Template** (articles, pages, categories, authors, tags, comments, globals) or the **Business Directory Template** (listings, categories, tags, locations, reviews) and extend it freely.
+- **Relations** — one-to-one / one-to-many between collections (e.g. category → articles). **Author** is a plain text field on articles/pages, auto-filled with the name of the currently logged-in user when content is created.
+- **Preset templates** — create a project from the **CMS Template** (articles, pages, categories, tags, comments, globals), the **Business Directory Template** (listings, categories, tags, locations, reviews) or the **Note Template** (cloud notes / posts, pages, categories, tags, globals) and extend it freely.
 
 ### Content Revisions & Version History
 - **Automatic snapshots** — every create, update, publish, unpublish, draft-edit, restore and import creates a full-field snapshot in `content_revisions`, with a version chain (`parent_id`) linking each revision to its predecessor.
@@ -35,6 +35,18 @@
 - Annotations render as inline `data-*` attributes on `<span>` elements; the HTML sanitizer whitelists `data-*`, `svg` and `path` so annotations survive save/load and render correctly on the frontend.
 - Read-only mode hides the "Click to edit" hint and shows a static preview.
 
+### Users, Roles & Permissions
+- **Global roles** — every account is either a `super_admin` (full platform access) or a regular `user` (no global admin rights).
+- **Project-level roles** — each project carries an owner (`projects.owner_id`) plus a `project_user` membership pivot with four weighted roles: `owner`, `admin`, `editor`, `viewer`.
+- **Policy-based authorization** — Laravel policies (`ProjectPolicy` etc.) gate every admin action per project: managing settings, publishing, moderating comments, editing collections/content.
+- **User management UI** — **Settings → Users** in the admin sidebar lists all accounts with their global role (editable inline) and project memberships; the edit dialog mirrors the admin profile page.
+- **Profile & 2FA** — every user can manage their own profile; two-factor authentication (TOTP) can be enabled per account and is enforced at login.
+
+### Comments (blog-style)
+- **Signed-in commenting** — logged-in users can post comments on content; the comment carries the author's name automatically.
+- **Moderation workflow** — each article can require approval before comments become visible. Comments use the industry-standard states `pending` / `approved` / `spam` / `trash`, with bulk state actions in the admin.
+- **Comment Approval** — a dedicated **Comment Approval** menu (per project, under Content) lets admins/owners review, approve, mark as spam or trash comments; the menu label is translatable.
+
 ### Publishing & API
 - **Two API modes**:
   - `/api/project/{uuid|slug}/...` — for frontend apps; validated by **domain whitelist**, with an optional **Public API** switch for token-free reads.
@@ -52,7 +64,8 @@
 ### Multilingual
 - **Content-level locales** — every content entry has a locale; query and create content per language (`en`, `zh`, …).
 - **Admin UI languages** — switch the whole admin interface between English and Chinese from the topbar.
-- **Translation manager** — global UI string translations plus per-project translations (collection names, field labels, custom strings), driven by an explicit `__()` helper and a `{{ ... }}` pattern-matching dictionary engine.
+- **Project names & descriptions follow the UI language** — project cards and headers display the name/description translated into the admin UI's current base language (English ↔ 中文); translations are managed on the project's **Translations** page, falling back to the source text when absent.
+- **Translation manager** — global UI string translations plus per-project translations (collection names, field labels, project name/description, custom strings), driven by an explicit `__()` helper and a `{{ ... }}` pattern-matching dictionary engine.
 
 ### Admin Experience
 - Single-page Vue 3 admin (`/admin`): projects, collections, content tables, rich text editor (TinyMCE with SSML speech annotation), drag-and-drop field ordering, forms, media, settings.
@@ -62,7 +75,8 @@
 - Supports **SQLite, MySQL, PostgreSQL and SQL Server**.
 
 ### Frontend
-- A frontend SPA (Vue 3) served at `/` for content sites, with ready-made pages for the CMS template (Home, Content archives, categories, tags, article details) and the Directory template (listings, categories, tags, locations, reviews) — all data loaded through the Content API.
+- A frontend SPA (Vue 3) served at `/` for content sites, with ready-made pages for the CMS template (Home, Content archives, categories, tags, article details), the Directory template (listings, categories, tags, locations, reviews) and the Note template (posts, pages, categories, tags) — all data loaded through the Content API.
+- **Global search** — a search box in the navbar (right side, next to the language switcher) runs a **global search across all projects**; results are grouped by project on `/search?q=…` with title, excerpt and direct links to each entry.
 
 ---
 
@@ -73,7 +87,7 @@
 | Backend | Laravel 13 (PHP 8.3+), Laravel Sanctum, Spatie Permission, Spatie Webhook Server, Intervention Image |
 | Frontend | Vue 3, Vite 6, Tailwind CSS 3, Pinia, Vue Router, TinyMCE |
 | Database | SQLite / MySQL / PostgreSQL / SQL Server |
-| Auth | Session auth for admin, Sanctum personal access tokens for the Content API |
+| Auth | Session auth for admin (global + project-level roles, 2FA), Sanctum personal access tokens for the Content API |
 
 ---
 
@@ -121,7 +135,7 @@ cp .env.example .env
 php artisan key:generate
 # edit .env: APP_URL, DB_CONNECTION, DB_DATABASE, ...
 
-# 3. Migrate & seed (creates the super_admin role + default admin)
+# 3. Migrate & seed (creates the super_admin role + default admin + three demo projects: CMS, Business Directory, Note)
 php artisan migrate --force
 php artisan db:seed --force
 
@@ -230,7 +244,7 @@ REDIS_CLIENT=predis
 ## 🏁 Quick Start
 
 1. **Sign in** to `/admin`.
-2. **Create a project** (or use a preset template: CMS / Business Directory).
+2. **Create a project** (or use a preset template: CMS / Business Directory / Note).
 3. In the project, create **Collections** (e.g. `articles`) and add **Fields** (e.g. `title`, `url`, `content`).
 4. Add **Content** entries under Content → your collection.
    - In any content editor, click **History** (top-right, with a revision-count badge) to view the full version history: preview any version, compare two versions field-by-field, tag a version with a custom label, or restore a previous version (with a change preview before confirming).
@@ -334,7 +348,7 @@ php artisan optimize:clear
 
 ### Project templates
 
-Project templates (CMS, Business Directory) are defined in `app/Aine/ProjectTemplates.php` — they ship the collections, fields and demo data used by the seeded demo projects (`database/seeders/DemoProjectsSeeder.php`).
+Project templates (CMS, Business Directory, Note) are defined in `app/Aine/ProjectTemplates.php` — they ship the collections, fields and demo data used by the seeded demo projects (`database/seeders/DemoProjectsSeeder.php`). Demo projects are created in a fixed order (`created_at` ascending): **CMS → Business Directory → Note**, so the project list order is deterministic across fresh installs.
 
 ### Content Revisions architecture
 
@@ -404,7 +418,7 @@ Notes:
 php artisan test
 ```
 
-The suite covers content CRUD, revisions (create / update / list / diff / restore / label), import/export, media, API auth & querying, workflow audit, collection field management, and the frontend root response. Current baseline: **171 tests / 429 assertions**.
+The suite covers content CRUD, revisions (create / update / list / diff / restore / label), import/export, media, API auth & querying, workflow audit, collection field management, users & permissions, comments & moderation, and the frontend root response. Current baseline: **270 tests / 812 assertions**.
 
 ---
 

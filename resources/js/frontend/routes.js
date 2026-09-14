@@ -17,13 +17,15 @@ const DirectoryTagPage = () => import("./views/directory/TagPage.vue");
 const DirectorySectionPage = () => import("./views/directory/SectionPage.vue");
 const DirectoryListingDetail = () => import("./views/directory/ListingDetail.vue");
 
-const SpeechArchive = () => import("./views/speech/Archive.vue");
-const SpeechCategoryPage = () => import("./views/speech/CategoryPage.vue");
-const SpeechTagPage = () => import("./views/speech/TagPage.vue");
-const SpeechSectionPage = () => import("./views/speech/SectionPage.vue");
-const SpeechPostDetail = () => import("./views/speech/PostDetail.vue");
-const SpeechPageDetail = () => import("./views/speech/PageDetail.vue");
-const SpeechPagesList = () => import("./views/speech/PagesList.vue");
+const NoteArchive = () => import("./views/note/Archive.vue");
+const NoteCategoryPage = () => import("./views/note/CategoryPage.vue");
+const NoteTagPage = () => import("./views/note/TagPage.vue");
+const NoteSectionPage = () => import("./views/note/SectionPage.vue");
+const NotePostDetail = () => import("./views/note/PostDetail.vue");
+const NotePageDetail = () => import("./views/note/PageDetail.vue");
+const NotePagesList = () => import("./views/note/PagesList.vue");
+
+const SearchPage = () => import("./views/SearchPage.vue");
 
 /**
  * Routes
@@ -32,7 +34,7 @@ const SpeechPagesList = () => import("./views/speech/PagesList.vue");
  *   /content/*    — the CMS project (articles, categories, tags, pages)
  *   /directory/*  — the Business Directory project (listings, categories,
  *                   tags, locations)
- *   /speech/*     — the Speech project (posts, categories, tags, pages)
+ *   /note/*     — the Note project (posts, categories, tags, pages)
  */
 const routes = [
     { path: "/", name: "home", component: Home },
@@ -56,16 +58,19 @@ const routes = [
     { path: "/directory/location/:slug", name: "directory.location", component: DirectoryArchive, props: { project: "directory", mode: "location" } },
     { path: "/directory/:category/:listing", name: "directory.listing", component: DirectoryListingDetail },
 
-    // ---- Speech system (/speech) ----
-    { path: "/speech", name: "speech.index", component: SpeechArchive, props: { project: "speech", mode: "all" } },
-    { path: "/speech/pages", name: "speech.pages", component: SpeechPagesList },
-    { path: "/speech/slider", name: "speech.slider", component: SpeechSectionPage, props: { project: "speech", mode: "slider" } },
-    { path: "/speech/featured", name: "speech.featured", component: SpeechSectionPage, props: { project: "speech", mode: "featured" } },
-    { path: "/speech/recommended", name: "speech.recommended", component: SpeechSectionPage, props: { project: "speech", mode: "recommended" } },
-    { path: "/speech/category/:slug", name: "speech.category", component: SpeechCategoryPage, props: { project: "speech" } },
-    { path: "/speech/tag/:slug", name: "speech.tag", component: SpeechTagPage, props: { project: "speech" } },
-    { path: "/speech/:category/:post", name: "speech.post", component: SpeechPostDetail },
-    { path: "/speech/:slug", name: "speech.page", component: SpeechPageDetail },
+    // ---- Note system (/note) ----
+    { path: "/note", name: "note.index", component: NoteArchive, props: { project: "note", mode: "all" } },
+    { path: "/note/pages", name: "note.pages", component: NotePagesList },
+    { path: "/note/slider", name: "note.slider", component: NoteSectionPage, props: { project: "note", mode: "slider" } },
+    { path: "/note/featured", name: "note.featured", component: NoteSectionPage, props: { project: "note", mode: "featured" } },
+    { path: "/note/recommended", name: "note.recommended", component: NoteSectionPage, props: { project: "note", mode: "recommended" } },
+    { path: "/note/category/:slug", name: "note.category", component: NoteCategoryPage, props: { project: "note" } },
+    { path: "/note/tag/:slug", name: "note.tag", component: NoteTagPage, props: { project: "note" } },
+    { path: "/note/:category/:post", name: "note.post", component: NotePostDetail },
+    { path: "/note/:slug", name: "note.page", component: NotePageDetail },
+
+    // ---- Global search ----
+    { path: "/search", name: "search", component: SearchPage },
 ];
 
 const router = createRouter({

@@ -31,7 +31,7 @@
             </li>
             <li class="mb-2">
                 <router-link
-                    v-if="typeof project.id !== 'undefined' && canProject(['owner', 'admin'])"
+                    v-if="typeof project.id !== 'undefined'"
                     :to="{
                         name: 'projects.settings.api',
                         params: { project_id: project.id },
@@ -45,7 +45,7 @@
             </li>
             <li class="mb-2">
                 <router-link
-                    v-if="typeof project.id !== 'undefined' && canProject(['owner', 'admin'])"
+                    v-if="typeof project.id !== 'undefined'"
                     :to="{
                         name: 'projects.settings.webhooks',
                         params: { project_id: project.id }
@@ -59,7 +59,7 @@
             </li>
             <li class="mb-2">
                 <router-link
-                    v-if="typeof project.id !== 'undefined' && canProject(['owner', 'admin'])"
+                    v-if="typeof project.id !== 'undefined'"
                     :to="{
                         name: 'projects.settings.language',
                         params: { project_id: project.id },
@@ -72,7 +72,7 @@
             </li>
             <li class="mb-2">
                 <router-link
-                    v-if="typeof project.id !== 'undefined' && canProject(['owner', 'admin'])"
+                    v-if="typeof project.id !== 'undefined'"
                     :to="{
                         name: 'projects.settings.audit-logs',
                         params: { project_id: project.id },

@@ -45,6 +45,7 @@ const checkPermission = async (to, from, next, options = {}) => {
 
 const Dashboard = () => import("./views/Dashboard.vue");
 const Settings = () => import("./views/Settings.vue");
+const Users = () => import("./views/Users.vue");
 const Language = () => import("./views/Language.vue");
 const Translations = () => import("./views/Translations.vue");
 const Localization = () => import("./views/Localization.vue");
@@ -77,6 +78,7 @@ const ProjectSettingsAuditLogs = () => import("./views/Project.Settings/AuditLog
 const routes = [
   { path: "/", name: "dashboard", component: Dashboard },
   { path: "/settings", name: "settings", component: Settings },
+  { path: "/users", name: "users", component: Users },
   { path: "/language", name: "language", component: Language },
   { path: "/localization", name: "localization", component: Localization },
   { path: "/translations", name: "translations", component: Translations },

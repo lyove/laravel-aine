@@ -43,7 +43,7 @@ return [
 
     'frontend_directory_project' => env('FRONTEND_DIRECTORY_PROJECT', 'business-directory'),
 
-    'frontend_speech_project' => env('FRONTEND_SPEECH_PROJECT', 'speech'),
+    'frontend_note_project' => env('FRONTEND_NOTE_PROJECT', 'note'),
 
     /*
     |--------------------------------------------------------------------------

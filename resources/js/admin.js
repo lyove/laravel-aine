@@ -20,9 +20,7 @@ import "./vendor/nprogress/nprogress.css";
 
 import Slugify from "./vendor/slugify";
 
-// Tooltip/popover library (v-tooltip directive). The named `VTooltip`
-// export is the raw directive object without an `install` method —
-// `app.use()` needs the default plugin export to register the directives.
+// Tooltip/popover library (v-tooltip directive)
 import FloatingVue from "floating-vue";
 import "floating-vue/dist/style.css";
 
@@ -40,27 +38,19 @@ import router from "./admin/routes";
 import AdminLayout from "./admin/Layout.vue";
 
 /**
- * We'll load the axios HTTP library
+ * Axios HTTP library
  */
 import axios from "axios";
 window.axios = axios;
 window.axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
-// Set base URL for API calls to avoid conflict with Vue Router
 window.axios.defaults.baseURL = "/admin-api";
 
-// Attach the CSRF token from the meta tag so stateful web requests
-// (e.g. POST /logout) pass Laravel's CSRF verification.
 const csrfTokenMeta = document.head.querySelector('meta[name="csrf-token"]');
 if (csrfTokenMeta) {
     window.axios.defaults.headers.common["X-CSRF-TOKEN"] = csrfTokenMeta.content;
 }
 
 // NProgress — progress bar for real network requests only.
-//  - Counts in-flight requests so concurrent calls don't hide the bar early
-//    or leave it stuck (NProgress itself has no reference counting).
-//  - trickle disabled: the default auto-tick animation fakes a "slow load"
-//    even after the request finished.
-//  - Requests flagged `silent: true` (background refreshes) skip the bar.
 import NProgress from "./vendor/nprogress/nprogress";
 NProgress.configure({
     showSpinner: false,
@@ -141,18 +131,11 @@ const toast = createToastInterface({
     position: "top-center",
 });
 
-// vue-toastification v2 does NOT install a `$toast` global property (that was
-// the v1 API) and `app.use(toast)` would just call the interface function with
-// the app as content. Register the interface manually so Options API
-// components can keep using `this.$toast.*`, and provide it under the
-// official key so `useToast()` works in composition components too.
+// vue-toastification
 app.config.globalProperties.$toast = toast;
 app.provide(toastInjectionKey, toast);
 
-// Explicit translation helper — templates can write `{{ __('...') }}` and
-// script code `this.__('...')`. It resolves through the reactive dictionary
-// view, so language switches / saved translations re-render components that
-// use it (unlike the DOM-scanning engine, which only patches on-screen nodes).
+// Explicit translation helper — templates can write `{{ __('...') }}` and script code `this.__('...')`
 app.config.globalProperties.__ = __;
 
 // Register plugins
@@ -179,12 +162,7 @@ app.use(FloatingVue);
 app.component("pagination", TailwindPagination);
 app.component("v-select", vSelect);
 
-// Keep the admin shell hidden until the boot UI language is applied (see
-// useAdminStore().initUiLocale) so a refresh never flashes the English UI
-// before the saved language's translations arrive. With a cached dictionary
-// this resolves in the same task as mount; on a cold start the shell stays
-// hidden for the single dictionary request instead. The failsafe guarantees
-// the admin is revealed even if something goes wrong.
+// Keep the admin shell hidden until the boot UI language is applied
 const adminRoot = document.getElementById("admin");
 if (adminRoot) {
     adminRoot.setAttribute("data-ui-pending", "");

@@ -87,7 +87,7 @@ export const useFrontendStore = defineStore("frontend", {
         async initLocale() {
             const cms = await this.loadProject(PROJECTS.cms.identifier);
             await this.loadProject(PROJECTS.directory.identifier);
-            await this.loadProject(PROJECTS.speech.identifier);
+            await this.loadProject(PROJECTS.note.identifier);
 
             const locales = this.cmsProjectLocales;
             if (!this.locale || !locales.includes(this.locale)) {

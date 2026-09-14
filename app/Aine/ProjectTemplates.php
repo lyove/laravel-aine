@@ -7,19 +7,12 @@ use App\Models\CollectionField;
 
 /**
  * Preset project templates.
- *
- * Each template is a list of collections with their fields. Relation fields
- * reference other collections by slug with a {{slug}} placeholder that is
- * resolved to the real collection id when the template is applied.
- *
- * Used by both ProjectsController@store (Create New Project) and the demo
- * seeder, so the admin-created projects and the preset data always match.
  */
 class ProjectTemplates
 {
     public const CMS = 2;
     public const BUSINESS_DIRECTORY = 3;
-    public const SPEECH = 4;
+    public const NOTE = 4;
 
     /**
      * All available templates: type => definition.
@@ -155,8 +148,8 @@ class ProjectTemplates
                 ],
             ],
 
-            self::SPEECH => [
-                'name' => 'Speech Template',
+            self::NOTE => [
+                'name' => 'Note Template',
                 'collections' => [
                     [
                         'name' => 'Pages', 'slug' => 'pages', 'order' => 1,

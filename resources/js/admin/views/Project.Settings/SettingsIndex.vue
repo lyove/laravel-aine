@@ -163,9 +163,9 @@ export default {
             project: currentProject,
             editProjectData: {
                 id: currentProject.id,
-                name: currentProject.name,
+                name: currentProject.raw_name ?? currentProject.name,
                 slug: currentProject.slug,
-                description: currentProject.description,
+                description: currentProject.raw_description ?? currentProject.description,
                 disk: currentProject.disk,
                 errors: {
                     name: [],

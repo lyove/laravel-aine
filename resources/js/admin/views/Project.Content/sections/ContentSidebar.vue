@@ -64,7 +64,7 @@
                     :exact-active-class="'bg-blue-100 text-blue-700 font-semibold'"
                     class="block w-full p-2 cursor-pointer hover:bg-gray-100 rounded"
                 >
-                    <i class="fas fa-comments text-gray-600 mr-3"></i> {{ __('Comments') }}
+                    <i class="fas fa-comments text-gray-600 mr-3"></i> {{ __('Comment Approval') }}
                 </router-link>
             </li>
         </ul>
@@ -82,7 +82,13 @@ export default {
 
     computed: {
         canModerateComments() {
-            return ["owner", "admin", "editor"].includes(this.project.my_role);
+            if (!["owner", "admin", "editor"].includes(this.project.my_role)) {
+                return false;
+            }
+            const collections = this.project.collections || [];
+            return collections.some(
+                (collection) => String(collection.slug || "").toLowerCase() === "comments"
+            );
         },
 
         filterSearch() {

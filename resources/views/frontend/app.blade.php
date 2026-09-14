@@ -6,7 +6,7 @@
         <meta name="APP_URL" content="{{ config('app.url') }}">
         <meta name="cms-project-identifier" content="{{ config('app.frontend_cms_project', 'cms') }}">
         <meta name="directory-project-identifier" content="{{ config('app.frontend_directory_project', 'business-directory') }}">
-        <meta name="speech-project-identifier" content="{{ config('app.frontend_speech_project', 'speech') }}">
+        <meta name="note-project-identifier" content="{{ config('app.frontend_note_project', 'note') }}">
 
         <!-- <title>{{ env("APP_NAME") }}</title> -->
         <title>{{ config('app.name', 'Aine') }}</title>

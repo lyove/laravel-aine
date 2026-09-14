@@ -19,6 +19,10 @@ class ProjectTranslationsController extends Controller
     {
         $sources = [];
 
+        if (! empty($project->description)) {
+            $sources[] = $project->description;
+        }
+
         foreach ($project->collections as $collection) {
             $sources[] = $collection->name;
 

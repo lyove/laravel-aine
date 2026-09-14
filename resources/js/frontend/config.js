@@ -29,11 +29,11 @@ export const PROJECTS = {
         label: "Directory",
         portal: ["featured", "categoryTabs"],
     },
-    speech: {
-        identifier: meta("speech-project-identifier") || "speech",
+    note: {
+        identifier: meta("note-project-identifier") || "note",
         contentCollection: "posts",
-        path: "/speech",
-        label: "Speech",
+        path: "/note",
+        label: "Note",
         portal: ["slider", "featured", "recommended", "categoryTabs", "pages"],
         fallbackToLatest: true,
     },

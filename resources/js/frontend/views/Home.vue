@@ -1,13 +1,6 @@
 <template>
     <!-- Full-page skeleton while the home data is loading -->
     <section v-if="loading" class="mx-auto w-full max-w-6xl px-4 pb-16 pt-8">
-        <!-- Hero / slider -->
-        <div class="mb-4 flex items-center justify-between">
-            <div class="h-7 w-24 animate-pulse rounded bg-gray-200"></div>
-            <div class="h-4 w-40 animate-pulse rounded bg-gray-200"></div>
-        </div>
-        <div class="h-64 animate-pulse rounded-xl bg-gray-100"></div>
-
         <!-- Content area -->
         <div class="pt-10">
             <div class="mb-7 flex items-center gap-4">
@@ -37,7 +30,7 @@
             </div>
         </div>
 
-        <!-- Speech area -->
+        <!-- Note area -->
         <div class="pt-10">
             <div class="mb-7 h-8 w-36 animate-pulse rounded bg-gray-200"></div>
             <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -53,15 +46,6 @@
 
     <!-- Real content once the data is loaded -->
     <template v-else>
-        <!-- Hero: banner slider (CMS articles) — full width -->
-        <section v-if="showCmsSlider" class="mx-auto w-full max-w-6xl px-4 pt-8">
-            <div class="mb-4 flex items-center justify-between">
-                <h2 class="text-2xl font-bold tracking-tight text-gray-900">Slider</h2>
-                <span class="text-xs text-gray-400">{{ sliderArticles.length }} featured stories</span>
-            </div>
-            <banner-slider :slides="sliderArticles" path-prefix="/content" />
-        </section>
-
         <!-- Content: full-width heading, then two columns
                 (left: category tabs content / right: Featured | Recommended) -->
         <section v-if="showCmsSection" class="mx-auto w-full max-w-6xl px-4">
@@ -131,22 +115,12 @@
             </div>
         </section>
 
-        <!-- Speech hero: banner slider (speech posts) — full width -->
-        <section v-if="showSpeechSlider" class="mx-auto w-full max-w-6xl px-4 pt-8">
-            <div class="mb-4 flex items-center justify-between">
-                <h2 class="text-2xl font-bold tracking-tight text-gray-900">Speech</h2>
-                <span class="text-xs text-gray-400">{{ speechSliderPosts.length }} featured posts</span>
-            </div>
-            <banner-slider :slides="speechSliderPosts" path-prefix="/speech" />
-        </section>
-
-        <!-- Speech: full-width heading, then two columns
+        <!-- Note: full-width heading, then two columns
                 (left: category tabs / right: Featured | Recommended) -->
-        <section v-if="showSpeechSection" class="mx-auto w-full max-w-6xl px-4 pb-16">
+        <section v-if="showNoteSection" class="mx-auto w-full max-w-6xl px-4 pb-16">
             <div class="pt-10">
                 <div class="mb-7 flex items-center gap-4">
-                    <h2 class="shrink-0 text-2xl font-bold tracking-tight text-gray-900">Speech</h2>
-                    <pages-ticker :pages="speechPages" path-prefix="/speech" class="min-w-0 flex-1" />
+                    <h2 class="shrink-0 text-2xl font-bold tracking-tight text-gray-900">Note</h2>
                 </div>
 
                 <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -154,12 +128,12 @@
                     <div class="lg:col-span-2">
                         <category-tabs-section
                             :show-title="false"
-                            path-prefix="/speech"
-                            :sections="speechSections"
+                            path-prefix="/note"
+                            :sections="noteSections"
                             grid-class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-2"
                         >
                             <template #card="{ item }">
-                                <article-card :item="item" path-prefix="/speech" />
+                                <article-card :item="item" path-prefix="/note" />
                             </template>
                         </category-tabs-section>
                     </div>
@@ -167,10 +141,10 @@
                     <!-- Right: Featured | Recommended tabs -->
                     <div class="lg:col-span-1">
                         <featured-sidebar
-                            :featured="speechFeaturedPosts"
-                            :recommended="speechRecommendedPosts"
-                            path-prefix="/speech"
-                            more-prefix="/speech"
+                            :featured="noteFeaturedPosts"
+                            :recommended="noteRecommendedPosts"
+                            path-prefix="/note"
+                            more-prefix="/note"
                         />
                     </div>
                 </div>
@@ -182,7 +156,6 @@
 <script>
 import { api } from "../api";
 import { PROJECTS, COLLECTIONS, DEFAULT_PORTAL } from "../config";
-import BannerSlider from "../components/BannerSlider.vue";
 import CategoryTabsSection from "../components/CategoryTabsSection.vue";
 import FeaturedSidebar from "../components/FeaturedSidebar.vue";
 import FeaturedListingsSidebar from "../components/FeaturedListingsSidebar.vue";
@@ -193,7 +166,6 @@ import ListingCard from "../components/ListingCard.vue";
 export default {
     name: "Home",
     components: {
-        BannerSlider,
         CategoryTabsSection,
         FeaturedSidebar,
         FeaturedListingsSidebar,
@@ -205,55 +177,46 @@ export default {
         return {
             cms: PROJECTS.cms,
             directory: PROJECTS.directory,
-            speech: PROJECTS.speech,
+            note: PROJECTS.note,
             loading: true,
-            sliderArticles: [],
             featuredArticles: [],
             recommendedArticles: [],
             featuredListings: [],
             cmsPages: [],
             cmsSections: [],
             directorySections: [],
-            speechSliderPosts: [],
-            speechFeaturedPosts: [],
-            speechRecommendedPosts: [],
-            speechPages: [],
-            speechSections: [],
+            noteFeaturedPosts: [],
+            noteRecommendedPosts: [],
+            notePages: [],
+            noteSections: [],
         };
     },
     computed: {
-        showCmsSlider() {
-            return this.hasBlock(this.cms, "slider");
-        },
         showCmsSection() {
             return this.hasAnyBlock(this.cms, ["categoryTabs", "featured", "recommended", "pages"]);
         },
         showDirectorySection() {
             return this.hasAnyBlock(this.directory, ["categoryTabs", "featured"]);
         },
-        showSpeechSlider() {
-            return this.hasBlock(this.speech, "slider");
-        },
-        showSpeechSection() {
-            return this.hasAnyBlock(this.speech, ["categoryTabs", "featured", "recommended", "pages"]);
+        showNoteSection() {
+            return this.hasAnyBlock(this.note, ["categoryTabs", "featured", "recommended", "pages"]);
         },
     },
     async mounted() {
         try {
             const cms = this.cms;
             const directory = this.directory;
-            const speech = this.speech;
+            const note = this.note;
 
-            const [cmsPortal, directoryPortal, speechPortal] = await Promise.all([
+            const [cmsPortal, directoryPortal, notePortal] = await Promise.all([
                 api.getCmsPortal({ collection: cms.contentCollection }).catch(() => null),
                 api.getDirectoryPortal({ collection: directory.contentCollection }).catch(() => null),
-                api.getSpeechPortal({ collection: speech.contentCollection, _skipLocale: true }).catch(() => null),
+                api.getNotePortal({ collection: note.contentCollection, _skipLocale: true }).catch(() => null),
             ]);
 
             const cmsData = this.mapSections(cms, cmsPortal, true);
             this.featuredArticles = cmsData.featured;
             this.recommendedArticles = cmsData.recommended;
-            this.sliderArticles = cmsData.slider;
             this.cmsPages = cmsData.pages;
             this.cmsSections = cmsData.sections;
 
@@ -261,12 +224,11 @@ export default {
             this.featuredListings = directoryData.featured;
             this.directorySections = directoryData.sections;
 
-            const speechData = this.mapSections(speech, speechPortal, true);
-            this.speechFeaturedPosts = speechData.featured;
-            this.speechRecommendedPosts = speechData.recommended;
-            this.speechSliderPosts = speechData.slider;
-            this.speechPages = speechData.pages;
-            this.speechSections = speechData.sections;
+            const noteData = this.mapSections(note, notePortal, true);
+            this.noteFeaturedPosts = noteData.featured;
+            this.noteRecommendedPosts = noteData.recommended;
+            this.notePages = noteData.pages;
+            this.noteSections = noteData.sections;
         } catch (error) {
             console.error("Failed to load home data:", error);
         } finally {

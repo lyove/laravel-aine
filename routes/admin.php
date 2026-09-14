@@ -4,6 +4,8 @@ use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UsersController;
+use App\Http\Controllers\Admin\UsersManagementController;
+use App\Http\Controllers\Admin\UserTwoFactorController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\ProjectsController;
 use App\Http\Controllers\Admin\CollectionsController;
@@ -31,6 +33,19 @@ Route::middleware('auth:web')->prefix('admin-api')->group(function(){
     Route::post('/user/update_email', [UsersController::class, 'updateEmail']);
     Route::post('/user/update_password', [UsersController::class, 'updatePassword']);
     Route::post('/user/update_profile', [UsersController::class, 'updateProfile']);
+
+    // Global user management (super admin only).
+    Route::middleware('role:super_admin')->group(function () {
+        Route::get('/users', [UsersManagementController::class, 'index']);
+        Route::post('/users', [UsersManagementController::class, 'store']);
+        Route::post('/users/bulk', [UsersManagementController::class, 'bulk']);
+        Route::post('/users/{id}/2fa/enable', [UserTwoFactorController::class, 'enable']);
+        Route::post('/users/{id}/2fa/confirm', [UserTwoFactorController::class, 'confirm']);
+        Route::post('/users/{id}/2fa/disable', [UserTwoFactorController::class, 'disable']);
+        Route::post('/users/{id}/2fa/recovery-codes', [UserTwoFactorController::class, 'recoveryCodes']);
+        Route::post('/users/{id}', [UsersManagementController::class, 'update']);
+        Route::delete('/users/{id}', [UsersManagementController::class, 'destroy']);
+    });
 
     Route::post('/user/2fa/enable', [TwoFactorController::class, 'enable']);
     Route::post('/user/2fa/confirm', [TwoFactorController::class, 'confirm']);

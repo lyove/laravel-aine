@@ -31,13 +31,34 @@
                         Directory
                     </router-link>
                     <router-link
-                        to="/speech"
+                        to="/note"
                         class="whitespace-nowrap rounded-md px-3 py-2 font-medium text-gray-600 transition hover:text-indigo-600"
-                        :class="{ 'text-indigo-600': isActive('speech') }"
+                        :class="{ 'text-indigo-600': isActive('note') }"
                     >
-                        Speech
+                        Note
                     </router-link>
                 </nav>
+
+                <!-- Global search -->
+                <form
+                    class="relative hidden shrink-0 sm:block"
+                    @submit.prevent="submitSearch"
+                >
+                    <svg
+                        class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <input
+                        v-model="searchQuery"
+                        type="search"
+                        placeholder="Search…"
+                        class="w-44 rounded-md border border-gray-300 bg-white py-1.5 pl-8 pr-3 text-sm text-gray-700 placeholder-gray-400 transition focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 lg:w-56"
+                    />
+                </form>
 
                 <!-- Language switcher (project locales) -->
                 <div v-if="store.cmsProjectLocales.length > 1" class="relative shrink-0" ref="langWrap">
@@ -118,6 +139,7 @@ export default {
             year: new Date().getFullYear(),
             langOpen: false,
             langMenuStyle: { left: "0px", top: "0px" },
+            searchQuery: "",
         };
     },
     computed: {
@@ -142,11 +164,21 @@ export default {
         window.removeEventListener("scroll", this.onLangViewportChange, true);
     },
     methods: {
+        submitSearch() {
+            const q = (this.searchQuery || "").trim();
+            if (q.length < 2) {
+                return;
+            }
+            if (this.$route.name === "search" && this.$route.query.q === q) {
+                return;
+            }
+            this.$router.push({ path: "/search", query: { q } });
+        },
         isActive(name) {
             if (name === "home") return this.$route.name === "home";
             if (name === "content") return this.$route.name === "content.index";
             if (name === "directory") return this.$route.name === "directory.index";
-            if (name === "speech") return this.$route.name === "speech.index";
+            if (name === "note") return this.$route.name === "note.index";
             return false;
         },
         labelOf(l) {

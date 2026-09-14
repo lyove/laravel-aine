@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\User as AppUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -121,5 +122,84 @@ class Project extends Model
 
     public function forms(){
         return $this->hasMany('App\Models\Form');
+    }
+
+    /**
+     * Expose the acting user's role inside this project (owner / admin /
+     * editor / viewer) as `my_role`, mirroring ProjectsController@show.
+     * Super admins without a membership are treated as owners.
+     */
+    public function applyMyRole(AppUser $user): static
+    {
+        $this->my_role = $user->isSuperAdmin() && $user->projectRole($this) === null
+            ? ProjectUser::ROLE_OWNER
+            : $user->projectRole($this);
+
+        return $this;
+    }
+
+    /**
+     * Present the project for the acting user: inject `my_role` and resolve
+     * the `description` shown in the admin UI (translated into the admin UI's
+     * current base locale when a translation exists).
+     */
+    public function presentFor(AppUser $user): static
+    {
+        $this->applyMyRole($user);
+        // Raw (source-language) values for edit forms; translated values for display.
+        $this->raw_name = $this->name;
+        $this->raw_description = $this->description;
+        $this->name = $this->presentName();
+        $this->description = $this->presentDescription();
+
+        return $this;
+    }
+
+    /**
+     * Resolve the name that should be displayed, following the admin UI's
+     * current base locale.
+     */
+    public function presentName(?string $locale = null): string
+    {
+        $base = (string) ($this->name ?? '');
+
+        if ($base === '') {
+            return '';
+        }
+
+        $locale = $locale ?: \App\Http\Controllers\Admin\LocalizationController::baseLocale();
+
+        $translated = ProjectTranslation::where('project_id', $this->id)
+            ->where('source', $base)
+            ->where('locale', $locale)
+            ->value('value');
+
+        return $translated !== null && $translated !== ''
+            ? (string) $translated
+            : $base;
+    }
+
+    /**
+     * Resolve the description that should be displayed, following the admin
+     * UI's current base locale.
+     */
+    public function presentDescription(?string $locale = null): string
+    {
+        $base = (string) ($this->description ?? '');
+
+        if ($base === '') {
+            return '';
+        }
+
+        $locale = $locale ?: \App\Http\Controllers\Admin\LocalizationController::baseLocale();
+
+        $translated = ProjectTranslation::where('project_id', $this->id)
+            ->where('source', $base)
+            ->where('locale', $locale)
+            ->value('value');
+
+        return $translated !== null && $translated !== ''
+            ? (string) $translated
+            : $base;
     }
 }
