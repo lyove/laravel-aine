@@ -3,6 +3,7 @@
  */
 
 import http from "./http";
+import axios from "axios";
 import { PROJECTS, COLLECTIONS } from "./config";
 
 const cms = PROJECTS.cms.identifier;
@@ -740,6 +741,42 @@ api.related = function (
     related: relatedSlug,
     params,
   });
+};
+
+/* ------------------------------------------------------------------ *
+ * Blog comments (CMS project)
+ * ------------------------------------------------------------------ */
+
+/**
+ * Approved comments for one article, oldest first.
+ */
+api.getComments = async function (projectIdentifier, articleId) {
+  const url = `/api/project/${projectIdentifier}/comments/${articleId}`;
+  const response = await http.get(url);
+  return response && response.data ? response.data.data : [];
+};
+
+/**
+ * Submit a comment as the logged-in user. Visibility depends on the
+ * article's comments_moderation setting; the response carries the
+ * resulting status (approved | pending).
+ */
+api.submitComment = async function (projectIdentifier, articleId, comment) {
+  const url = `/api/project/${projectIdentifier}/comments`;
+  const response = await http.post(url, { article_id: articleId, comment });
+  return response && response.data ? response.data.data : null;
+};
+
+/**
+ * Current logged-in platform user (null when not authenticated).
+ * Uses the raw axios instance so an unauthenticated guest does not
+ * trigger the global API error toast.
+ */
+api.me = async function () {
+  const response = await axios.get("/api/auth/me", {
+    headers: { Accept: "application/json" },
+  });
+  return response && response.data ? response.data.data : null;
 };
 
 export { api };

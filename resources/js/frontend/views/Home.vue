@@ -1,184 +1,182 @@
 <template>
-    <div>
-        <!-- Full-page skeleton while the home data is loading -->
-        <section v-if="loading" class="mx-auto w-full max-w-6xl px-4 pb-16 pt-8">
-            <!-- Hero / slider -->
-            <div class="mb-4 flex items-center justify-between">
-                <div class="h-7 w-24 animate-pulse rounded bg-gray-200"></div>
-                <div class="h-4 w-40 animate-pulse rounded bg-gray-200"></div>
-            </div>
-            <div class="h-64 animate-pulse rounded-xl bg-gray-100"></div>
+    <!-- Full-page skeleton while the home data is loading -->
+    <section v-if="loading" class="mx-auto w-full max-w-6xl px-4 pb-16 pt-8">
+        <!-- Hero / slider -->
+        <div class="mb-4 flex items-center justify-between">
+            <div class="h-7 w-24 animate-pulse rounded bg-gray-200"></div>
+            <div class="h-4 w-40 animate-pulse rounded bg-gray-200"></div>
+        </div>
+        <div class="h-64 animate-pulse rounded-xl bg-gray-100"></div>
 
-            <!-- Content area -->
+        <!-- Content area -->
+        <div class="pt-10">
+            <div class="mb-7 flex items-center gap-4">
+                <div class="h-8 w-28 animate-pulse rounded bg-gray-200"></div>
+                <div class="h-4 min-w-0 flex-1 animate-pulse rounded bg-gray-200"></div>
+            </div>
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:col-span-2 xl:grid-cols-2">
+                    <div v-for="n in 4" :key="n" class="h-64 animate-pulse rounded-xl bg-gray-100"></div>
+                </div>
+                <div class="grid gap-6">
+                    <div v-for="n in 3" :key="n" class="h-28 animate-pulse rounded-xl bg-gray-100"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Directory area -->
+        <div class="pt-10">
+            <div class="mb-7 h-8 w-36 animate-pulse rounded bg-gray-200"></div>
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:col-span-2 xl:grid-cols-2">
+                    <div v-for="n in 4" :key="n" class="h-64 animate-pulse rounded-xl bg-gray-100"></div>
+                </div>
+                <div class="grid gap-6">
+                    <div v-for="n in 3" :key="n" class="h-28 animate-pulse rounded-xl bg-gray-100"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Speech area -->
+        <div class="pt-10">
+            <div class="mb-7 h-8 w-36 animate-pulse rounded bg-gray-200"></div>
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:col-span-2 xl:grid-cols-2">
+                    <div v-for="n in 4" :key="n" class="h-64 animate-pulse rounded-xl bg-gray-100"></div>
+                </div>
+                <div class="grid gap-6">
+                    <div v-for="n in 3" :key="n" class="h-28 animate-pulse rounded-xl bg-gray-100"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Real content once the data is loaded -->
+    <template v-else>
+        <!-- Hero: banner slider (CMS articles) — full width -->
+        <section v-if="showCmsSlider" class="mx-auto w-full max-w-6xl px-4 pt-8">
+            <div class="mb-4 flex items-center justify-between">
+                <h2 class="text-2xl font-bold tracking-tight text-gray-900">Slider</h2>
+                <span class="text-xs text-gray-400">{{ sliderArticles.length }} featured stories</span>
+            </div>
+            <banner-slider :slides="sliderArticles" path-prefix="/content" />
+        </section>
+
+        <!-- Content: full-width heading, then two columns
+                (left: category tabs content / right: Featured | Recommended) -->
+        <section v-if="showCmsSection" class="mx-auto w-full max-w-6xl px-4">
             <div class="pt-10">
                 <div class="mb-7 flex items-center gap-4">
-                    <div class="h-8 w-28 animate-pulse rounded bg-gray-200"></div>
-                    <div class="h-4 min-w-0 flex-1 animate-pulse rounded bg-gray-200"></div>
+                    <h2 class="shrink-0 text-2xl font-bold tracking-tight text-gray-900">Content</h2>
+                    <pages-ticker :pages="cmsPages" path-prefix="/content" class="min-w-0 flex-1" />
                 </div>
-                <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:col-span-2 xl:grid-cols-2">
-                        <div v-for="n in 4" :key="n" class="h-64 animate-pulse rounded-xl bg-gray-100"></div>
-                    </div>
-                    <div class="grid gap-6">
-                        <div v-for="n in 3" :key="n" class="h-28 animate-pulse rounded-xl bg-gray-100"></div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Directory area -->
-            <div class="pt-10">
-                <div class="mb-7 h-8 w-36 animate-pulse rounded bg-gray-200"></div>
                 <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:col-span-2 xl:grid-cols-2">
-                        <div v-for="n in 4" :key="n" class="h-64 animate-pulse rounded-xl bg-gray-100"></div>
+                    <!-- Left: category tabs (the content) -->
+                    <div class="lg:col-span-2">
+                        <category-tabs-section
+                            :show-title="false"
+                            path-prefix="/content"
+                            :sections="cmsSections"
+                            grid-class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-2"
+                        >
+                            <template #card="{ item }">
+                                <article-card :item="item" path-prefix="/content" />
+                            </template>
+                        </category-tabs-section>
                     </div>
-                    <div class="grid gap-6">
-                        <div v-for="n in 3" :key="n" class="h-28 animate-pulse rounded-xl bg-gray-100"></div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Speech area -->
-            <div class="pt-10">
-                <div class="mb-7 h-8 w-36 animate-pulse rounded bg-gray-200"></div>
-                <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:col-span-2 xl:grid-cols-2">
-                        <div v-for="n in 4" :key="n" class="h-64 animate-pulse rounded-xl bg-gray-100"></div>
-                    </div>
-                    <div class="grid gap-6">
-                        <div v-for="n in 3" :key="n" class="h-28 animate-pulse rounded-xl bg-gray-100"></div>
+                    <!-- Right: Featured | Recommended tabs -->
+                    <div class="lg:col-span-1">
+                        <featured-sidebar
+                            :featured="featuredArticles"
+                            :recommended="recommendedArticles"
+                            path-prefix="/content"
+                        />
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Real content once the data is loaded -->
-        <template v-else>
-            <!-- Hero: banner slider (CMS articles) — full width -->
-            <section v-if="showCmsSlider" class="mx-auto w-full max-w-6xl px-4 pt-8">
-                <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-2xl font-bold tracking-tight text-gray-900">Slider</h2>
-                    <span class="text-xs text-gray-400">{{ sliderArticles.length }} featured stories</span>
-                </div>
-                <banner-slider :slides="sliderArticles" path-prefix="/content" />
-            </section>
+        <!-- Directory: full-width heading, then two columns
+                (left: category tabs / right: featured listings) -->
+        <section v-if="showDirectorySection" class="mx-auto w-full max-w-6xl px-4 pb-16">
+            <div class="pt-10">
+                <h2 class="mb-7 text-2xl font-bold tracking-tight text-gray-900">Directory</h2>
 
-            <!-- Content: full-width heading, then two columns
-                 (left: category tabs content / right: Featured | Recommended) -->
-            <section v-if="showCmsSection" class="mx-auto w-full max-w-6xl px-4">
-                <div class="pt-10">
-                    <div class="mb-7 flex items-center gap-4">
-                        <h2 class="shrink-0 text-2xl font-bold tracking-tight text-gray-900">Content</h2>
-                        <pages-ticker :pages="cmsPages" path-prefix="/content" class="min-w-0 flex-1" />
+                <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                    <!-- Left: category tabs (the listings) -->
+                    <div class="lg:col-span-2">
+                        <category-tabs-section
+                            :show-title="false"
+                            path-prefix="/directory"
+                            :sections="directorySections"
+                            grid-class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-2"
+                        >
+                            <template #card="{ item }">
+                                <listing-card :item="item" path-prefix="/directory" />
+                            </template>
+                        </category-tabs-section>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                        <!-- Left: category tabs (the content) -->
-                        <div class="lg:col-span-2">
-                            <category-tabs-section
-                                :show-title="false"
-                                path-prefix="/content"
-                                :sections="cmsSections"
-                                grid-class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-2"
-                            >
-                                <template #card="{ item }">
-                                    <article-card :item="item" path-prefix="/content" />
-                                </template>
-                            </category-tabs-section>
-                        </div>
-
-                        <!-- Right: Featured | Recommended tabs -->
-                        <div class="lg:col-span-1">
-                            <featured-sidebar
-                                :featured="featuredArticles"
-                                :recommended="recommendedArticles"
-                                path-prefix="/content"
-                            />
-                        </div>
+                    <!-- Right: featured listings (no tabs — single dimension) -->
+                    <div class="lg:col-span-1">
+                        <featured-listings-sidebar
+                            :items="featuredListings"
+                            path-prefix="/directory"
+                            more-link="/directory/featured"
+                        />
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Directory: full-width heading, then two columns
-                 (left: category tabs / right: featured listings) -->
-            <section v-if="showDirectorySection" class="mx-auto w-full max-w-6xl px-4 pb-16">
-                <div class="pt-10">
-                    <h2 class="mb-7 text-2xl font-bold tracking-tight text-gray-900">Directory</h2>
+        <!-- Speech hero: banner slider (speech posts) — full width -->
+        <section v-if="showSpeechSlider" class="mx-auto w-full max-w-6xl px-4 pt-8">
+            <div class="mb-4 flex items-center justify-between">
+                <h2 class="text-2xl font-bold tracking-tight text-gray-900">Speech</h2>
+                <span class="text-xs text-gray-400">{{ speechSliderPosts.length }} featured posts</span>
+            </div>
+            <banner-slider :slides="speechSliderPosts" path-prefix="/speech" />
+        </section>
 
-                    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                        <!-- Left: category tabs (the listings) -->
-                        <div class="lg:col-span-2">
-                            <category-tabs-section
-                                :show-title="false"
-                                path-prefix="/directory"
-                                :sections="directorySections"
-                                grid-class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-2"
-                            >
-                                <template #card="{ item }">
-                                    <listing-card :item="item" path-prefix="/directory" />
-                                </template>
-                            </category-tabs-section>
-                        </div>
-
-                        <!-- Right: featured listings (no tabs — single dimension) -->
-                        <div class="lg:col-span-1">
-                            <featured-listings-sidebar
-                                :items="featuredListings"
-                                path-prefix="/directory"
-                                more-link="/directory/featured"
-                            />
-                        </div>
-                    </div>
+        <!-- Speech: full-width heading, then two columns
+                (left: category tabs / right: Featured | Recommended) -->
+        <section v-if="showSpeechSection" class="mx-auto w-full max-w-6xl px-4 pb-16">
+            <div class="pt-10">
+                <div class="mb-7 flex items-center gap-4">
+                    <h2 class="shrink-0 text-2xl font-bold tracking-tight text-gray-900">Speech</h2>
+                    <pages-ticker :pages="speechPages" path-prefix="/speech" class="min-w-0 flex-1" />
                 </div>
-            </section>
 
-            <!-- Speech hero: banner slider (speech posts) — full width -->
-            <section v-if="showSpeechSlider" class="mx-auto w-full max-w-6xl px-4 pt-8">
-                <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-2xl font-bold tracking-tight text-gray-900">Speech</h2>
-                    <span class="text-xs text-gray-400">{{ speechSliderPosts.length }} featured posts</span>
-                </div>
-                <banner-slider :slides="speechSliderPosts" path-prefix="/speech" />
-            </section>
-
-            <!-- Speech: full-width heading, then two columns
-                 (left: category tabs / right: Featured | Recommended) -->
-            <section v-if="showSpeechSection" class="mx-auto w-full max-w-6xl px-4 pb-16">
-                <div class="pt-10">
-                    <div class="mb-7 flex items-center gap-4">
-                        <h2 class="shrink-0 text-2xl font-bold tracking-tight text-gray-900">Speech</h2>
-                        <pages-ticker :pages="speechPages" path-prefix="/speech" class="min-w-0 flex-1" />
+                <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                    <!-- Left: category tabs (the posts) -->
+                    <div class="lg:col-span-2">
+                        <category-tabs-section
+                            :show-title="false"
+                            path-prefix="/speech"
+                            :sections="speechSections"
+                            grid-class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-2"
+                        >
+                            <template #card="{ item }">
+                                <article-card :item="item" path-prefix="/speech" />
+                            </template>
+                        </category-tabs-section>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                        <!-- Left: category tabs (the posts) -->
-                        <div class="lg:col-span-2">
-                            <category-tabs-section
-                                :show-title="false"
-                                path-prefix="/speech"
-                                :sections="speechSections"
-                                grid-class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-2"
-                            >
-                                <template #card="{ item }">
-                                    <article-card :item="item" path-prefix="/speech" />
-                                </template>
-                            </category-tabs-section>
-                        </div>
-
-                        <!-- Right: Featured | Recommended tabs -->
-                        <div class="lg:col-span-1">
-                            <featured-sidebar
-                                :featured="speechFeaturedPosts"
-                                :recommended="speechRecommendedPosts"
-                                path-prefix="/speech"
-                                more-prefix="/speech"
-                            />
-                        </div>
+                    <!-- Right: Featured | Recommended tabs -->
+                    <div class="lg:col-span-1">
+                        <featured-sidebar
+                            :featured="speechFeaturedPosts"
+                            :recommended="speechRecommendedPosts"
+                            path-prefix="/speech"
+                            more-prefix="/speech"
+                        />
                     </div>
                 </div>
-            </section>
-        </template>
-    </div>
+            </div>
+        </section>
+    </template>
 </template>
 
 <script>

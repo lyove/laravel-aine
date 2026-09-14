@@ -1,5 +1,5 @@
 <template>
-    <div class="mx-auto w-full max-w-3xl px-4 py-10">
+    <div class="mx-auto w-full max-w-6xl px-4 py-10">
         <router-link to="/" class="mb-6 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600">
             ← Back to home
         </router-link>
@@ -59,6 +59,53 @@
                     #{{ tag.tag }}
                 </router-link>
             </div>
+
+            <!-- Comments -->
+            <div v-if="item['comments_moderation'] !== 'disabled'" class="mt-10 border-t border-gray-200 pt-8">
+                <h2 class="mb-4 text-xl font-bold text-gray-900">Comments</h2>
+
+                <div v-if="comments.length" class="space-y-4">
+                    <div v-for="comment in comments" :key="comment.id" class="rounded-lg border border-gray-100 bg-white/95 p-4">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="font-semibold text-gray-800">{{ comment.name }}</span>
+                            <span class="text-xs text-gray-400">{{ formatCommentDate(comment.created_at) }}</span>
+                        </div>
+                        <p class="mt-1 text-sm leading-relaxed text-gray-700">{{ comment.comment }}</p>
+                    </div>
+                </div>
+                <p v-else class="text-sm text-gray-500">No comments yet.</p>
+
+                <div class="mt-6">
+                    <div v-if="!currentUser" class="rounded-md border border-dashed border-gray-200 bg-white p-4 text-sm text-gray-600">
+                        <a href="/login" class="font-medium text-indigo-600 hover:text-indigo-700">Log in</a> to leave a comment.
+                    </div>
+                    <form v-else @submit.prevent="submitComment" class="rounded-md border border-gray-200 bg-white p-4">
+                        <div class="mb-2 text-sm text-gray-600">
+                            Commenting as <span class="font-semibold text-gray-800">{{ currentUser.name }}</span>
+                        </div>
+                        <textarea
+                            v-model="commentText"
+                            rows="3"
+                            required
+                            maxlength="2000"
+                            placeholder="Share your thoughts…"
+                            class="w-full rounded-md border border-gray-200 p-3 text-sm text-gray-800 focus:border-indigo-400 focus:outline-none"
+                        ></textarea>
+                        <div class="mt-2 flex items-center justify-between gap-3">
+                            <span v-if="submitMessage" class="text-sm" :class="submitError ? 'text-red-600' : 'text-green-600'">
+                                {{ submitMessage }}
+                            </span>
+                            <button
+                                type="submit"
+                                :disabled="submitting || !commentText.trim()"
+                                class="ml-auto rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                            >
+                                {{ submitting ? "Submitting…" : "Post Comment" }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </template>
     </div>
 </template>
@@ -78,6 +125,12 @@ export default {
         return {
             item: null,
             loading: true,
+            comments: [],
+            currentUser: null,
+            commentText: "",
+            submitting: false,
+            submitMessage: "",
+            submitError: false,
         };
     },
     computed: {
@@ -95,7 +148,9 @@ export default {
         },
     },
     async mounted() {
-        this.loadItem();
+        await this.loadItem();
+        this.loadComments();
+        this.loadMe();
     },
     methods: {
         async loadItem() {
@@ -111,6 +166,55 @@ export default {
             } finally {
                 this.loading = false;
             }
+        },
+
+        async loadComments() {
+            if (!this.item || this.item["comments_moderation"] === "disabled") {
+                this.comments = [];
+                return;
+            }
+            try {
+                this.comments = await api.getComments(PROJECTS.cms.identifier, this.item.id);
+            } catch (error) {
+                console.error("Failed to load comments:", error);
+                this.comments = [];
+            }
+        },
+
+        async loadMe() {
+            try {
+                this.currentUser = await api.me();
+            } catch (error) {
+                this.currentUser = null;
+            }
+        },
+
+        async submitComment() {
+            this.submitting = true;
+            this.submitMessage = "";
+            this.submitError = false;
+
+            try {
+                const result = await api.submitComment(PROJECTS.cms.identifier, this.item.id, this.commentText);
+                this.commentText = "";
+
+                if (result && result.status === "pending") {
+                    this.submitMessage = "Comment submitted — it will appear once approved.";
+                } else {
+                    await this.loadComments();
+                }
+            } catch (error) {
+                this.submitError = true;
+                this.submitMessage =
+                    (error && error.response && error.response.data && error.response.data.message) ||
+                    "Unable to post the comment. Please try again.";
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        formatCommentDate(value) {
+            return value ? formatDate(value, "MMM D, YYYY") : "";
         },
     },
 };

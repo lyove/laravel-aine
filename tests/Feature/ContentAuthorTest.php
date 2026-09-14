@@ -87,6 +87,23 @@ class ContentAuthorTest extends TestCase
         );
     }
 
+    public function test_store_via_http_sets_author(): void
+    {
+        $response = $this->postJson("/admin-api/content/store/{$this->project->id}/{$this->collectionId}", [
+            'locale' => 'en',
+            'published' => false,
+            'data' => ['title' => 'HTTP Hello'],
+        ]);
+
+        $response->assertOk();
+        $id = $response->json('id');
+
+        $this->assertSame(
+            'Jane Author',
+            ContentMeta::where('content_id', $id)->where('field_name', 'author')->value('value')
+        );
+    }
+
     public function test_update_keeps_original_author(): void
     {
         $response = (new ContentController())->store(

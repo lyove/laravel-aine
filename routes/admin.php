@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\ProjectsController;
 use App\Http\Controllers\Admin\CollectionsController;
+use App\Http\Controllers\Admin\CommentsController;
 use App\Http\Controllers\Admin\MediaLibraryController;
 use App\Http\Controllers\Admin\CollectionFieldsController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -129,15 +130,17 @@ Route::middleware('auth:web')->prefix('admin-api')->group(function(){
     Route::prefix('content')->group(function(){
         Route::get('/project/{id}', [ContentController::class, 'project']);
 
-        // Form builder CRUD. The controller lives under Frontend but these
-        // endpoints are admin-only and are guarded like the rest of content.
-        // NOTE: must be registered BEFORE the dynamic content/{project_id}/
-        // {collection_id} routes below, otherwise 'forms' would be captured
-        // as a project id and every call would 404.
         Route::get('/forms/{project_id}/{collection_id}', [FormController::class, 'forms']);
         Route::post('/forms/{project_id}/{collection_id}', [FormController::class, 'store']);
         Route::post('/forms/save/{project_id}/{collection_id}/{form_id}', [FormController::class, 'save']);
         Route::delete('/forms/delete/{project_id}/{collection_id}/{form_id}', [FormController::class, 'delete']);
+
+        Route::get('/comments/{project_id}', [CommentsController::class, 'index']);
+        Route::post('/comments/approve/{project_id}/{content_id}', [CommentsController::class, 'approve']);
+        Route::post('/comments/reject/{project_id}/{content_id}', [CommentsController::class, 'reject']);
+        Route::post('/comments/spam/{project_id}/{content_id}', [CommentsController::class, 'spam']);
+        Route::post('/comments/restore/{project_id}/{content_id}', [CommentsController::class, 'restore']);
+        Route::post('/comments/bulk/{project_id}', [CommentsController::class, 'bulk']);
 
         Route::post('/preview-token/{project_id}/{collection_id}/{content_id}', [PreviewController::class, 'generate']);
 

@@ -1,5 +1,5 @@
 <template>
-    <div class="mx-auto w-full max-w-3xl px-4 py-10">
+    <div class="mx-auto w-full max-w-6xl px-4 py-10">
         <router-link :to="projectConfig.path" class="mb-6 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600">
             ← Back to {{ projectConfig.label.toLowerCase() }}
         </router-link>

@@ -57,6 +57,7 @@ const ProjectContentIndex = () => import("./views/Project.Content/ContentIndex.v
 const ProjectContentList = () => import("./views/Project.Content/List.vue");
 const ProjectContentNew = () => import("./views/Project.Content/New.vue");
 const ProjectContentEdit = () => import("./views/Project.Content/Edit.vue");
+const ProjectContentComments = () => import("./views/Project.Content/Comments.vue");
 const ProjectContentForms = () => import("./views/Project.Content/Forms.vue");
 const ProjectContentFormsDetail = () => import("./views/Project.Content/FormsDetail.vue");
 const ProjectContentMedia = () => import("./views/Project.Content/Media.vue");
@@ -112,6 +113,15 @@ const routes = [
     path: "/project/:project_id/content",
     name: "projects.content",
     component: ProjectContentIndex,
+    beforeEnter: async (to, from, next) =>
+        checkPermission(to, from, next, {
+            requiredProjectRoles: ["owner", "admin", "editor"],
+        }),
+  },
+  {
+    path: "/project/:project_id/comments",
+    name: "projects.comments",
+    component: ProjectContentComments,
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
             requiredProjectRoles: ["owner", "admin", "editor"],

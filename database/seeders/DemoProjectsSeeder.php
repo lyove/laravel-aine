@@ -72,6 +72,22 @@ class DemoProjectsSeeder extends Seeder
         );
 
         Role::firstOrCreate(['name' => 'user']);
+
+        // Demo commenter accounts (plain users): comments on the blog are
+        // tied to a real logged-in user, mirroring the frontend flow.
+        foreach ([
+            ['name' => 'Alice Brown', 'email' => 'alice@example.com'],
+            ['name' => 'Bob Wilson', 'email' => 'bob@example.com'],
+            ['name' => 'Carol Davis', 'email' => 'carol@example.com'],
+        ] as $demo) {
+            $demoUser = User::firstOrCreate(
+                ['email' => $demo['email']],
+                ['name' => $demo['name'], 'password' => Hash::make('password')]
+            );
+            if (! $demoUser->hasRole('user')) {
+                $demoUser->assignRole('user');
+            }
+        }
     }
 
     /* ------------------------------------------------------------------ */
@@ -127,7 +143,7 @@ class DemoProjectsSeeder extends Seeder
      * ContentController@store persists them (values are plain strings;
      * media/relation/enumeration-multi are comma-joined).
      */
-    protected function addContent(Project $project, Collection $collection, array $data, bool $published = false, bool $trashed = false, int $daysAgo = 0, string $locale = 'en'): Content
+    protected function addContent(Project $project, Collection $collection, array $data, bool $published = false, bool $trashed = false, int $daysAgo = 0, string $locale = 'en', int $createdBy = 1): Content
     {
         $created = now()->subDays($daysAgo);
 
@@ -136,11 +152,11 @@ class DemoProjectsSeeder extends Seeder
             'collection_id' => $collection->id,
             'locale' => $locale,
             'created_at' => $created,
-            'created_by' => 1,
+            'created_by' => $createdBy,
             'updated_at' => $created,
-            'updated_by' => 1,
+            'updated_by' => $createdBy,
             'published_at' => $published ? $created->copy()->addMinutes(5) : null,
-            'published_by' => $published ? 1 : null,
+            'published_by' => $published ? $createdBy : null,
         ]);
 
         foreach ($data as $fieldName => $value) {
@@ -346,7 +362,7 @@ class DemoProjectsSeeder extends Seeder
                 'title' => 'Getting Started with Aine CMS', 'slug' => 'getting-started-with-aine-cms', 'excerpt' => 'A gentle introduction to Aine: install it, create your first project from the CMS Template and serve content through the REST API.',
                 'content' => '<h2>What is Aine?</h2><p>Aine is a <strong>self-hosted headless CMS</strong> built with Laravel and Vue.js.</p><h3>Key concepts</h3><ol><li><strong>Projects</strong> — isolated content spaces.</li><li><strong>Collections</strong> — your content models (Articles, Categories, Tags...).</li><li><strong>Fields</strong> — 15 field types from simple text to media and relations.</li></ol>',
                 'featured-image' => $media['cover-1.jpg'], 'category' => $categories['Tutorials'], 'author' => 'Jane Doe',
-                'tags' => $tags['Laravel'].','.$tags['CMS'], 'slider' => 1, 'featured' => 1,
+                'tags' => $tags['Laravel'].','.$tags['CMS'], 'slider' => 1, 'featured' => 1, 'comments_moderation' => 'approval'
             ],
             [
                 'title' => 'Building a Blog Frontend with Vue 3', 'slug' => 'building-a-blog-frontend-with-vue-3', 'excerpt' => 'Consume the Aine content API from a Vue 3 single page app using the domain-whitelist authentication method.',
@@ -358,7 +374,7 @@ class DemoProjectsSeeder extends Seeder
                 'title' => 'Aine 2.0 Release Notes: What\u2019s New', 'slug' => 'aine-2-0-release-notes-what-s-new', 'excerpt' => 'A quick tour of the 2.0 release: multi-locale projects, domain whitelist API, webhooks with signed payloads and more.',
                 'content' => '<h2>Release highlights</h2><ul><li>Multi-locale content in every project.</li><li>Domain whitelist authentication for pure frontend apps.</li><li>Signed webhooks on every content event.</li></ul>',
                 'featured-image' => $media['cover-3.jpg'], 'category' => $categories['News'], 'author' => 'John Smith',
-                'tags' => $tags['PHP'].','.$tags['CMS'], 'slider' => 1, 'featured' => 1,
+                'tags' => $tags['PHP'].','.$tags['CMS'], 'slider' => 1, 'featured' => 1, 'comments_moderation' => 'disabled'
             ],
             [
                 'title' => 'Top 10 Laravel Packages for 2026', 'slug' => 'top-10-laravel-packages-for-2026', 'excerpt' => 'Our hand-picked list of the most useful Laravel packages this year, from permissions to webhook delivery.',
@@ -474,7 +490,7 @@ class DemoProjectsSeeder extends Seeder
                 'excerpt' => '本文介绍如何安装 Aine、用 CMS 模板创建第一个项目，并通过 REST API 提供内容。',
                 'content' => '<h2>什么是 Aine？</h2><p>Aine 是一个用 Laravel 和 Vue.js 构建的<strong>自托管无头 CMS</strong>。</p><h3>核心概念</h3><ol><li><strong>项目</strong>——相互隔离的内容空间。</li><li><strong>集合</strong>——内容模型（文章、分类、作者……）。</li><li><strong>字段</strong>——从文本到媒体、关联共 15 种字段类型。</li></ol><p>本文是<em>中文版</em>内容，通过切换前台语言即可看到。</p>',
                 'featured-image' => $media['cover-1.jpg'], 'category' => $zhCategoryByEn['Tutorials'], 'author' => 'Jane Doe',
-                'tags' => $tags['Laravel'].','.$tags['CMS'], 'slider' => 1, 'featured' => 1,
+                'tags' => $tags['Laravel'].','.$tags['CMS'], 'slider' => 1, 'featured' => 1, 'comments_moderation' => 'approval'
             ],
             [
                 'title' => '2026 年十大 Laravel 扩展包', 'slug' => 'top-10-laravel-packages-2026-zh',
@@ -543,22 +559,31 @@ class DemoProjectsSeeder extends Seeder
             $this->addContent($project, $c['articles'], $data, published: true, daysAgo: max(8 - $i, 1), locale: 'zh');
         }
 
-        /* --- Comments (relation to articles) --- */
-        $comments = [
-            ['name' => 'Alice Brown', 'e-mail' => 'alice@example.com', 'comment' => 'Great article! The installation steps worked perfectly on my machine.', 'article' => $articleIds[0]],
-            ['name' => 'Bob Wilson', 'e-mail' => 'bob@example.com', 'comment' => 'Looking forward to the next part. Could you cover API tokens in more detail?', 'article' => $articleIds[0]],
-            ['name' => 'Carol Davis', 'e-mail' => 'carol@example.com', 'comment' => 'The Vue 3 example rendered beautifully. Thanks for the code snippet!', 'article' => $articleIds[1]],
-            ['name' => 'Dave Miller', 'e-mail' => 'dave@example.com', 'comment' => 'Thanks for the package list — Spatie Permission is a lifesaver.', 'article' => $articleIds[3]],
+        /* --- Comments (relation to articles, tied to demo users) --- */
+        $demoUsers = [
+            'alice' => User::where('email', 'alice@example.com')->value('id'),
+            'bob' => User::where('email', 'bob@example.com')->value('id'),
+            'carol' => User::where('email', 'carol@example.com')->value('id'),
         ];
-        $comments[] = ['name' => 'Eva Lindqvist', 'e-mail' => 'eva@example.com', 'comment' => 'The Eloquent guide finally made relationships click for me. Thank you!', 'article' => $articleIds[6]];
-        $comments[] = ['name' => 'Omar Farouk', 'e-mail' => 'omar@example.com', 'comment' => 'Composables article is gold — my components got so much cleaner.', 'article' => $articleIds[7]];
-        $comments[] = ['name' => 'Grace Liu', 'e-mail' => 'grace@example.com', 'comment' => 'The security checklist caught two things we were doing wrong. Highly recommended.', 'article' => $articleIds[9]];
-        $comments[] = ['name' => 'Peter Novak', 'e-mail' => 'peter@example.com', 'comment' => 'PHP 8.5 property hooks are a game changer for value objects.', 'article' => $articleIds[13]];
-        $comments[] = ['name' => 'Mia Tanaka', 'e-mail' => 'mia@example.com', 'comment' => 'Loved the DevTools review — the timeline tab is now my favourite.', 'article' => $articleIds[14]];
-        $comments[] = ['name' => 'Leo Martins', 'e-mail' => 'leo@example.com', 'comment' => 'The API design guide should be required reading for every backend team.', 'article' => $articleIds[15]];
+
+        // Approved comments — visible on the blog.
+        $comments = [
+            ['name' => 'Alice Brown', 'e-mail' => 'alice@example.com', 'comment' => 'Great article! The installation steps worked perfectly on my machine.', 'article' => $articleIds[0], 'status' => 'approved', 'created_by' => $demoUsers['alice']],
+            ['name' => 'Bob Wilson', 'e-mail' => 'bob@example.com', 'comment' => 'Looking forward to the next part. Could you cover API tokens in more detail?', 'article' => $articleIds[0], 'status' => 'approved', 'created_by' => $demoUsers['bob']],
+            ['name' => 'Carol Davis', 'e-mail' => 'carol@example.com', 'comment' => 'The Vue 3 example rendered beautifully. Thanks for the code snippet!', 'article' => $articleIds[1], 'status' => 'approved', 'created_by' => $demoUsers['carol']],
+            ['name' => 'Alice Brown', 'e-mail' => 'alice@example.com', 'comment' => 'Thanks for the package list — Spatie Permission is a lifesaver.', 'article' => $articleIds[3], 'status' => 'approved', 'created_by' => $demoUsers['alice']],
+            ['name' => 'Bob Wilson', 'e-mail' => 'bob@example.com', 'comment' => 'The Eloquent guide finally made relationships click for me. Thank you!', 'article' => $articleIds[6], 'status' => 'approved', 'created_by' => $demoUsers['bob']],
+            ['name' => 'Carol Davis', 'e-mail' => 'carol@example.com', 'comment' => 'Composables article is gold — my components got so much cleaner.', 'article' => $articleIds[7], 'status' => 'approved', 'created_by' => $demoUsers['carol']],
+        ];
+
+        // Pending comments on the "approval" article — await moderation.
+        $comments[] = ['name' => 'Alice Brown', 'e-mail' => 'alice@example.com', 'comment' => 'Could you share a minimal config example for the domain whitelist middleware?', 'article' => $articleIds[0], 'status' => 'pending', 'created_by' => $demoUsers['alice']];
+        $comments[] = ['name' => 'Bob Wilson', 'e-mail' => 'bob@example.com', 'comment' => 'This deserves a follow-up post about deployment. Any plans?', 'article' => $articleIds[0], 'status' => 'pending', 'created_by' => $demoUsers['bob']];
 
         foreach ($comments as $i => $data) {
-            $this->addContent($project, $c['comments'], $data, published: true, daysAgo: max(8 - $i, 1));
+            $createdBy = $data['created_by'] ?? 1;
+            unset($data['created_by']);
+            $this->addContent($project, $c['comments'], $data, published: false, daysAgo: max(8 - $i, 1), createdBy: $createdBy);
         }
 
         /* --- Globals --- */

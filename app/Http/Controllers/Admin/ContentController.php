@@ -239,8 +239,20 @@ class ContentController extends Controller
         $count1 = clone $content_items; $count2 = clone $content_items;
         $count3 = clone $content_items; $count4 = clone $content_items;
 
+        $isComments = $collection->slug === 'comments';
+
         $getItems = $request->get('getItems');
-        if ($getItems === 'all')       $content_items = $content_items->whereNull('draft_parent_id')->paginate($each);
+        if ($isComments) {
+            // Comments use their own status field (pending/approved/spam/trash).
+            if (in_array($getItems, ['pending', 'approved', 'spam', 'trash'], true)) {
+                $content_items = $content_items->whereHas(
+                    'meta',
+                    fn ($q) => $q->where('field_name', 'status')->where('value', $getItems)
+                )->paginate($each);
+            } else {
+                $content_items = $content_items->paginate($each);
+            }
+        } elseif ($getItems === 'all')       $content_items = $content_items->whereNull('draft_parent_id')->paginate($each);
         elseif ($getItems === 'published') $content_items = $content_items->whereNotNull('published_at')->whereNull('draft_parent_id')->paginate($each);
         elseif ($getItems === 'draft')     $content_items = $content_items->whereNull('published_at')->whereNull('draft_parent_id')->paginate($each);
         elseif ($getItems === 'trashed')   $content_items = $content_items->with(['meta' => fn ($q) => $q->withTrashed()])->onlyTrashed()->paginate($each);
@@ -266,6 +278,9 @@ class ContentController extends Controller
             $c->updated_by   = $users->get($c->updated_by);
             $c->published_by = $users->get($c->published_by);
             $c->has_pending_draft = $c->isPublished() && $draftParentIds->contains($c->id);
+            if ($isComments) {
+                $c->status = $c->meta->firstWhere('field_name', 'status')?->value ?? 'pending';
+            }
         }
 
         $data['content']     = $content_items;
@@ -273,6 +288,19 @@ class ContentController extends Controller
         $data['published']   = $count2->whereNotNull('published_at')->whereNull('draft_parent_id')->count();
         $data['draft']       = $count3->whereNull('published_at')->whereNull('draft_parent_id')->count();
         $data['trashed']     = $count4->onlyTrashed()->count();
+
+        if ($isComments) {
+            // Independent queries: the count clones above already carry
+            // published_at filters from the generic draft/published counts.
+            $countComments = fn (string $status) => Content::where('project_id', $project->id)
+                ->where('collection_id', $collection_id)
+                ->whereHas('meta', fn ($q) => $q->where('field_name', 'status')->where('value', $status))
+                ->count();
+            $data['approved'] = $countComments('approved');
+            $data['pending']  = $countComments('pending');
+            $data['spam']     = $countComments('spam');
+            $data['trash']    = $countComments('trash');
+        }
         $data['project']     = $project;
         $data['forms']       = Form::where('project_id', $project->id)->where('collection_id', $collection_id)->count();
 

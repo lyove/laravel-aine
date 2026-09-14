@@ -173,65 +173,119 @@
         <div class="w-full flex justify-between text-sm text-gray-700 mb-2 pl-1">
             <div class="flex">
                 <div class="py-1">{{ selected.length }} {{ __('items selected') }}</div>
-                <div
-                    v-if="selected.length !== 0 && listOptions.getItems !== 'trashed'"
-                    class="ml-2 cursor-pointer text-green-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
-                    @click="publishSelected"
-                >
-                    <i class="fa fa-cloud-upload-alt"></i> {{ __('publish') }}
-                </div>
-                <div
-                    v-if="selected.length !== 0 && listOptions.getItems !== 'trashed'"
-                    class="ml-2 cursor-pointer text-gray-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
-                    @click="unPublishSelected"
-                >
-                    <i class="fa fa-cloud-download-alt"></i> {{ __('unpublish') }}
-                </div>
-                <div
-                    v-if="selected.length !== 0 && listOptions.getItems !== 'trashed'"
-                    class="ml-2 cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
-                    @click="moveToTrashSelected"
-                >
-                    <i class="fa fa-trash-restore"></i> {{ __('move to trash') }}
-                </div>
-                <div
-                    v-if="selected.length !== 0 && listOptions.getItems === 'trashed'"
-                    class="ml-2 cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
-                    @click="restoreSelected"
-                >
-                    <i class="fa fa-recycle"></i> {{ __('restore') }}
-                </div>
-                <div v-if="selected.length !== 0" class="ml-2 cursor-pointer text-red-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100" @click="deleteSelected">
-                    <i class="fa fa-trash-alt"></i> {{ __('delete') }}
-                </div>
+                <template v-if="isComments">
+                    <div
+                        v-if="selected.length !== 0 && listOptions.getItems !== 'trash'"
+                        class="ml-2 cursor-pointer text-green-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
+                        @click="commentBulk('approve')"
+                    >
+                        <i class="fa fa-check"></i> {{ __('approve') }}
+                    </div>
+                    <div
+                        v-if="selected.length !== 0 && listOptions.getItems !== 'trash'"
+                        class="ml-2 cursor-pointer text-gray-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
+                        @click="commentBulk('spam')"
+                    >
+                        <i class="fa fa-bug"></i> {{ __('mark as spam') }}
+                    </div>
+                    <div
+                        v-if="selected.length !== 0 && listOptions.getItems !== 'trash'"
+                        class="ml-2 cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
+                        @click="commentBulk('trash')"
+                    >
+                        <i class="fa fa-trash-restore"></i> {{ __('move to trash') }}
+                    </div>
+                    <div
+                        v-if="selected.length !== 0 && listOptions.getItems === 'trash'"
+                        class="ml-2 cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
+                        @click="commentBulk('restore')"
+                    >
+                        <i class="fa fa-recycle"></i> {{ __('restore') }}
+                    </div>
+                    <div v-if="selected.length !== 0" class="ml-2 cursor-pointer text-red-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100" @click="deleteSelected">
+                        <i class="fa fa-trash-alt"></i> {{ __('delete') }}
+                    </div>
+                </template>
+                <template v-else>
+                    <div
+                        v-if="selected.length !== 0 && listOptions.getItems !== 'trashed'"
+                        class="ml-2 cursor-pointer text-green-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
+                        @click="publishSelected"
+                    >
+                        <i class="fa fa-cloud-upload-alt"></i> {{ __('publish') }}
+                    </div>
+                    <div
+                        v-if="selected.length !== 0 && listOptions.getItems !== 'trashed'"
+                        class="ml-2 cursor-pointer text-gray-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
+                        @click="unPublishSelected"
+                    >
+                        <i class="fa fa-cloud-download-alt"></i> {{ __('unpublish') }}
+                    </div>
+                    <div
+                        v-if="selected.length !== 0 && listOptions.getItems !== 'trashed'"
+                        class="ml-2 cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
+                        @click="moveToTrashSelected"
+                    >
+                        <i class="fa fa-trash-restore"></i> {{ __('move to trash') }}
+                    </div>
+                    <div
+                        v-if="selected.length !== 0 && listOptions.getItems === 'trashed'"
+                        class="ml-2 cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
+                        @click="restoreSelected"
+                    >
+                        <i class="fa fa-recycle"></i> {{ __('restore') }}
+                    </div>
+                    <div v-if="selected.length !== 0" class="ml-2 cursor-pointer text-red-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100" @click="deleteSelected">
+                        <i class="fa fa-trash-alt"></i> {{ __('delete') }}
+                    </div>
+                </template>
             </div>
 
             <div class="flex">
-                <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('all')" :class="{ 'bg-gray-200': listOptions.getItems == 'all' }">
-                    {{ __('All') }}({{ totalCount }})
-                </div>
-                <div
-                    class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100"
-                    @click="changeGetItems('published')"
-                    :class="{
-                        'bg-gray-200': listOptions.getItems == 'published',
-                    }"
-                >
-                    {{ __('Published') }}({{ publishedCount }})
-                </div>
-                <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('draft')" :class="{ 'bg-gray-200': listOptions.getItems == 'draft' }">
-                    {{ __('Draft') }}({{ draftCount }})
-                </div>
-                <div
-                    v-if="!hasAddSelectedListener"
-                    class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100"
-                    @click="changeGetItems('trashed')"
-                    :class="{
-                        'bg-gray-200': listOptions.getItems == 'trashed',
-                    }"
-                >
-                    {{ __('Trashed') }}({{ trashedCount }})
-                </div>
+                <template v-if="isComments">
+                    <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('all')" :class="{ 'bg-gray-200': listOptions.getItems == 'all' }">
+                        {{ __('All') }}({{ totalCount }})
+                    </div>
+                    <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('approved')" :class="{ 'bg-gray-200': listOptions.getItems == 'approved' }">
+                        {{ __('Approved') }}({{ approvedCount }})
+                    </div>
+                    <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('pending')" :class="{ 'bg-gray-200': listOptions.getItems == 'pending' }">
+                        {{ __('Pending') }}({{ pendingCount }})
+                    </div>
+                    <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('spam')" :class="{ 'bg-gray-200': listOptions.getItems == 'spam' }">
+                        {{ __('Spam') }}({{ spamCount }})
+                    </div>
+                    <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('trash')" :class="{ 'bg-gray-200': listOptions.getItems == 'trash' }">
+                        {{ __('Trash') }}({{ trashCount }})
+                    </div>
+                </template>
+                <template v-else>
+                    <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('all')" :class="{ 'bg-gray-200': listOptions.getItems == 'all' }">
+                        {{ __('All') }}({{ totalCount }})
+                    </div>
+                    <div
+                        class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100"
+                        @click="changeGetItems('published')"
+                        :class="{
+                            'bg-gray-200': listOptions.getItems == 'published',
+                        }"
+                    >
+                        {{ __('Published') }}({{ publishedCount }})
+                    </div>
+                    <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('draft')" :class="{ 'bg-gray-200': listOptions.getItems == 'draft' }">
+                        {{ __('Draft') }}({{ draftCount }})
+                    </div>
+                    <div
+                        v-if="!hasAddSelectedListener"
+                        class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100"
+                        @click="changeGetItems('trashed')"
+                        :class="{
+                            'bg-gray-200': listOptions.getItems == 'trashed',
+                        }"
+                    >
+                        {{ __('Trashed') }}({{ trashedCount }})
+                    </div>
+                </template>
             </div>
         </div>
 
@@ -411,8 +465,16 @@
                             </td>
                             <td class="pl-2 py-4 text-sm text-center w-24">
                                 <div v-if="item.form_id === null">
-                                    <span v-if="item.published_at !== null" class="text-gray-500 rounded-md bg-green-200 px-3 py-1 whitespace-nowrap">{{ __('published') }}</span>
-                                    <span v-else class="text-gray-500 rounded-md bg-gray-200 px-3 py-1 whitespace-nowrap">{{ __('draft') }}</span>
+                                    <template v-if="isComments">
+                                        <span v-if="item.status === 'approved'" class="text-white rounded-md bg-green-500 px-3 py-1 whitespace-nowrap">{{ __('approved') }}</span>
+                                        <span v-else-if="item.status === 'pending'" class="text-white rounded-md bg-amber-500 px-3 py-1 whitespace-nowrap">{{ __('pending') }}</span>
+                                        <span v-else-if="item.status === 'spam'" class="text-white rounded-md bg-gray-400 px-3 py-1 whitespace-nowrap">{{ __('spam') }}</span>
+                                        <span v-else class="text-white rounded-md bg-red-500 px-3 py-1 whitespace-nowrap">{{ __('trash') }}</span>
+                                    </template>
+                                    <template v-else>
+                                        <span v-if="item.published_at !== null" class="text-gray-500 rounded-md bg-green-200 px-3 py-1 whitespace-nowrap">{{ __('published') }}</span>
+                                        <span v-else class="text-gray-500 rounded-md bg-gray-200 px-3 py-1 whitespace-nowrap">{{ __('draft') }}</span>
+                                    </template>
                                 </div>
                                 <div v-else>
                                     <span
@@ -474,7 +536,10 @@
                                     >
                                         <i class="fa fa-pencil-alt"></i>
                                     </router-link>
-                                    <a class="text-orange-500 p-2 px-3 rounded-md hover:bg-gray-100 cursor-pointer bg-gray-50" @click="moveToTrashContent(item)">
+                                    <a v-if="!isComments" class="text-orange-500 p-2 px-3 rounded-md hover:bg-gray-100 cursor-pointer bg-gray-50" @click="moveToTrashContent(item)">
+                                        <i class="fa fa-trash-restore"></i>
+                                    </a>
+                                    <a v-else class="text-orange-500 p-2 px-3 rounded-md hover:bg-gray-100 cursor-pointer bg-gray-50" @click="commentTrash(item)">
                                         <i class="fa fa-trash-restore"></i>
                                     </a>
                                 </div>
@@ -761,6 +826,10 @@ export default {
             publishedCount: 0,
             draftCount: 0,
             trashedCount: 0,
+            approvedCount: 0,
+            pendingCount: 0,
+            spamCount: 0,
+            trashCount: 0,
             search: "",
             localeFilter,
             projectLocales,
@@ -834,9 +903,6 @@ export default {
                     this.content = response.data.content;
                     this.form_count = response.data.forms;
 
-                    // Keep the language filter in sync with the authoritative
-                    // project payload (e.g. a locale removed since the last
-                    // visit): fall back to the default language and refetch.
                     const locales = parseLocales(this.project.locales);
                     this.projectLocales = locales;
                     if (!this.localeStorageKey) {
@@ -850,9 +916,16 @@ export default {
                     }
 
                     this.totalCount = response.data.totalCount;
-                    this.publishedCount = response.data.published;
-                    this.draftCount = response.data.draft;
-                    this.trashedCount = response.data.trashed;
+                    if (this.isComments) {
+                        this.approvedCount = response.data.approved;
+                        this.pendingCount = response.data.pending;
+                        this.spamCount = response.data.spam;
+                        this.trashCount = response.data.trash;
+                    } else {
+                        this.publishedCount = response.data.published;
+                        this.draftCount = response.data.draft;
+                        this.trashedCount = response.data.trashed;
+                    }
 
                     if (this.content.data == 0) this.selectAll = false;
 
@@ -1103,6 +1176,55 @@ export default {
                 });
         },
 
+        commentBulk(action) {
+            const labels = {
+                approve: __("approve all selected comments?"),
+                spam: __("mark all selected comments as spam?"),
+                trash: __("move all selected comments to the trash?"),
+                restore: __("restore all selected comments?"),
+                delete: __("delete all selected comments permanently?"),
+            };
+
+            this.$swal
+                .fire({
+                    title: __("Are you sure"),
+                    text: labels[action] || __("continue?"),
+                })
+                .then((result) => {
+                    if (result.isConfirmed) {
+                        axios
+                            .post("content/comments/bulk/" + this.$route.params.project_id, {
+                                action,
+                                ids: this.selected,
+                            })
+                            .then((response) => {
+                                this.$toast.success(__("Comments updated"));
+                                this.getContent();
+                                this.selected = [];
+                                this.selectAll = false;
+                            });
+                    }
+                });
+        },
+
+        commentTrash(item) {
+            this.$swal
+                .fire({
+                    title: __("Are you sure"),
+                    text: __("you want to move this comment to the trash?"),
+                })
+                .then((result) => {
+                    if (result.isConfirmed) {
+                        axios
+                            .post("content/comments/reject/" + this.$route.params.project_id + "/" + item.id)
+                            .then((response) => {
+                                this.$toast.success(__("Comment moved to the trash."));
+                                this.getContent();
+                            });
+                    }
+                });
+        },
+
         moveToTrashContent(item) {
             this.$swal
                 .fire({
@@ -1138,6 +1260,10 @@ export default {
         },
 
         deleteSelected() {
+            if (this.isComments) {
+                this.commentBulk("delete");
+                return;
+            }
             this.$swal
                 .fire({
                     title: __('Are you sure'),
@@ -1156,6 +1282,10 @@ export default {
         },
 
         restoreSelected() {
+            if (this.isComments) {
+                this.commentBulk("restore");
+                return;
+            }
             this.$swal
                 .fire({
                     title: __('Are you sure'),
@@ -1199,6 +1329,9 @@ export default {
     },
 
     computed: {
+        isComments() {
+            return this.collection && this.collection.slug === "comments";
+        },
         localeOptions() {
             const options = this.projectLocales.map((l) => {
                 const name = localeDisplayName(l) || l.toUpperCase();

@@ -57,6 +57,16 @@
                     <i class="fas fa-images text-gray-600 mr-3"></i> {{ __('Media Library') }}
                 </router-link>
             </li>
+            <li class="mb-2" v-if="canModerateComments">
+                <router-link
+                    :to="{ name: 'projects.comments', params: { project_id: project.id } }"
+                    :active-class="'bg-blue-50 text-blue-700'"
+                    :exact-active-class="'bg-blue-100 text-blue-700 font-semibold'"
+                    class="block w-full p-2 cursor-pointer hover:bg-gray-100 rounded"
+                >
+                    <i class="fas fa-comments text-gray-600 mr-3"></i> {{ __('Comments') }}
+                </router-link>
+            </li>
         </ul>
     </div>
 </template>
@@ -71,6 +81,10 @@ export default {
     },
 
     computed: {
+        canModerateComments() {
+            return ["owner", "admin", "editor"].includes(this.project.my_role);
+        },
+
         filterSearch() {
             if (this.project.collections !== undefined) {
                 return this.project.collections.filter((collection) => {
@@ -81,9 +95,6 @@ export default {
     },
 
     methods: {
-        // The edit/new/forms routes are flat siblings of the list route, so
-        // vue-router's active-class never highlights the list link there.
-        // Highlight by the col_id route param instead.
         isCollectionActive(collectionId) {
             return String(this.$route.params.col_id) === String(collectionId);
         },
