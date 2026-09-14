@@ -257,10 +257,9 @@ export default {
                     previewEl.innerHTML = previewHtml;
                 }
             } else {
-                // ---- Insert new placeholder at TinyMCE cursor ----
-                const safeJson = json.replace(/'/g, "&#39;");
+                const safeJson = json.replace(/"/g, "&quot;");
                 const html =
-                    `<div class="ssml-block" contenteditable="false" data-ssml='${safeJson}'>` +
+                    `<div class="ssml-block" contenteditable="false" data-ssml="${safeJson}">` +
                     `<div class="ssml-rich-preview">${previewHtml}</div>` +
                     `<div class="ssml-edit-hint">${this.__("Click to edit SSML speech annotations")}</div>` +
                     `</div>` +
