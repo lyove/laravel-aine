@@ -10,9 +10,7 @@ use App\Models\CollectionField;
 use App\Aine\AuditLogger;
 use App\Aine\PublicCache;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Spatie\Permission\Exceptions\UnauthorizedException;
 
 class CollectionsController extends Controller
 {
@@ -26,10 +24,7 @@ class CollectionsController extends Controller
         $project = Project::with('collections')->findOrFail($id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$project->id)){
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageCollections', $project);
 
         return $project;
     }
@@ -45,10 +40,7 @@ class CollectionsController extends Controller
         $project = Project::findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$project->id)){
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageCollections', $project);
 
         $request->validate([
             'name' => 'required',
@@ -84,10 +76,7 @@ class CollectionsController extends Controller
         $project = Project::findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$project->id)){
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageCollections', $project);
 
         foreach($request->all() as $item){
             $collection =  Collection::where('project_id', $project->id)->where('id', $item['id'])->firstOrFail();
@@ -109,10 +98,7 @@ class CollectionsController extends Controller
         $project = Project::with('collections')->findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$project->id)){
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageCollections', $project);
 
         $collection = Collection::with(['project', 'project.collections', 'project.collections.fields', 'fields'])
                                     ->where('project_id', $project->id)
@@ -140,10 +126,7 @@ class CollectionsController extends Controller
         $project = Project::findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$project->id)){
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageCollections', $project);
 
         $collection = Collection::where('project_id', $project->id)->where('id', $collection_id)->firstOrFail();
 
@@ -177,10 +160,7 @@ class CollectionsController extends Controller
         $project = Project::findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$project->id)){
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageCollections', $project);
 
         $collection = Collection::with('fields')->where('project_id', $project->id)->where('id', $collection_id)->firstOrFail();
 
@@ -221,10 +201,7 @@ class CollectionsController extends Controller
         $project = Project::findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$project->id)){
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageCollections', $project);
 
         $request->validate([
             'file' => 'required|file|max:2048',
@@ -312,10 +289,7 @@ class CollectionsController extends Controller
         $project = Project::findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$project->id)){
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageCollections', $project);
 
         $collection = Collection::where('project_id', $project->id)->where('id', $collection_id)->firstOrFail();
 

@@ -9,6 +9,7 @@ use App\Models\ContentMeta;
 use App\Models\Media;
 use App\Models\Project;
 use App\Models\ProjectTranslation;
+use App\Models\ProjectUser;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\Webhook;
@@ -23,26 +24,12 @@ use Spatie\Permission\Models\Role;
 /**
  * Demo preset data for both project templates:
  *
- *   1. Demo CMS        (CMS Template)      — pages, articles, categories,
- *      authors, tags, comments, globals; published/draft/trashed states;
- *      zh articles; media; project translations; API token; webhook.
- *   2. Demo Directory  (Business Directory) — listings, categories, tags,
- *      locations, reviews, globals; featured listings; logos + galleries;
- *      project translations; API token.
- *   3. Demo Speech     (Speech Template)   — pages, posts, categories, tags,
- *      globals (no comments); Mandarin learning texts, speeches, tongue
- *      twisters and classic quotes (zh); media; project translations;
- *      API token; webhook.
- *
  * Usage:  php artisan migrate:fresh --seed --seeder=DemoProjectsSeeder
  */
 class DemoProjectsSeeder extends Seeder
 {
     public function run()
     {
-        // Fresh installs need the admin UI languages + translation registry
-        // (database tables, seeded from database/seeders/data/admin_strings.php)
-        // before anything else renders. Idempotent.
         $this->call(AdminTranslationsSeeder::class);
 
         $this->seedBaseData();
@@ -57,11 +44,6 @@ class DemoProjectsSeeder extends Seeder
 
     protected function seedBaseData(): void
     {
-        // When this seeder runs as part of the web installer, the admin
-        // account is created from the wizard form right after — never create
-        // a second demo admin on top of it (DatabaseManager sets
-        // installer.seed_demo_skip_admin before seeding; a manual
-        // `php artisan db:seed` still creates admin@admin.com/admin).
         $skipAdmin = config('installer.seed_demo_skip_admin', false);
         $hasSuperAdmin = User::whereHas('roles', fn ($q) => $q->where('name', 'super_admin'))->exists();
 
@@ -88,6 +70,8 @@ class DemoProjectsSeeder extends Seeder
                 'version' => env('APP_VERSION', '2.0.0'),
             ]
         );
+
+        Role::firstOrCreate(['name' => 'user']);
     }
 
     /* ------------------------------------------------------------------ */
@@ -96,18 +80,19 @@ class DemoProjectsSeeder extends Seeder
 
     protected function createProject(array $data): Project
     {
-        // Safety: remove a previously seeded project with the same slug —
-        // every related row (Content is SoftDeletes, so plain delete()
-        // would leave rows behind) and the media files on disk.
         $previous = Project::where('slug', $data['slug'])->first();
         if ($previous) {
             $this->removeProject($previous);
         }
 
+        $data['owner_id'] ??= User::whereHas('roles', fn ($q) => $q->where('name', 'super_admin'))->value('id');
+
         $project = Project::create($data);
 
-        Role::create(['name' => 'admin'.$project->id]);
-        Role::create(['name' => 'editor'.$project->id]);
+        ProjectUser::updateOrCreate(
+            ['project_id' => $project->id, 'user_id' => $project->owner_id],
+            ['role' => ProjectUser::ROLE_OWNER]
+        );
 
         return $project;
     }
@@ -118,11 +103,7 @@ class DemoProjectsSeeder extends Seeder
      */
     protected function removeProject(Project $project): void
     {
-        Role::whereIn('name', ['admin'.$project->id, 'editor'.$project->id])->delete();
-
         $project->content()->withTrashed()->forceDelete();
-        // ContentMeta is SoftDeletes too — a plain delete() would only
-        // set deleted_at and leave the rows behind.
         $project->meta()->withTrashed()->forceDelete();
         $project->fields()->delete();
         $project->collections()->delete();
@@ -130,16 +111,14 @@ class DemoProjectsSeeder extends Seeder
         $project->webhooks()->delete();
         $project->webhook_logs()->delete();
         $project->forms()->delete();
+        ProjectUser::where('project_id', $project->id)->delete();
         DB::table('project_translations')->where('project_id', $project->id)->delete();
-        // Sanctum personal access tokens are polymorphic.
         DB::table('personal_access_tokens')
             ->where('tokenable_type', Project::class)
             ->where('tokenable_id', $project->id)
             ->delete();
 
         Storage::disk('local')->deleteDirectory('public/'.$project->uuid);
-        // Project is SoftDeletes — a plain delete() would keep the row and
-        // let the projects.slug unique index block the re-seed below.
         $project->forceDelete();
     }
 
@@ -178,7 +157,7 @@ class DemoProjectsSeeder extends Seeder
         }
 
         if ($trashed) {
-            $content->delete(); // SoftDeletes -> sets deleted_at, keeps the row
+            $content->delete();
         }
 
         return $content;
@@ -238,11 +217,6 @@ class DemoProjectsSeeder extends Seeder
             $thumb = $manager->read($path)->scale(height: 600)->encodeByExtension($png ? 'png' : 'jpg');
             Storage::disk('local')->put($base.'/thumbnails/'.$name, $thumb);
 
-            // The thumbnails directory is created by Storage::put with the
-            // process umask (often 700). Web servers / PHP-FPM running under
-            // another user then cannot read the files, so thumbnails 403/404.
-            // Normalize the permission (dir + files) so media images are
-            // always servable regardless of the process umask.
             $thumbDir = storage_path('app/'.$base.'/thumbnails');
             @chmod($thumbDir, 0775);
             foreach ((glob($thumbDir.'/*') ?: []) as $thumbFile) {

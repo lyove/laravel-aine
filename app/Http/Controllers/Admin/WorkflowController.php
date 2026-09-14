@@ -12,7 +12,6 @@ use App\Models\Project;
 use App\Services\Content\ContentMutationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Permission\Exceptions\UnauthorizedException;
 
 class WorkflowController extends Controller
 {
@@ -111,20 +110,12 @@ class WorkflowController extends Controller
 
     private function authorizeWriter(Project $project): void
     {
-        $user = Auth::user();
-        if (! $user->isSuperAdmin()
-            && ! $user->hasRole('admin' . $project->id)
-            && ! $user->hasRole('editor' . $project->id)) {
-            throw UnauthorizedException::forRoles(['admin' . $project->id, 'editor' . $project->id]);
-        }
+        $this->authorize('manageContent', $project);
     }
 
     private function authorizeReviewer(Project $project): void
     {
-        $user = Auth::user();
-        if (! $user->isSuperAdmin() && ! $user->hasRole('admin' . $project->id)) {
-            throw UnauthorizedException::forRoles(['admin' . $project->id]);
-        }
+        $this->authorize('publishContent', $project);
     }
 
     private function bumpPublicCacheVersion(?int $projectId, ?string $collectionSlug = null): void

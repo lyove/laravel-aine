@@ -29,7 +29,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
-use Spatie\Permission\Exceptions\UnauthorizedException;
 
 class ContentController extends Controller
 {
@@ -49,24 +48,13 @@ class ContentController extends Controller
     /** Assert the current user is admin or editor of the project. */
     private function authorizeEditor(Project $project): void
     {
-        /** @var User $user */
-        $user = Auth::user();
-        if (! $user->isSuperAdmin()
-            && ! $user->hasRole('admin' . $project->id)
-            && ! $user->hasRole('editor' . $project->id)) {
-            throw UnauthorizedException::forRoles(['admin' . $project->id]);
-        }
+        $this->authorize('manageContent', $project);
     }
 
     /** Assert the current user is admin of the project (no editors). */
     private function authorizeAdmin(Project $project): void
     {
-        /** @var User $user */
-        $user = Auth::user();
-        if (! $user->isSuperAdmin()
-            && ! $user->hasRole('admin' . $project->id)) {
-            throw UnauthorizedException::forRoles(['admin' . $project->id]);
-        }
+        $this->authorize('publishContent', $project);
     }
 
     // =================================================================
@@ -365,6 +353,11 @@ class ContentController extends Controller
             return $this->workflowPublishBlocked();
         }
 
+        // Direct publishing (workflow disabled) is an owner/admin ability.
+        if (! $project->workflow_enabled && $request->get('published')) {
+            $this->authorizeAdmin($project);
+        }
+
         // Pre-process richtext values before mutation.
         $processedData = $this->preProcessData($input, $collection->fields);
 
@@ -476,6 +469,9 @@ class ContentController extends Controller
                 return $this->workflowPublishBlocked();
             }
 
+            // Direct publishing (workflow disabled) is an owner/admin ability.
+            $this->authorizeAdmin($project);
+
             $draftId = $content->id;
 
             $this->mutations->update(
@@ -507,6 +503,11 @@ class ContentController extends Controller
         // Workflow gate.
         if ($project->workflow_enabled && $request->get('published')) {
             return $this->workflowPublishBlocked();
+        }
+
+        // Direct publishing (workflow disabled) is an owner/admin ability.
+        if (! $project->workflow_enabled && $request->get('published')) {
+            $this->authorizeAdmin($project);
         }
 
         // Publish event.

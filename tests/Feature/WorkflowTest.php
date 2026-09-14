@@ -10,10 +10,11 @@ use App\Models\CollectionField;
 use App\Models\Content;
 use App\Models\ContentMeta;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -50,9 +51,14 @@ class WorkflowTest extends TestCase
         Role::firstOrCreate(['name' => 'super_admin']);
         $this->admin->assignRole('super_admin');
 
-        Role::firstOrCreate(['name' => 'editor' . $this->project->id]);
         $this->editor = User::create(['name' => 'Editor', 'email' => 'editor@test.local', 'password' => bcrypt('password')]);
-        $this->editor->assignRole('editor' . $this->project->id);
+        // Editor is a project member with the "editor" role (new model).
+        $this->editor->assignRole(Role::firstOrCreate(['name' => 'user']));
+        ProjectUser::create([
+            'project_id' => $this->project->id,
+            'user_id' => $this->editor->id,
+            'role' => ProjectUser::ROLE_EDITOR,
+        ]);
     }
 
     private function makeDraft(): Content
@@ -81,7 +87,7 @@ class WorkflowTest extends TestCase
         $stranger = User::create(['name' => 's', 'email' => 's@t.local', 'password' => bcrypt('password')]);
         $this->actingAs($stranger);
 
-        $this->expectException(UnauthorizedException::class);
+        $this->expectException(AuthorizationException::class);
         (new WorkflowController())->submitReview($this->project->id, $this->collectionId, $content->id);
     }
 
@@ -118,7 +124,7 @@ class WorkflowTest extends TestCase
         $content->save();
         $this->actingAs($this->editor);
 
-        $this->expectException(UnauthorizedException::class);
+        $this->expectException(AuthorizationException::class);
         (new WorkflowController())->approve($this->project->id, $this->collectionId, $content->id);
     }
 
@@ -168,11 +174,30 @@ class WorkflowTest extends TestCase
         $this->assertSame(422, $resp->getStatusCode());
     }
 
-    public function test_workflow_disabled_allows_direct_publish(): void
+    public function test_workflow_disabled_editor_cannot_direct_publish(): void
     {
         $this->project->update(['workflow_enabled' => false]);
         $content = $this->makeDraft();
         $this->actingAs($this->editor);
+
+        // Direct publishing (workflow off) is owner/admin only.
+        $this->expectException(AuthorizationException::class);
+        (new ContentController())->update($this->project->id, $this->collectionId, $content->id, Request::create('/x', 'POST', [
+            'locale' => 'en', 'published' => 1, 'data' => ['title' => 'Updated'],
+        ]));
+    }
+
+    public function test_workflow_disabled_owner_can_direct_publish(): void
+    {
+        $this->project->update(['workflow_enabled' => false]);
+        $this->project->update(['owner_id' => $this->admin->id]);
+        ProjectUser::updateOrCreate(
+            ['project_id' => $this->project->id, 'user_id' => $this->admin->id],
+            ['role' => ProjectUser::ROLE_OWNER]
+        );
+        $content = $this->makeDraft();
+        $this->actingAs($this->admin);
+
         (new ContentController())->update($this->project->id, $this->collectionId, $content->id, Request::create('/x', 'POST', [
             'locale' => 'en', 'published' => 1, 'data' => ['title' => 'Updated'],
         ]));

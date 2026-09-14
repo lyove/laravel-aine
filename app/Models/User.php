@@ -5,6 +5,8 @@ namespace App\Models;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -49,6 +51,56 @@ class User extends Authenticatable
 
     public function isSuperAdmin(){
         return $this->hasRole('super_admin');
+    }
+
+    /**
+     * Projects the user owns (projects.owner_id is the source of truth).
+     */
+    public function ownedProjects(): HasMany
+    {
+        return $this->hasMany(Project::class, 'owner_id');
+    }
+
+    /**
+     * Projects the user is a member of (through project_user), with the
+     * membership role available on the pivot.
+     */
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'project_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    /**
+     * The user's role inside a project (owner/admin/editor/viewer) or null
+     * when the user has no membership.
+     */
+    public function projectRole(Project $project): ?string
+    {
+        $membership = $this->projects()->where('projects.id', $project->id)->first();
+
+        return $membership?->pivot->role;
+    }
+
+    public function isProjectMember(Project $project): bool
+    {
+        return $this->projectRole($project) !== null;
+    }
+
+    public function isProjectOwner(Project $project): bool
+    {
+        return $this->projectRole($project) === ProjectUser::ROLE_OWNER;
+    }
+
+    /**
+     * Whether the user holds one of the given roles inside the project.
+     *
+     * @param  array<int, string>  $roles
+     */
+    public function hasProjectRole(Project $project, array $roles): bool
+    {
+        return in_array($this->projectRole($project), $roles, true);
     }
 
     /**

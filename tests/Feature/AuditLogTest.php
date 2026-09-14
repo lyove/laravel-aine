@@ -9,6 +9,7 @@ use App\Models\CollectionField;
 use App\Models\Content;
 use App\Models\ContentMeta;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
@@ -273,8 +274,13 @@ class AuditLogTest extends TestCase
     public function test_audit_logs_api_denies_non_project_admin(): void
     {
         $other = User::create(['name' => 'Other', 'email' => 'other@test.local', 'password' => bcrypt('password')]);
-        $editorRole = Role::firstOrCreate(['name' => 'editor' . $this->project->id]);
-        $other->assignRole($editorRole);
+        // Editor membership is not enough to view audit logs (owner/admin only).
+        $other->assignRole(Role::firstOrCreate(['name' => 'user']));
+        ProjectUser::create([
+            'project_id' => $this->project->id,
+            'user_id' => $other->id,
+            'role' => ProjectUser::ROLE_EDITOR,
+        ]);
         $this->actingAs($other);
 
         $this->getJson('/admin-api/audit-logs/project/' . $this->project->id)->assertStatus(403);

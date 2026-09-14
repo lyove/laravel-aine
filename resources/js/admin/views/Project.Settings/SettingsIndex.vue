@@ -116,7 +116,7 @@
                         <hr class="clear-both mt-5 mb-5" />
 
                         <ui-button
-                            v-if="checkRole(['super_admin'])"
+                            v-if="canDeleteProject()"
                             :color="'red-500'"
                             class="float-right"
                             @click="deleteProject()"
@@ -141,7 +141,6 @@ import ProjectHeader from "../components/ProjectHeader.vue";
 
 import SettingsSidebar from "./sections/SettingsSidebar.vue";
 
-import checkRole from "../../../utils/checkrole";
 import projectBreadcrumb from "../../mixins/projectBreadcrumb";
 import { useAdminStore } from "../../store";
 
@@ -158,9 +157,6 @@ export default {
     },
 
     data() {
-        // Pre-seed from the store (loaded by the router guard before this
-        // page renders) so the shell and the edit form never flash blank
-        // while the page's own getProject() refreshes the data.
         const currentProject = useAdminStore().currentProject || {};
 
         return {
@@ -183,15 +179,15 @@ export default {
     },
 
     methods: {
-        checkRole,
+        canDeleteProject() {
+            return this.project && this.project.my_role === 'owner';
+        },
 
         generateSlugFromName() {
-            // Regenerate the slug on every keystroke, but never clobber a
-            // slug the user edited by hand (once the slug field is touched,
-            // auto-fill stops).
-            if (this.editProjectData.slugManuallyEdited) return;
+            if (this.editProjectData.slugManuallyEdited) {
+                return;
+            }
 
-            // $slugify converts Chinese input to pinyin automatically.
             this.editProjectData.slug = this.$slugify(this.editProjectData.name || '');
         },
 
@@ -238,9 +234,6 @@ export default {
                             description: [],
                         };
                         this.editProjectData.slugExists = false;
-                        // Apply the server response directly (no extra
-                        // request) and keep the store — and the main sidebar
-                        // project name — in sync with the saved values.
                         const saved = response.data;
                         this.project = saved;
                         this.editProjectData.id = saved.id;

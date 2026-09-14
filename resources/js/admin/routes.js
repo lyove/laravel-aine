@@ -13,7 +13,7 @@ const checkPermission = async (to, from, next, options = {}) => {
     }
 
     const roles = store.user.roles;
-    const { requireSuperAdmin = false, requiredRoles = [] } = options;
+    const { requireSuperAdmin = false, requiredRoles = [], requiredProjectRoles = [] } = options;
 
     if (roles.includes("super_admin")) {
         return next();
@@ -26,6 +26,16 @@ const checkPermission = async (to, from, next, options = {}) => {
     if (requiredRoles.length > 0) {
         const hasRole = requiredRoles.some(role => roles.includes(role));
         if (!hasRole) {
+            return next("/");
+        }
+    }
+
+    // Project pages are guarded by the current user's role inside the
+    // project (project.my_role: owner / admin / editor / viewer), which is
+    // loaded by the global beforeEach guard before these guards run.
+    if (requiredProjectRoles.length > 0) {
+        const myRole = store.currentProject && store.currentProject.my_role;
+        if (!requiredProjectRoles.includes(myRole)) {
             return next("/");
         }
     }
@@ -77,10 +87,7 @@ const routes = [
     component: ProjectIndex,
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
-            requiredRoles: [
-                "admin" + to.params.project_id,
-                "editor" + to.params.project_id,
-            ],
+            requiredProjectRoles: ["owner", "admin", "editor", "viewer"],
         }),
   },
   {
@@ -89,7 +96,7 @@ const routes = [
     component: ProjectCollectionIndex,
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
-            requiredRoles: ["admin" + to.params.project_id],
+            requiredProjectRoles: ["owner", "admin"],
         }),
   },
   {
@@ -98,7 +105,7 @@ const routes = [
     component: ProjectCollectionList,
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
-            requiredRoles: ["admin" + to.params.project_id],
+            requiredProjectRoles: ["owner", "admin"],
         }),
   },
   {
@@ -107,10 +114,7 @@ const routes = [
     component: ProjectContentIndex,
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
-            requiredRoles: [
-                "admin" + to.params.project_id,
-                "editor" + to.params.project_id,
-            ],
+            requiredProjectRoles: ["owner", "admin", "editor"],
         }),
   },
   {
@@ -119,10 +123,7 @@ const routes = [
     component: ProjectContentList,
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
-            requiredRoles: [
-                "admin" + to.params.project_id,
-                "editor" + to.params.project_id,
-            ],
+            requiredProjectRoles: ["owner", "admin", "editor"],
         }),
   },
   {
@@ -131,10 +132,7 @@ const routes = [
     component: ProjectContentNew,
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
-            requiredRoles: [
-                "admin" + to.params.project_id,
-                "editor" + to.params.project_id,
-            ],
+            requiredProjectRoles: ["owner", "admin", "editor"],
         }),
   },
   {
@@ -143,10 +141,7 @@ const routes = [
     component: ProjectContentEdit,
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
-            requiredRoles: [
-                "admin" + to.params.project_id,
-                "editor" + to.params.project_id,
-            ],
+            requiredProjectRoles: ["owner", "admin", "editor"],
         }),
   },
   {
@@ -155,10 +150,7 @@ const routes = [
     component: ProjectContentForms,
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
-            requiredRoles: [
-                "admin" + to.params.project_id,
-                "editor" + to.params.project_id,
-            ],
+            requiredProjectRoles: ["owner", "admin", "editor"],
         }),
   },
   {
@@ -167,10 +159,7 @@ const routes = [
     component: ProjectContentFormsDetail,
     beforeEnter: async (to, from, next) =>
       checkPermission(to, from, next, {
-            requiredRoles: [
-                "admin" + to.params.project_id,
-                "editor" + to.params.project_id,
-            ],
+            requiredProjectRoles: ["owner", "admin", "editor"],
       }),
   },
   {
@@ -178,7 +167,9 @@ const routes = [
     name: "projects.settings",
     component: ProjectSettingsIndex,
     beforeEnter: async (to, from, next) =>
-        checkPermission(to, from, next, { requireSuperAdmin: true }),
+        checkPermission(to, from, next, {
+            requiredProjectRoles: ["owner", "admin"],
+        }),
   },
   {
     path: "/project/:project_id/settings/locales",
@@ -186,7 +177,7 @@ const routes = [
     component: ProjectSettingsLocales,
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
-            requiredRoles: ["admin" + to.params.project_id],
+            requiredProjectRoles: ["owner", "admin"],
         }),
   },
   {
@@ -194,42 +185,54 @@ const routes = [
     name: "projects.settings.users",
     component: ProjectSettingsUsers,
     beforeEnter: async (to, from, next) =>
-        checkPermission(to, from, next, { requireSuperAdmin: true }),
+        checkPermission(to, from, next, {
+            requiredProjectRoles: ["owner"],
+        }),
   },
   {
     path: "/project/:project_id/settings/api",
     name: "projects.settings.api",
     component: ProjectSettingsAPI,
     beforeEnter: async (to, from, next) =>
-        checkPermission(to, from, next, { requireSuperAdmin: true }),
+        checkPermission(to, from, next, {
+            requiredProjectRoles: ["owner", "admin"],
+        }),
   },
   {
     path: "/project/:project_id/settings/webhooks",
     name: "projects.settings.webhooks",
     component: ProjectSettingsWebhooks,
     beforeEnter: async (to, from, next) =>
-        checkPermission(to, from, next, { requireSuperAdmin: true }),
+        checkPermission(to, from, next, {
+            requiredProjectRoles: ["owner", "admin"],
+        }),
   },
   {
     path: "/project/:project_id/settings/translations",
     name: "projects.settings.translations",
     component: ProjectSettingsTranslations,
     beforeEnter: async (to, from, next) =>
-        checkPermission(to, from, next, { requireSuperAdmin: true }),
+        checkPermission(to, from, next, {
+            requiredProjectRoles: ["owner", "admin"],
+        }),
   },
   {
     path: "/project/:project_id/settings/language",
     name: "projects.settings.language",
     component: ProjectSettingsLanguage,
     beforeEnter: async (to, from, next) =>
-        checkPermission(to, from, next, { requireSuperAdmin: true }),
+        checkPermission(to, from, next, {
+            requiredProjectRoles: ["owner", "admin"],
+        }),
   },
   {
     path: "/project/:project_id/settings/webhooks/:webhook_id/logs",
     name: "projects.settings.webhooks.logs",
     component: ProjectSettingsWebhookLogs,
     beforeEnter: async (to, from, next) =>
-      checkPermission(to, from, next, { requireSuperAdmin: true }),
+        checkPermission(to, from, next, {
+            requiredProjectRoles: ["owner", "admin"],
+        }),
   },
   {
     path: "/project/:project_id/settings/audit-logs",
@@ -237,7 +240,7 @@ const routes = [
     component: ProjectSettingsAuditLogs,
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
-            requiredRoles: ["admin" + to.params.project_id],
+            requiredProjectRoles: ["owner", "admin"],
         }),
   },
   {
@@ -246,10 +249,7 @@ const routes = [
     component: ProjectContentMedia,
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
-            requiredRoles: [
-                "admin" + to.params.project_id,
-                "editor" + to.params.project_id,
-            ],
+            requiredProjectRoles: ["owner", "admin", "editor"],
         }),
   },
 ];
@@ -261,16 +261,11 @@ const router = createRouter({
 
 router.afterEach(() => {
     const store = useAdminStore();
-    // Route navigation (lazy chunk + async guard data) finished: hide the
-    // transition overlay shown in the Layout shell.
     store.routeLoading = false;
 });
 
 router.beforeEach(async (to, from, next) => {
     const store = useAdminStore();
-    // Show the route transition overlay while the lazy chunk and the async
-    // guard data (user / project / collection) load, so switches never flash
-    // a blank or half-rendered page. Cleared in afterEach.
     store.routeLoading = true;
     const hasRoles = store.user.roles && store.user.roles.length > 0;
 
@@ -288,17 +283,10 @@ router.beforeEach(async (to, from, next) => {
         const projectChanged = !currentProjectId || currentProjectId != to.params.project_id;
 
         if (projectChanged) {
-            // No cached data for this project (first visit or switching
-            // projects): drop the stale copy and block until the fresh data
-            // is in the store so pages never render the wrong project shell.
             store.currentProject = null;
             store.currentCollection = null;
             await store.setCurrentProject(to.params.project_id);
         } else {
-            // Same project: navigate immediately without waiting on the
-            // network, and silently re-validate the data in the background
-            // (stale-while-revalidate) so it never goes stale. The refresh
-            // is flagged silent so it doesn't trigger the NProgress bar.
             if (Date.now() - (store.currentProjectLoadedAt || 0) > 30000) {
                 store.setCurrentProject(to.params.project_id, { silent: true });
             }
@@ -316,7 +304,6 @@ router.beforeEach(async (to, from, next) => {
             store.currentCollection = null;
         }
     } else if (wasProjectPage && !isProjectPage) {
-        // Clear current project when leaving a project page
         store.setCurrentProject(null);
         store.currentCollection = null;
     }

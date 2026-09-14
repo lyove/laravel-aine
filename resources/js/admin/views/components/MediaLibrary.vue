@@ -213,7 +213,7 @@
                             </label>
                         </div>
                         <p class="text-xs text-gray-500" v-if="upload_max_filesize !== null">{{ __('Up to') }} {{ $filters.prettyBytes(upload_max_filesize, 1024) }}</p>
-                        <p class="text-sm text-gray-500 pt-5 w-full text-center" v-if="typeof project.id !== 'undefined' && checkRole(['admin' + project.id]) && project.s3">
+                        <p class="text-sm text-gray-500 pt-5 w-full text-center" v-if="typeof project.id !== 'undefined' && canProject(['owner', 'admin']) && project.s3">
                             <i class="fas fa-hdd"></i>
                             {{ __('Default upload disk is') }}
                             <strong>{{ project.disk == "s3" ? "AWS S3" : __('Local') }}</strong
@@ -609,6 +609,12 @@ export default {
                 this.fileUpdateData.name = this.fileUpdateData.name.split(".")[0];
                 this.getMedia();
             });
+        },
+
+        // Whether the current user holds one of the given roles inside this
+        // project (project.my_role comes from the project payload).
+        canProject(roles) {
+            return Array.isArray(roles) && roles.includes(this.project && this.project.my_role);
         },
 
         checkRole,

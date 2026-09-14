@@ -38,6 +38,47 @@
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     <tr>
                                         <td class="px-6 py-3 text-sm align-top">
+                                            {{ __('Owner') }}
+                                            <small class="block text-gray-600 text-xs">{{ __('Can manage members, settings and delete the project') }}</small>
+                                        </td>
+                                        <td class="px-6 py-3 text-sm">
+                                            <div
+                                                v-if="owner"
+                                                class="border border-gray-100 rounded-md mb-2 block w-full p-2"
+                                            >
+                                                <div class="flex items-center">
+                                                    <div>
+                                                        <div class="flex bg-amber-500 text-white p-2 text-md rounded-full text-center mr-2 w-9">
+                                                            <div class="w-full text-center">
+                                                                {{ getUserNameInitials(owner.name) }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="block">
+                                                            {{ owner.name }}
+                                                        </div>
+                                                        <div class="block text-sm">
+                                                            {{ owner.email }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <p v-else class="text-sm text-gray-500">
+                                                {{ __('This project has no owner yet.') }}
+                                            </p>
+                                        </td>
+                                        <td class="px-6 py-3 text-sm text-right align-top">
+                                            <ui-button
+                                                color="amber-500"
+                                                @click="assignUser('transfer')"
+                                            >
+                                                {{ __('Transfer') }}
+                                            </ui-button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-3 text-sm align-top">
                                             {{ __('Admin') }}
                                             <small class="block text-gray-600 text-xs">{{ __('Can create and edit collections and content') }}</small>
                                         </td>
@@ -148,6 +189,53 @@
                                             </ui-button>
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <td class="px-6 py-3 text-sm align-top">
+                                            {{ __('Viewer') }}
+                                            <small class="block text-gray-600 text-xs">{{ __('Read-only access to content and media') }}</small>
+                                        </td>
+                                        <td class="px-6 py-3 text-sm">
+                                            <div
+                                                v-for="user in viewers"
+                                                :key="user.id"
+                                                class="border border-gray-100 rounded-md mb-2 block w-full p-2"
+                                            >
+                                                <div class="flex flex-start w-full items-center">
+                                                    <div>
+                                                        <div class="flex bg-green-500 text-white p-2 text-md rounded-full text-center mr-2 w-9">
+                                                            <div class="w-full text-center">
+                                                                {{ getUserNameInitials(user.name) }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="block">
+                                                            {{ user.name }}
+                                                        </div>
+                                                        <div class="block text-sm">
+                                                            {{ user.email }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="ml-auto">
+                                                        <i
+                                                            class="fa fa-minus-circle text-red-400 cursor-pointer hover:text-red-500 text-lg ml-2"
+                                                            @click="removeUser(user, 'viewer')"
+                                                        ></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td
+                                            class="px-6 py-3 text-sm text-right align-top"
+                                        >
+                                            <ui-button
+                                                color="indigo-500"
+                                                @click="assignUser('viewer')"
+                                            >
+                                                {{ __('+ Assign User') }}
+                                            </ui-button>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -163,7 +251,7 @@
                     <div>
                         <ui-button
                             color="indigo-500"
-                            v-if="!createNewUser"
+                            v-if="!createNewUser && current_assign_role !== 'transfer'"
                             @click="createNewUser = true"
                         >
                             {{ __('Create New User') }}
@@ -182,6 +270,9 @@
 
             <template #content>
                 <div class="mt-4">
+                    <p v-if="current_assign_role === 'transfer'" class="text-sm text-gray-600 mb-3">
+                        {{ __('Choose the user who will become the new owner of this project. The current owner stays on as an admin.') }}
+                    </p>
                     <div v-if="!createNewUser">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-100">
@@ -205,7 +296,7 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-for="user in users" :key="user.id">
+                                <tr v-for="user in currentAssignCandidates" :key="user.id">
                                     <td class="px-6 py-3 text-sm">
                                         {{ user.name }}
                                     </td>
@@ -348,17 +439,27 @@ export default {
     mixins: [projectBreadcrumb],
 
     computed: {
+        // For role assignment: only users who are not members yet. For an
+        // ownership transfer: everyone except super admins and the current
+        // owner (members can take over too), so a handover is possible.
+        currentAssignCandidates() {
+            if (this.current_assign_role === 'transfer') {
+                return [...this.admins, ...this.editors, ...this.viewers, ...this.users]
+                    .filter((user) => this.owner === null || user.id !== this.owner.id);
+            }
+
+            return this.users;
+        },
     },
 
     data() {
         return {
-            // Pre-seed from the store (loaded by the router guard before
-            // this page renders) so the shell never flashes blank while the
-            // page's own getProject() refreshes the data.
             project: useAdminStore().currentProject || {},
+            owner: null,
             super_admins: {},
             admins: {},
             editors: {},
+            viewers: {},
             users: {},
             current_assign_role: null,
             openAssignUserModal: false,
@@ -379,9 +480,11 @@ export default {
                 )
                 .then((response) => {
                     this.project = response.data.project;
+                    this.owner = response.data.owner;
                     this.super_admins = response.data.super_admins;
                     this.admins = response.data.admins;
                     this.editors = response.data.editors;
+                    this.viewers = response.data.viewers;
                     this.users = response.data.users;
                 });
         },
@@ -405,6 +508,20 @@ export default {
         },
 
         selectUser(user) {
+            if (this.current_assign_role === 'transfer') {
+                axios
+                    .post(
+                        "projects/settings/users/transfer-owner/" + this.project.id,
+                        { user_id: user.id }
+                    )
+                    .then((response) => {
+                        this.$toast.success(__('Ownership transferred!'));
+                        this.getProject();
+                        this.closeAssignUserModal();
+                    });
+                return;
+            }
+
             let assignUserData = {
                 role: this.current_assign_role,
                 user_id: user.id,

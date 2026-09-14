@@ -10,9 +10,7 @@ use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use App\Models\Media;
 use App\Models\Project;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Permission\Exceptions\UnauthorizedException;
 
 class MediaLibraryController extends Controller
 {
@@ -28,10 +26,7 @@ class MediaLibraryController extends Controller
         $project = Project::with('collections')->findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$project->id) && !$user->hasRole('editor'.$project->id)){
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageMedia', $project);
 
         $data['project'] = $project;
 
@@ -110,10 +105,7 @@ class MediaLibraryController extends Controller
         $project = Project::findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$project->id) && !$user->hasRole('editor'.$project->id)){
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageMedia', $project);
 
         // Whitelist the file types the media library accepts — never allow
         // executable/script files (php/html/js/svg...) to be stored.
@@ -218,10 +210,7 @@ class MediaLibraryController extends Controller
         $project = Project::findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$project->id) && !$user->hasRole('editor'.$project->id)){
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageMedia', $project);
 
         $file = Media::where('project_id', $project->id)->where('id', $file_id)->firstOrFail();
 
@@ -255,10 +244,7 @@ class MediaLibraryController extends Controller
         $project = Project::findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$project->id) && !$user->hasRole('editor'.$project->id)){
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageMedia', $project);
 
         foreach ($request->get('files') as $file) {
             $file = Media::where('project_id', $project->id)->where('id', $file)->first();
@@ -295,10 +281,7 @@ class MediaLibraryController extends Controller
         $project = Project::findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$project->id) && !$user->hasRole('editor'.$project->id)){
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageMedia', $project);
 
         $media = Media::where('project_id', $project->id)->where('id', $file_id)->firstOrFail();
 

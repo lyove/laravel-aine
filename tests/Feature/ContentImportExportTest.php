@@ -168,7 +168,7 @@ class ContentImportExportTest extends TestCase
 
     public function test_non_project_member_cannot_export(): void
     {
-        $this->expectException(\Spatie\Permission\Exceptions\UnauthorizedException::class);
+        $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
 
         $regular = User::create(['name' => 'Regular', 'email' => 'regular@test.local', 'password' => bcrypt('password')]);
         $this->actingAs($regular);

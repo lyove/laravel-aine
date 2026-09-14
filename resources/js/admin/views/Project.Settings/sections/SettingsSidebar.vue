@@ -17,7 +17,7 @@
             </li>
             <li class="mb-2">
                 <router-link
-                    v-if="typeof project.id !== 'undefined' && checkRole(['super_admin'])"
+                    v-if="typeof project.id !== 'undefined' && canProject(['owner'])"
                     :to="{
                         name: 'projects.settings.users',
                         params: { project_id: project.id },
@@ -31,7 +31,7 @@
             </li>
             <li class="mb-2">
                 <router-link
-                    v-if="typeof project.id !== 'undefined' && checkRole(['super_admin'])"
+                    v-if="typeof project.id !== 'undefined' && canProject(['owner', 'admin'])"
                     :to="{
                         name: 'projects.settings.api',
                         params: { project_id: project.id },
@@ -45,7 +45,7 @@
             </li>
             <li class="mb-2">
                 <router-link
-                    v-if="typeof project.id !== 'undefined' && checkRole(['super_admin'])"
+                    v-if="typeof project.id !== 'undefined' && canProject(['owner', 'admin'])"
                     :to="{
                         name: 'projects.settings.webhooks',
                         params: { project_id: project.id }
@@ -59,7 +59,7 @@
             </li>
             <li class="mb-2">
                 <router-link
-                    v-if="typeof project.id !== 'undefined' && checkRole(['super_admin'])"
+                    v-if="typeof project.id !== 'undefined' && canProject(['owner', 'admin'])"
                     :to="{
                         name: 'projects.settings.language',
                         params: { project_id: project.id },
@@ -72,7 +72,7 @@
             </li>
             <li class="mb-2">
                 <router-link
-                    v-if="typeof project.id !== 'undefined' && checkRole(['super_admin'])"
+                    v-if="typeof project.id !== 'undefined' && canProject(['owner', 'admin'])"
                     :to="{
                         name: 'projects.settings.audit-logs',
                         params: { project_id: project.id },
@@ -88,13 +88,13 @@
 </template>
 
 <script>
-import checkRole from "../../../../utils/checkrole";
-
 export default {
   props: ["project"],
 
   methods: {
-    checkRole,
+    canProject(roles) {
+      return Array.isArray(roles) && roles.includes(this.project && this.project.my_role);
+    },
   },
 };
 </script>

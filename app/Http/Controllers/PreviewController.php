@@ -6,9 +6,7 @@ use App\Http\Resources\ContentResource;
 use App\Models\Content;
 use App\Models\Project;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Spatie\Permission\Exceptions\UnauthorizedException;
 
 /*
 |--------------------------------------------------------------------------
@@ -74,12 +72,7 @@ class PreviewController extends Controller
     {
         $project = Project::findOrFail($project_id);
 
-        $user = Auth::user();
-        if (! $user->isSuperAdmin()
-            && ! $user->hasRole('admin' . $project->id)
-            && ! $user->hasRole('editor' . $project->id)) {
-            throw UnauthorizedException::forRoles(['admin' . $project->id]);
-        }
+        $this->authorize('manageContent', $project);
 
         $content = Content::where('project_id', $project->id)
             ->where('collection_id', $collection_id)

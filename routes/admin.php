@@ -65,14 +65,14 @@ Route::middleware('auth:web')->prefix('admin-api')->group(function(){
 
     Route::prefix('projects')->group(function(){
         Route::get('/', [ProjectsController::class, 'index']);
-        Route::post('/', [ProjectsController::class, 'store'])->middleware(['role:super_admin']);
+        Route::post('/', [ProjectsController::class, 'store']);
         Route::get('/{id}', [ProjectsController::class, 'show']);
         Route::post('/update/{id}', [ProjectsController::class, 'update']);
         Route::post('/toggle-status/{id}', [ProjectsController::class, 'toggleStatus']);
-        Route::delete('/delete/{id}', [ProjectsController::class, 'delete'])->middleware(['role:super_admin']);
+        Route::delete('/delete/{id}', [ProjectsController::class, 'delete']);
         Route::get('/check-slug/{slug}', [ProjectsController::class, 'checkSlug']);
 
-        Route::prefix('settings')->middleware(['role:super_admin'])->group(function(){
+        Route::prefix('settings')->group(function(){
             Route::get('/locales/{id}', [ProjectsController::class, 'locales']);
             Route::post('/locales/add/{id}', [ProjectsController::class, 'addLocale']);
             Route::post('/locales/change-default-locale/{id}', [ProjectsController::class, 'changeDefaultLocale']);
@@ -89,6 +89,7 @@ Route::middleware('auth:web')->prefix('admin-api')->group(function(){
             Route::post('/users/assign/{id}', [ProjectsController::class, 'assignUser']);
             Route::post('/users/remove-user/{id}', [ProjectsController::class, 'removeUser']);
             Route::post('/users/new/{id}', [ProjectsController::class, 'newUser']);
+            Route::post('/users/transfer-owner/{id}', [ProjectsController::class, 'transferOwnership']);
 
             Route::get('/api/{id}', [ProjectsController::class, 'api']);
             Route::post('/api/new-token/{id}', [ProjectsController::class, 'newToken']);

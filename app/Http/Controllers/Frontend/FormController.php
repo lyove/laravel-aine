@@ -13,7 +13,6 @@ use App\Models\Form;
 use App\Models\Media;
 use App\Models\Project;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -21,7 +20,6 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
-use Spatie\Permission\Exceptions\UnauthorizedException;
 use App\Http\Controllers\Controller;
 
 class FormController extends Controller
@@ -40,10 +38,7 @@ class FormController extends Controller
         $project = Project::with('collections')->findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if (! $user->isSuperAdmin() && ! $user->hasRole('admin'.$project->id) && ! $user->hasRole('editor'.$project->id)) {
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageContent', $project);
 
         $collection = Collection::with(['fields'])->where('project_id', $project->id)->where('id', $collection_id)->firstOrFail();
 
@@ -67,10 +62,7 @@ class FormController extends Controller
         $project = Project::findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if (! $user->isSuperAdmin() && ! $user->hasRole('admin'.$project->id) && ! $user->hasRole('editor'.$project->id)) {
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageContent', $project);
 
         $collection = Collection::with(['fields'])->where('project_id', $project->id)->where('id', $collection_id)->firstOrFail();
 
@@ -93,10 +85,7 @@ class FormController extends Controller
         $project = Project::findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if (! $user->isSuperAdmin() && ! $user->hasRole('admin'.$project->id) && ! $user->hasRole('editor'.$project->id)) {
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageContent', $project);
 
         $form = Form::findOrFail($form_id);
 
@@ -114,10 +103,7 @@ class FormController extends Controller
         $project = Project::findOrFail($project_id);
 
         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if (! $user->isSuperAdmin() && ! $user->hasRole('admin'.$project->id) && ! $user->hasRole('editor'.$project->id)) {
-            throw UnauthorizedException::forRoles(['admin'.$project->id]);
-        }
+        $this->authorize('manageContent', $project);
 
         $form = Form::findOrFail($form_id);
         $form->delete();

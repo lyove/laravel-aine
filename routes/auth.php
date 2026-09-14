@@ -11,6 +11,12 @@ Route::get('/login', [AuthenticatedSessionController::class, 'create'])->middlew
 
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('guest');
 
+Route::get('/register', [RegisteredUserController::class, 'create'])->middleware('guest')->name('register');
+
+Route::post('/register', [RegisteredUserController::class, 'store'])
+    ->middleware('guest')
+    ->middleware('throttle:6,1');
+
 Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->middleware('guest')->name('password.request');
 
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
@@ -32,5 +38,3 @@ Route::post('/two-factor-challenge', [TwoFactorChallengeController::class, 'stor
     ->middleware('throttle:5,1');
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->middleware('auth')->name('logout');
-
-// Route::get('/register', [RegisteredUserController::class, 'create'])->middleware('guest')->name('register');

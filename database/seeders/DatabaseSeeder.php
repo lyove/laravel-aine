@@ -28,6 +28,8 @@ class DatabaseSeeder extends Seeder
 
         $user->assignRole($role);
 
+        Role::firstOrCreate(['name' => 'user']);
+
         Setting::firstOrCreate(
             ['id' => 1],
             [

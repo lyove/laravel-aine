@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Project;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Spatie\Permission\Exceptions\UnauthorizedException;
 
 class AuditLogController extends Controller
 {
@@ -24,11 +22,7 @@ class AuditLogController extends Controller
     {
         $project = Project::findOrFail($project_id);
 
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if (!$user->isSuperAdmin() && !$user->hasRole('admin' . $project->id)) {
-            throw UnauthorizedException::forRoles(['admin' . $project->id]);
-        }
+        $this->authorize('viewAuditLogs', $project);
 
         $query = AuditLog::where('project_id', $project->id)
             ->with('user:id,name,email')

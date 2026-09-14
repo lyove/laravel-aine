@@ -10,6 +10,7 @@ use App\Models\ContentMeta;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Spatie\Permission\Exceptions\UnauthorizedException;
@@ -107,7 +108,7 @@ class PreviewTest extends TestCase
         $stranger = User::create(['name' => 'Stranger', 'email' => 's@t.local', 'password' => bcrypt('password')]);
         $this->actingAs($stranger);
 
-        $this->expectException(UnauthorizedException::class);
+        $this->expectException(AuthorizationException::class);
         (new PreviewController())->generate($this->project->id, $this->collection->id, $this->content->id);
     }
 }

@@ -2,7 +2,7 @@
     <div class="admin__project-centre relative h-full flex flex-col">
         <project-header :project="project"></project-header>
         <div class="grid grid-cols-1 sm:grid-cols-2 pt-4 overflow-y-auto">
-            <div class="col p-4" v-if="checkRole(['admin' + project.id])">
+            <div class="col p-4" v-if="canProject(['owner', 'admin'])">
                 <div class="inline-flex mb-5">
                     <div class="mr-4 text-gray-100 bg-yellow-900 rounded-md text-xl p-4 h-full items-center content-center">
                         <i class="fas fa-table"></i>
@@ -16,7 +16,7 @@
                 </div>
                 <collection-sidebar :project="project" class="shadow-md rounded-md"></collection-sidebar>
             </div>
-            <div class="col p-4">
+            <div class="col p-4" v-if="canProject(['owner', 'admin', 'editor'])">
                 <div class="inline-flex mb-5">
                     <div class="mr-4 text-gray-100 bg-green-400 rounded-md text-xl p-4 h-full items-center content-center">
                         <i class="fas fa-edit"></i>
@@ -30,6 +30,19 @@
                 </div>
                 <content-sidebar :project="project" class="shadow-md rounded-md"></content-sidebar>
             </div>
+            <div class="col p-4 sm:col-span-2" v-if="canProject(['viewer']) && !canProject(['owner', 'admin', 'editor'])">
+                <div class="inline-flex mb-5">
+                    <div class="mr-4 text-gray-100 bg-gray-500 rounded-md text-xl p-4 h-full items-center content-center">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="block">
+                        <h3 class="font-bold text-lg">{{ __('Read-only access') }}</h3>
+                        <div class="text-sm">
+                            {{ __('You have viewer access to this project. Content and collections are managed by the owner and team members.') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -38,7 +51,6 @@
 import ProjectHeader from "../components/ProjectHeader.vue";
 import CollectionSidebar from "../Project.Collection/sections/CollectionSidebar.vue";
 import ContentSidebar from "../Project.Content/sections/ContentSidebar.vue";
-import checkRole from "../../../utils/checkrole";
 import projectBreadcrumb from "../../mixins/projectBreadcrumb";
 import { useAdminStore } from "../../store";
 
@@ -53,14 +65,14 @@ export default {
 
     data() {
         return {
-            // Project data comes from the store — the router guard loads it
-            // before this page renders, so no extra request is needed.
             project: useAdminStore().currentProject || {},
         };
     },
 
     methods: {
-        checkRole,
+        canProject(roles) {
+            return Array.isArray(roles) && roles.includes(this.project && this.project.my_role);
+        },
     },
 };
 </script>

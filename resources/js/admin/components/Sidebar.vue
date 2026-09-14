@@ -44,7 +44,7 @@
                     </div>
                     <div v-show="projectExpanded" class="admin__project-sub-menu">
                         <router-link
-                            v-if="checkRole(['admin' + $route.params.project_id])"
+                            v-if="canProject(['owner', 'admin'])"
                             :to="{
                                 name: 'projects.collections',
                                 params: { project_id: $route.params.project_id },
@@ -65,7 +65,7 @@
                             <span class="text-xs">{{ __('Content') }}</span>
                         </router-link>
                         <router-link
-                            v-if="checkRole(['super_admin'])"
+                            v-if="canProject(['owner', 'admin'])"
                             :to="{
                                 name: 'projects.settings',
                                 params: { project_id: $route.params.project_id },
@@ -81,6 +81,7 @@
         </nav>
         <nav class="admin__footer-menu border-t border-gray-700">
             <router-link
+                v-if="checkRole(['super_admin'])"
                 :to="{ name: 'settings' }"
                 :active-class="'bg-blue-500'"
                 class="admin__footer-menu-item flex flex-nowrap items-center px-8 py-4 hover:bg-blue-500 cursor-pointer"
@@ -120,6 +121,10 @@ export default {
 
     methods: {
         checkRole,
+
+        canProject(roles) {
+            return Array.isArray(roles) && roles.includes(this.currentProject && this.currentProject.my_role);
+        },
     },
 
     computed: {
@@ -136,9 +141,6 @@ export default {
             return this.$route.name === 'language';
         },
 
-        // The project sub-menu routes are flat siblings (not nested
-        // children), so vue-router's active-class never matches a sub-page
-        // against its parent link. Match by route-name prefix instead.
         isCollectionsActive() {
             const name = this.$route.name;
             return name === 'projects.collections' || (name && name.startsWith('projects.collections.'));

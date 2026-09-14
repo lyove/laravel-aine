@@ -49,6 +49,8 @@ class ProjectTranslationsController extends Controller
     {
         $project = Project::with(['collections.fields'])->findOrFail($project_id);
 
+        $this->authorize('updateSettings', $project);
+
         $baseLocale = $project->default_locale ?? 'en';
         $locales = $project->locales ? explode(',', $project->locales) : [$baseLocale];
         $locale = $request->get('locale', $baseLocale);
@@ -91,6 +93,9 @@ class ProjectTranslationsController extends Controller
     public function dict($project_id, Request $request)
     {
         $project = Project::findOrFail($project_id);
+
+        $this->authorize('updateSettings', $project);
+
         $locale = $request->get('locale', $project->default_locale ?? 'en');
 
         $dict = ProjectTranslation::where('project_id', $project->id)
@@ -117,6 +122,8 @@ class ProjectTranslationsController extends Controller
     public function save($project_id, Request $request)
     {
         $project = Project::findOrFail($project_id);
+
+        $this->authorize('updateSettings', $project);
 
         $request->validate([
             'locale' => 'required|string|max:10',
@@ -198,6 +205,8 @@ class ProjectTranslationsController extends Controller
     public function addString($project_id, Request $request)
     {
         $project = Project::findOrFail($project_id);
+
+        $this->authorize('updateSettings', $project);
 
         $request->validate([
             'source' => 'required|string|max:1000',

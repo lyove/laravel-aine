@@ -196,7 +196,7 @@ class ContentRevisionTest extends TestCase
 
     public function test_non_project_member_cannot_access_revisions(): void
     {
-        $this->expectException(\Spatie\Permission\Exceptions\UnauthorizedException::class);
+        $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
 
         $project = $this->createFixture();
         $collection = Collection::where('project_id', $project->id)->first();

@@ -14,7 +14,6 @@
                 />
             </div>
             <div
-                v-if="isSuperAdmin"
                 @click="openNewProjectModal = true"
                 class="flex justify-center items-center bg-green-500 hover:bg-green-600 text-white mx-2 h-9 w-9 rounded-md cursor-pointer shadow-sm"
             >
@@ -58,6 +57,7 @@
                         <ui-switch
                             :model-value="Boolean(project.status)"
                             :label="__(project.status ? 'Active' : 'Inactive')"
+                            :disabled="!canToggleStatus(project)"
                             @change="(value) => toggleStatus(project, value)"
                         />
                     </div>
@@ -234,7 +234,6 @@ import UiModal from "../../components/Modal.vue";
 import UiButton from "../../components/Button.vue";
 import UiSwitch from "../../components/UiSwitch.vue";
 
-import checkRole from "../../utils/checkrole";
 import localesJson from "../../locales.json";
 import { useAdminStore } from '../store';
 
@@ -265,22 +264,12 @@ export default {
         };
     },
 
-    computed: {
-        isSuperAdmin() {
-            return checkRole(['super_admin']);
-        },
-    },
-
     methods: {
-        checkRole,
-
         generateSlugFromName() {
-            // Regenerate the slug on every keystroke, but never clobber a
-            // slug the user edited by hand (once the slug field is touched,
-            // auto-fill stops until the modal is reopened).
-            if (this.new_project.slugManuallyEdited) return;
+            if (this.new_project.slugManuallyEdited) {
+                return;
+            }
 
-            // $slugify converts Chinese input to pinyin automatically.
             this.new_project.slug = this.$slugify(this.new_project.name || '');
         },
 
@@ -289,11 +278,6 @@ export default {
             this.clearSlugError();
         },
 
-        // vue-select sometimes renders the raw (reduced) value instead of the
-        // matched option object — e.g. when the model value is set before the
-        // options arrive. Those helpers tolerate both shapes so the field
-        // never displays "undefined": strings are looked up in the option
-        // list first and fall back to the raw code.
         localeKey(option) {
             return typeof option === 'string' ? option : option.id;
         },
@@ -363,6 +347,12 @@ export default {
                 .then((response) => {
                     this.projects = response.data;
                 });
+        },
+
+        // Only owners and admins may toggle a project's status (matches the
+        // update ability on the backend).
+        canToggleStatus(project) {
+            return project && ["owner", "admin"].includes(project.my_role);
         },
 
         toggleStatus(project, value) {

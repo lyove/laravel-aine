@@ -14,7 +14,7 @@ class Project extends Model
 
     protected $table = "projects";
 
-    protected $fillable = ['name', 'slug', 'description', 'default_locale', 'locales', 'disk', 'public_api', 'domain_whitelist', 'status', 'workflow_enabled'];
+    protected $fillable = ['owner_id', 'name', 'slug', 'description', 'default_locale', 'locales', 'disk', 'public_api', 'domain_whitelist', 'status', 'workflow_enabled'];
 
     protected $hidden = ['deleted_at'];
 
@@ -34,6 +34,35 @@ class Project extends Model
             if (empty($model->slug)) {
                 $model->slug = Str::slug($model->name);
             }
+        });
+    }
+
+    /**
+     * The user who created / owns this project.
+     */
+    public function owner(){
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    /**
+     * Users with a membership in this project (project_user), each carrying
+     * a role: owner | admin | editor | viewer.
+     */
+    public function members(){
+        return $this->belongsToMany(User::class, 'project_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    /**
+     * Scope to projects the given user owns or is a member of.
+     * Row-level isolation: a user must never see projects they have no
+     * relationship with.
+     */
+    public function scopeForUser($query, User $user){
+        return $query->where(function ($q) use ($user) {
+            $q->where('owner_id', $user->id)
+                ->orWhereHas('members', fn ($m) => $m->where('users.id', $user->id));
         });
     }
 

@@ -9,16 +9,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Collection;
 use App\Models\CollectionField;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Models\User;
 use App\Models\Webhook;
 use App\Models\WebhookLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
-use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Models\Role;
 
 class ProjectsController extends Controller
@@ -34,34 +35,22 @@ class ProjectsController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $projects = Project::when($request->get('search'), function($q)use($request){
+        $projects = Project::query();
+        if (! $user->isSuperAdmin()) {
+            $projects = $projects->forUser($user);
+        }
+        $projects = $projects->when($request->get('search'), function($q)use($request){
             $searchItem = $request->get('search');
             return $q->where('name', 'LIKE', "%$searchItem%");
         });
 
-        if(!$user->isSuperAdmin()){
-            $roles = $user->roles;
-
-            $arr = [];
-
-            foreach ($roles as $role) {
-                $ex = explode('admin', $role->name);
-
-                if(isset($ex[1]) && !in_array($ex[1], $arr)) {
-                    $arr[] = $ex[1];
-                }
-                    
-                $ex = explode('editor', $role->name);
-
-                if(isset($ex[1]) && !in_array($ex[1], $arr)) {
-                    $arr[] = $ex[1];
-                }
-            }
-
-            $projects = $projects->whereIn('id', $arr);
-        }
-
         $projects = $projects->orderBy('created_at', 'DESC')->get();
+
+        $projects->each(function (Project $project) use ($user) {
+            $project->my_role = $user->isSuperAdmin() && $user->projectRole($project) === null
+                ? ProjectUser::ROLE_OWNER
+                : $user->projectRole($project);
+        });
 
         return response($projects, 200);
     }
@@ -96,6 +85,9 @@ class ProjectsController extends Controller
      */
     public function store(Request $request){
 
+        // Any authenticated user may create a project; they become its owner.
+        $this->authorize('create', Project::class);
+
         $request->validate([
             'name' => ['required', 'string', 'max:255', 'not_regex:/[#$%^&*()+=\-\[\]\';,\/{}|":<>?~\\\\]/'],
             'slug' => 'nullable|regex:/^[a-z0-9-]+$/|max:60|unique:projects,slug',
@@ -110,7 +102,11 @@ class ProjectsController extends Controller
             $slug = Str::slug($request->get('name'));
         }
 
+        /** @var User $user */
+        $user = Auth::user();
+
         $project = Project::create([
+        	'owner_id' => $user->id,
         	'name' => $request->get('name'),
         	'slug' => $slug,
         	'description' => $request->get('description'),
@@ -118,8 +114,12 @@ class ProjectsController extends Controller
         	'locales' => $request->get('default_locale'),
         ]);
 
-        Role::create(['name' => 'admin'.$project->id]);
-        Role::create(['name' => 'editor'.$project->id]);
+        // The creator is the owner of the project (membership role).
+        ProjectUser::create([
+            'project_id' => $project->id,
+            'user_id' => $user->id,
+            'role' => ProjectUser::ROLE_OWNER,
+        ]);
 
         // Apply a preset template (CMS / Business Directory) when selected.
         $templateType = (int) $request->get('type');
@@ -142,14 +142,16 @@ class ProjectsController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$id) && !$user->hasRole('editor'.$id)){
-            throw UnauthorizedException::forRoles(['admin'.$id]);
-        }
-
         $project = Project::with('collections')->findOrFail($id);
 
+        $this->authorize('view', $project);
+
+        $project->my_role = $user->isSuperAdmin() && $user->projectRole($project) === null
+            ? ProjectUser::ROLE_OWNER
+            : $user->projectRole($project);
+
         $project->s3 = false;
-        //Check if AWS S3 has been configured
+
         if(config('filesystems.disks.s3.key') && config('filesystems.disks.s3.secret') && config('filesystems.disks.s3.region') && config('filesystems.disks.s3.bucket')){
             $project->s3 = true;
         }
@@ -165,14 +167,9 @@ class ProjectsController extends Controller
      * @return \App\Models\Project
      */
     public function update($id, Request $request){
-        /** @var User $user */
-        $user = Auth::user();
-
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$id)){
-            throw UnauthorizedException::forRoles(['admin'.$id]);
-        }
-
         $project = Project::findOrFail($id);
+
+        $this->authorize('update', $project);
 
         $request->validate([
             'name' => 'required|max:255',
@@ -209,14 +206,9 @@ class ProjectsController extends Controller
      * @return \App\Models\Project
      */
     public function toggleStatus($id){
-        /** @var User $user */
-        $user = Auth::user();
-
-        if(!$user->isSuperAdmin() && !$user->hasRole('admin'.$id)){
-            throw UnauthorizedException::forRoles(['admin'.$id]);
-        }
-
         $project = Project::findOrFail($id);
+
+        $this->authorize('update', $project);
 
         $project->status = ! $project->isActive();
         $project->save();
@@ -233,14 +225,9 @@ class ProjectsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function delete($id){
-        /** @var User $user */
-        $user = Auth::user();
-
-        if(!$user->isSuperAdmin()){
-            throw UnauthorizedException::forRoles(['admin'.$id]);
-        }
-
         $project = Project::findOrFail($id);
+
+        $this->authorize('delete', $project);
 
         $project->collections()->delete();
         $project->fields()->delete();
@@ -259,8 +246,8 @@ class ProjectsController extends Controller
         $project->webhook_logs()->delete();
         $project->forms()->delete();
 
-        $admin_role = Role::where('name', 'admin'.$id)->delete();
-        $editor_role = Role::where('name', 'editor'.$id)->delete();
+        Role::where('name', 'admin'.$id)->delete();
+        Role::where('name', 'editor'.$id)->delete();
 
         if($project->delete()){
             AuditLogger::log('delete', 'project', $id, $project->name ?? null);
@@ -277,7 +264,11 @@ class ProjectsController extends Controller
      * @return \App\Models\Project
      */
     public function locales($id){
-        return Project::findOrFail($id);
+        $project = Project::findOrFail($id);
+
+        $this->authorize('updateSettings', $project);
+
+        return $project;
     }
 
     /**
@@ -289,6 +280,8 @@ class ProjectsController extends Controller
      */
     public function addLocale($id, Request $request){
         $project = Project::findOrFail($id);
+
+        $this->authorize('updateSettings', $project);
 
         $project_locales = explode(',', $project->locales);
 
@@ -319,6 +312,8 @@ class ProjectsController extends Controller
     public function changeDefaultLocale($id, Request $request){
         $project = Project::findOrFail($id);
 
+        $this->authorize('updateSettings', $project);
+
         $project->default_locale = $request->get('locale');
         $project->save();
 
@@ -334,6 +329,8 @@ class ProjectsController extends Controller
      */
     public function deleteLocale($id, Request $request){
         $project = Project::findOrFail($id);
+
+        $this->authorize('updateSettings', $project);
 
         if($request->get('locale') == $project->default_locale){
             return response([], 422);
@@ -354,7 +351,7 @@ class ProjectsController extends Controller
     }
 
     /**
-     * Get users
+     * Get users (project members grouped by role + candidate users).
      *
      * @param int $id
      * @return mixed
@@ -362,71 +359,142 @@ class ProjectsController extends Controller
     public function users($id){
         $project = Project::findOrFail($id);
 
+        $this->authorize('manageMembers', $project);
+
+        // Same my_role exposure as show(): keeps the settings UI's
+        // role-based menus working after this endpoint refreshes the page.
+        $user = auth()->user();
+        $project->my_role = $user->isSuperAdmin() && $user->projectRole($project) === null
+            ? ProjectUser::ROLE_OWNER
+            : $user->projectRole($project);
+
         $super_admins = User::whereHas('roles', function($q){ $q->where('name', 'super_admin'); })->get();
-        $users = User::whereDoesntHave('roles', function($q){ $q->where('name', 'super_admin'); })->get();
 
-        $admins = User::whereHas('roles', function($q)use($project){ $q->where('name', 'admin'.$project->id); })->get();
-        $editors = User::whereHas('roles', function($q)use($project){ $q->where('name', 'editor'.$project->id); })->get();
+        $members = ProjectUser::where('project_id', $project->id)->get()->keyBy('user_id');
 
-        $data['project'] = $project;
-        $data['super_admins'] = $super_admins;
-        $data['admins'] = $admins;
-        $data['editors'] = $editors;
-        $data['users'] = $users;
+        $admins = User::whereIn('id', $members->where('role', ProjectUser::ROLE_ADMIN)->pluck('user_id'))->get();
+        $editors = User::whereIn('id', $members->where('role', ProjectUser::ROLE_EDITOR)->pluck('user_id'))->get();
+        $viewers = User::whereIn('id', $members->where('role', ProjectUser::ROLE_VIEWER)->pluck('user_id'))->get();
 
-        return $data;
+        $users = User::whereDoesntHave('roles', function($q){ $q->where('name', 'super_admin'); })
+            ->whereNotIn('id', $members->pluck('user_id'))
+            ->get();
+
+        return [
+            'project' => $project,
+            'super_admins' => $super_admins,
+            'owner' => $project->owner,
+            'admins' => $admins,
+            'editors' => $editors,
+            'viewers' => $viewers,
+            'users' => $users,
+        ];
     }
 
     /**
-     * Assign user to the project
+     * Assign user to the project (adds / updates the membership role).
      *
-     * @param int id
+     * @param int $id
      * @param \Illuminate\Http\Request $request
      * @return void
      */
     public function assignUser($id, Request $request){
         $project = Project::findOrFail($id);
 
+        $this->authorize('manageMembers', $project);
+
         $user = User::findOrFail($request->get('user_id'));
 
-        $role = Role::where('name', $request->get('role').$project->id)->first();
+        $role = $request->get('role', ProjectUser::ROLE_EDITOR);
 
-        if($role){
-            $user->assignRole($role);
-        } else {
-            $admin = Role::create(['name' => 'admin'.$project->id]);
-            $editor = Role::create(['name' => 'editor'.$project->id]);
-
-            $role = Role::where('name', $request->get('role').$project->id)->first();
-            $user->assignRole($role);
+        if (! in_array($role, [ProjectUser::ROLE_ADMIN, ProjectUser::ROLE_EDITOR, ProjectUser::ROLE_VIEWER], true)) {
+            $role = ProjectUser::ROLE_EDITOR;
         }
+
+        $user->assignRole(Role::firstOrCreate(['name' => 'user']));
+
+        $existing = ProjectUser::where('project_id', $project->id)->where('user_id', $user->id)->first();
+
+        if ($existing && $existing->role === ProjectUser::ROLE_OWNER) {
+            return response([], 422);
+        }
+
+        ProjectUser::updateOrCreate(
+            ['project_id' => $project->id, 'user_id' => $user->id],
+            ['role' => $role]
+        );
+
+        return response([], 200);
     }
 
     /**
      * Remove user from project
      *
-     * @param int id
+     * @param int $id
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
     public function removeUser($id, Request $request){
         $project = Project::findOrFail($id);
 
+        $this->authorize('manageMembers', $project);
+
         $user = User::findOrFail($request->get('user_id'));
 
-        $role = Role::where('name', $request->get('role').$project->id)->first();
-
-        if($user->hasRole($role)){
-            $user->removeRole($role);
-
-            return response([], 200);
-        } else {
-            return response([], 404);
+        if ($project->owner_id === $user->id) {
+            return response(['error' => __('The project owner cannot be removed.')], 422);
         }
+
+        ProjectUser::where('project_id', $project->id)->where('user_id', $user->id)->delete();
+
+        return response([], 200);
     }
 
     /**
-     * Create new user
+     * Transfer project ownership to another user. The new owner gets the
+     * "owner" membership; the previous owner stays on as an admin member so
+     * they keep access after handing the project over.
+     *
+     * @param int $id
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function transferOwnership($id, Request $request){
+        $project = Project::findOrFail($id);
+
+        $this->authorize('manageMembers', $project);
+
+        $newOwner = User::findOrFail($request->get('user_id'));
+
+        if ($project->owner_id === $newOwner->id) {
+            return response([], 200);
+        }
+
+        $previousOwner = $project->owner;
+
+        DB::transaction(function () use ($project, $newOwner, $previousOwner) {
+            $project->update(['owner_id' => $newOwner->id]);
+
+            $newOwner->assignRole(Role::firstOrCreate(['name' => 'user']));
+
+            ProjectUser::updateOrCreate(
+                ['project_id' => $project->id, 'user_id' => $newOwner->id],
+                ['role' => ProjectUser::ROLE_OWNER]
+            );
+
+            if ($previousOwner) {
+                ProjectUser::updateOrCreate(
+                    ['project_id' => $project->id, 'user_id' => $previousOwner->id],
+                    ['role' => ProjectUser::ROLE_ADMIN]
+                );
+            }
+        });
+
+        return response([], 200);
+    }
+
+    /**
+     * Create a new user and add them to the project.
      *
      * @param int $id
      * @param \Illuminate\Http\Request $request
@@ -435,17 +503,35 @@ class ProjectsController extends Controller
     public function newUser($id, Request $request){
         $project = Project::findOrFail($id);
 
+        $this->authorize('manageMembers', $project);
+
         $request->validate([
             'name' => 'required|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:8',
         ]);
 
+        $role = $request->get('role', ProjectUser::ROLE_EDITOR);
+
+        if (! in_array($role, [ProjectUser::ROLE_ADMIN, ProjectUser::ROLE_EDITOR, ProjectUser::ROLE_VIEWER], true)) {
+            $role = ProjectUser::ROLE_EDITOR;
+        }
+
         $user = User::create([
             'name' => $request->get('name'),
             'email' => $request->get('email'),
             'password' => Hash::make($request->get('password'))
         ]);
+
+        $user->assignRole(Role::firstOrCreate(['name' => 'user']));
+
+        ProjectUser::create([
+            'project_id' => $project->id,
+            'user_id' => $user->id,
+            'role' => $role,
+        ]);
+
+        return response($user, 200);
     }
 
     /**
@@ -456,6 +542,8 @@ class ProjectsController extends Controller
      */
     public function api($id){
         $project = Project::findOrFail($id);
+
+        $this->authorize('updateSettings', $project);
 
         $data['project'] = $project;
         $data['tokens'] = $project->tokens;
@@ -472,6 +560,8 @@ class ProjectsController extends Controller
      */
     public function newToken($id, Request $request){
         $project = Project::findOrFail($id);
+
+        $this->authorize('updateSettings', $project);
 
         $request->validate([
             'name' => 'required'
@@ -495,9 +585,10 @@ class ProjectsController extends Controller
     public function updateToken($id, Request $request){
         $project = Project::findOrFail($id);
 
+        $this->authorize('updateSettings', $project);
+
         $token_id = $request->get('id');
-        // Scope the token lookup to this project so a token id belonging to
-        // another project can never be updated through this endpoint.
+
         $token = PersonalAccessToken::where('tokenable_id', $project->id)
             ->where('tokenable_type', Project::class)
             ->findOrFail($token_id);
@@ -522,6 +613,8 @@ class ProjectsController extends Controller
     public function deleteToken($id, Request $request){
         $project = Project::findOrFail($id);
 
+        $this->authorize('updateSettings', $project);
+
         $project->tokens()->where('id', $request->get('id'))->delete();
     }
 
@@ -533,6 +626,8 @@ class ProjectsController extends Controller
      */
     public function enablePublicAPIAccess($id){
         $project = Project::findOrFail($id);
+
+        $this->authorize('updateSettings', $project);
 
         $project->public_api = true;
         $project->save();
@@ -547,6 +642,8 @@ class ProjectsController extends Controller
     public function disablePublicAPIAccess($id){
         $project = Project::findOrFail($id);
 
+        $this->authorize('updateSettings', $project);
+
         $project->public_api = false;
         $project->save();
     }
@@ -560,6 +657,8 @@ class ProjectsController extends Controller
      */
     public function updateDomainWhitelist($id, Request $request){
         $project = Project::findOrFail($id);
+
+        $this->authorize('updateSettings', $project);
 
         $request->validate([
             'domain_whitelist' => 'array',
@@ -580,7 +679,11 @@ class ProjectsController extends Controller
      */
     public function webhooks($project_id)
     {
-        return Project::with(['collections', 'webhooks', 'webhooks.collections'])->findOrFail($project_id);
+        $project = Project::with(['collections', 'webhooks', 'webhooks.collections'])->findOrFail($project_id);
+
+        $this->authorize('updateSettings', $project);
+
+        return $project;
     }
 
     /**
@@ -593,6 +696,8 @@ class ProjectsController extends Controller
     public function newWebhook($project_id, Request $request)
     {
         $project = Project::findOrFail($project_id);
+
+        $this->authorize('updateSettings', $project);
 
         /** @var User $user */
         $user = Auth::user();
@@ -635,6 +740,9 @@ class ProjectsController extends Controller
     public function updateWebhook($project_id, Request $request)
     {
         $project = Project::findOrFail($project_id);
+
+        $this->authorize('updateSettings', $project);
+
         $webhook = Webhook::findOrFail($request->get('id'));
 
         $request->validate([
@@ -673,6 +781,9 @@ class ProjectsController extends Controller
     public function deleteWebhook($project_id, Request $request)
     {
         $project = Project::findOrFail($project_id);
+
+        $this->authorize('updateSettings', $project);
+
         $webhook = Webhook::findOrFail($request->get('id'));
 
         $webhook->logs()->delete();
@@ -691,7 +802,11 @@ class ProjectsController extends Controller
      */
     public function webhookLogs($project_id, $webhook_id)
     {
-        $data['project'] = Project::with(['collections'])->findOrFail($project_id);
+        $project = Project::with(['collections'])->findOrFail($project_id);
+
+        $this->authorize('updateSettings', $project);
+
+        $data['project'] = $project;
         $data['webhook'] = Webhook::findOrFail($webhook_id);
         $data['logs'] = WebhookLog::where('webhook_id', $webhook_id)->paginate(25);
 
@@ -708,6 +823,9 @@ class ProjectsController extends Controller
     public function deleteWebhookLogs($project_id, $webhook_id)
     {
         $project = Project::with(['collections'])->findOrFail($project_id);
+
+        $this->authorize('updateSettings', $project);
+
         $webhook = Webhook::findOrFail($webhook_id);
         $logs = WebhookLog::where('webhook_id', $webhook_id)->delete();
 
