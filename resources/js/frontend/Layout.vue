@@ -30,6 +30,13 @@
                     >
                         Directory
                     </router-link>
+                    <router-link
+                        to="/speech"
+                        class="whitespace-nowrap rounded-md px-3 py-2 font-medium text-gray-600 transition hover:text-indigo-600"
+                        :class="{ 'text-indigo-600': isActive('speech') }"
+                    >
+                        Speech
+                    </router-link>
                 </nav>
 
                 <!-- Language switcher (project locales) -->
@@ -139,6 +146,7 @@ export default {
             if (name === "home") return this.$route.name === "home";
             if (name === "content") return this.$route.name === "content.index";
             if (name === "directory") return this.$route.name === "directory.index";
+            if (name === "speech") return this.$route.name === "speech.index";
             return false;
         },
         labelOf(l) {

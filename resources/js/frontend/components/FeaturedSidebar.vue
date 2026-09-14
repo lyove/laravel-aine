@@ -74,6 +74,10 @@ export default {
             type: String,
             default: "/content",
         },
+        morePrefix: {
+            type: String,
+            default: "/content",
+        },
     },
     data() {
         return {
@@ -82,7 +86,7 @@ export default {
     },
     computed: {
         moreLink() {
-            return this.active === "featured" ? "/content/featured" : "/content/recommended";
+            return this.active === "featured" ? `${this.morePrefix}/featured` : `${this.morePrefix}/recommended`;
         },
     },
     mounted() {

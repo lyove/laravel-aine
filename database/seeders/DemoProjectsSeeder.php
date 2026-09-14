@@ -29,6 +29,10 @@ use Spatie\Permission\Models\Role;
  *   2. Demo Directory  (Business Directory) — listings, categories, tags,
  *      locations, reviews, globals; featured listings; logos + galleries;
  *      project translations; API token.
+ *   3. Demo Speech     (Speech Template)   — pages, posts, categories, tags,
+ *      globals (no comments); Mandarin learning texts, speeches, tongue
+ *      twisters and classic quotes (zh); media; project translations;
+ *      API token; webhook.
  *
  * Usage:  php artisan migrate:fresh --seed --seeder=DemoProjectsSeeder
  */
@@ -44,6 +48,7 @@ class DemoProjectsSeeder extends Seeder
         $this->seedBaseData();
         $this->seedCmsProject();
         $this->seedDirectoryProject();
+        $this->seedSpeechProject();
     }
 
     /* ------------------------------------------------------------------ */
@@ -79,7 +84,7 @@ class DemoProjectsSeeder extends Seeder
             ['id' => 1],
             [
                 'name' => config('app.name', 'Aine'),
-                'description' => 'CMS Template + Business Directory Template',
+                'description' => 'CMS Template + Business Directory Template + Speech Template',
                 'version' => env('APP_VERSION', '2.0.0'),
             ]
         );
@@ -133,7 +138,9 @@ class DemoProjectsSeeder extends Seeder
             ->delete();
 
         Storage::disk('local')->deleteDirectory('public/'.$project->uuid);
-        $project->delete();
+        // Project is SoftDeletes — a plain delete() would keep the row and
+        // let the projects.slug unique index block the re-seed below.
+        $project->forceDelete();
     }
 
     /**
@@ -884,5 +891,122 @@ class DemoProjectsSeeder extends Seeder
         ]);
 
         $this->seedProjectFeatures($project, $c['listings']);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Demo Speech (Speech Template)                                       */
+    /* ------------------------------------------------------------------ */
+
+    protected function seedSpeechProject(): void
+    {
+        $project = $this->createProject([
+            'name' => 'Speech',
+            'slug' => 'speech',
+            'description' => '普通话学习文本、演讲稿、绕口令与经典语句的内容平台。',
+            'default_locale' => 'zh',
+            'locales' => 'zh,en',
+            'disk' => 'local',
+            'public_api' => true,
+            'domain_whitelist' => [
+                config('app.url'),
+                'http://localhost:3000',
+                'http://localhost:5173',
+            ],
+        ]);
+
+        $c = ProjectTemplates::apply($project, ProjectTemplates::get(ProjectTemplates::SPEECH));
+
+        $media = $this->seedMedia($project, [
+            ['cover-putonghua.jpg', '普通话学习', [13, 148, 136], [14, 165, 233], 1200, 630, false],
+            ['cover-yanjiang.jpg', '演讲稿', [217, 119, 6], [239, 68, 68], 1200, 630, false],
+            ['cover-raokouling.jpg', '绕口令', [124, 58, 237], [236, 72, 153], 1200, 630, false],
+            ['cover-jingdian.jpg', '经典语句', [37, 99, 235], [6, 182, 212], 1200, 630, false],
+        ]);
+
+        /* --- Pages --- */
+        foreach ([
+            ['title' => '首页', 'slug' => 'home', 'content' => '<h1>欢迎来到普通话演讲学习平台</h1><p>这里汇集<strong>普通话学习文本、演讲稿、绕口令与经典语句</strong>，助你练好发音、开口自信。</p>'],
+            ['title' => '关于我们', 'slug' => 'about', 'content' => '<h2>关于普通话演讲学习平台</h2><p>本平台由 Aine 驱动，专注于普通话正音、演讲表达与语言素养提升，内容全部支持通过公共 API 接入你的网站或应用。</p>'],
+            ['title' => '学习指南', 'slug' => 'guide', 'content' => '<h2>如何用好这个平台</h2><ol><li>先做<strong>声母、韵母、声调</strong>的基础练习；</li><li>再通过<strong>绕口令</strong>强化口腔控制与吐字归音；</li><li>最后在<strong>演讲稿与经典语句</strong>中体会语感与表达。</li></ol>'],
+        ] as $i => $data) {
+            $this->addContent($project, $c['pages'], $data, published: true, daysAgo: 20 - $i, locale: 'zh');
+        }
+
+        /* --- Categories --- */
+        $categories = [];
+        foreach ([
+            ['普通话学习', 'putonghua-xuexi', '声母、韵母、声调与语流音变的基础知识与练习文本。'],
+            ['演讲稿', 'yanjiang-gao', '励志、校园、职场等不同场合的演讲稿范文与写作方法。'],
+            ['绕口令', 'raokouling', '经典绕口令，训练唇舌力度与吐字归音。'],
+            ['经典语句', 'jingdian-yuju', '名言警句、诗词名句与谚语俗语，积累表达素材。'],
+        ] as $i => [$title, $url, $description]) {
+            $categories[$title] = $this->addContent($project, $c['categories'], ['title' => $title, 'slug' => $url, 'description' => $description], published: true, daysAgo: 19 - $i, locale: 'zh')->id;
+        }
+
+        /* --- Tags --- */
+        $tags = [];
+        foreach (['声母', '韵母', '声调', '轻声', '儿化', '多音字', '朗读', '演讲', '励志', '校园', '职场', '口才', '名言', '谚语'] as $i => $tag) {
+            $tags[$tag] = $this->addContent($project, $c['tags'], ['tag' => $tag], published: true, daysAgo: 17 - $i, locale: 'zh')->id;
+        }
+
+        /* --- Posts --- */
+        $postData = [
+            // 普通话学习
+            ['声母发音入门：b p m f', 'putonghua-shengmu-bpmf', '双唇音与唇齿音的发音要领，配上对比练习，帮你打好普通话基础。', '<h2>双唇音 b 与 p</h2><p><strong>b</strong> 是不送气清音，<strong>p</strong> 是送气清音。练习时把手掌放在嘴前，读 b 几乎感觉不到气流，读 p 能明显感到气流冲出。</p><h2>鼻音 m 与唇齿音 f</h2><p><strong>m</strong> 双唇闭合、气流从鼻腔通过；<strong>f</strong> 上齿轻触下唇，气流从唇齿间挤出。</p><h3>对比练习</h3><ul><li>爸爸（bà ba）—— 爬坡（pá pō）</li><li>妈妈（mā ma）—— 丰富（fēng fù）</li></ul>', '普通话学习', ['声母'], 'cover-putonghua.jpg', 0, 1, 0],
+            ['韵母与声调：普通话的“四声”', 'putonghua-yunmu-shengdiao', '一声平、二声扬、三声拐弯、四声降——声调是普通话的“灵魂”。', '<h2>四个声调</h2><p>普通话有四个基本声调：阴平（55）、阳平（35）、上声（214）、去声（51）。</p><h2>声调与意义</h2><p>同一个音节，声调不同意思完全不同：mā（妈）、má（麻）、mǎ（马）、mà（骂）。</p><h3>练习方法</h3><ol><li>用“ā á ǎ à”做长音练习；</li><li>把词语按声调组合朗读：山河锦绣、光明磊落。</li></ol>', '普通话学习', ['韵母', '声调'], 'cover-putonghua.jpg', 0, 1, 0],
+            ['轻声与儿化：让普通话更自然', 'putonghua-qingsheng-erhua', '轻声不是“读得轻”，儿化不是“随便加”——掌握规律，普通话说得更地道。', '<h2>什么是轻声</h2><p>轻声是一种又短又轻的变调，如“爸爸”“妈妈”的第二个音节，以及助词“的、地、得”。</p><h2>什么是儿化</h2><p>儿化韵在韵母后加上卷舌动作，如“小孩儿”“一点儿”。</p><h3>常见轻声词</h3><p>萝卜、豆腐、耳朵、事情、朋友。</p>', '普通话学习', ['轻声', '儿化'], 'cover-putonghua.jpg', 0, 0, 1],
+            ['常见多音字辨析', 'putonghua-duoyinzi', '好读书不好读书，好读书不好读书——多音字一错，意思全变。', '<h2>为什么会有多音字</h2><p>多音字因意义不同而读音不同，是普通话学习中的重点难点。</p><h3>常见多音字</h3><ul><li><strong>好</strong>：hǎo（很好）/ hào（爱好）</li><li><strong>行</strong>：xíng（行走）/ háng（银行）</li><li><strong>长</strong>：cháng（长短）/ zhǎng（成长）</li><li><strong>重</strong>：zhòng（重要）/ chóng（重复）</li></ul><p>建议结合词语记忆，不要孤立背读音。</p>', '普通话学习', ['多音字'], 'cover-putonghua.jpg', 0, 1, 1],
+            // 演讲稿
+            ['励志演讲稿：向着光奔跑', 'yanjiang-lizhi-guang', '与其在黑暗里等待，不如向着光奔跑。一篇关于坚持与勇气的演讲。', '<h2>向着光奔跑</h2><p>尊敬的老师、亲爱的同学们：</p><p>大家好！今天我想和大家聊一个词——<strong>奔跑</strong>。</p><p>人生难免有低谷，就像夜里赶路。有人停在原地抱怨天黑，有人点亮火把继续前行。其实，光不是等来的，是跑出来的。</p><p>每一次练习、每一次失败后的重来，都是在为自己的路铺灯。请相信，当你决定出发，最难的时刻已经过去。</p><p>愿我们都能——向着光，奔跑。</p>', '演讲稿', ['演讲', '励志'], 'cover-yanjiang.jpg', 1, 1, 0],
+            ['毕业致辞：致我们滚烫的青春', 'yanjiang-biye-qingchun', '当毕业钟声响起，把最美的祝愿送给每一位即将远行的你。', '<h2>致我们滚烫的青春</h2><p>尊敬的老师们、亲爱的同学们：</p><p>大家好！今天，我们站在毕业的门槛上，回望这滚烫的青春。</p><p>还记得教室里朗朗的读书声，操场上挥洒的汗水，深夜里互相打气的朋友圈。这些细碎的片段，拼成了我们最珍贵的时光。</p><p>毕业不是句号，而是新的逗号。愿我们带着勇气出发，在各自的世界里闪闪发光。</p>', '演讲稿', ['演讲', '校园'], 'cover-yanjiang.jpg', 0, 1, 0],
+            ['竞聘演讲稿：以实干作答', 'yanjiang-jingpin', '不喊口号、不摆姿态，用一件件实事证明自己——竞聘演讲的务实范本。', '<h2>以实干作答</h2><p>各位领导、各位同事：</p><p>大家好！今天我竞聘的岗位是项目主管。我不打算说太多漂亮话，只想用三件事回答大家。</p><p><strong>第一，我能干活。</strong>过去一年，我牵头完成了三项跨部门协作项目，全部按期交付。</p><p><strong>第二，我肯学习。</strong>我利用业余时间完成了管理课程进修，并把它用在了团队协作上。</p><p><strong>第三，我愿担责。</strong>遇到问题不推诿，先解决问题，再复盘原因。</p><p>如果大家给我这个机会，我会用行动证明：选择我，不会错。</p>', '演讲稿', ['演讲', '职场'], 'cover-yanjiang.jpg', 0, 0, 1],
+            ['即兴演讲的开场与收尾技巧', 'yanjiang-jixing-jiqiao', '好的开场三秒抓住听众，好的收尾让人记住你——即兴演讲的实用技巧。', '<h2>开场：三秒抓住听众</h2><ul><li><strong>提问式</strong>：你们有没有想过……</li><li><strong>故事式</strong>：上周我遇到一件事……</li><li><strong>数据式</strong>：据统计，……</li></ul><h2>收尾：让人记住你</h2><p>把核心观点浓缩成一句话，再用一个动作或一句祝愿收束，如“谢谢大家，愿我们都能成为想成为的人。”</p><p><em>技巧的核心：先想“听众要什么”，再想“我要说什么”。</em></p>', '演讲稿', ['演讲', '口才'], 'cover-yanjiang.jpg', 0, 1, 0],
+            // 绕口令
+            ['绕口令：四是四，十是十', 'raokouling-sishi-shishi', '数字绕口令的经典，专治平翘舌不分。', '<h2>四是四，十是十</h2><p>四是四，十是十，十四是十四，四十是四十。</p><p>谁要说十四是四十，就打谁四十；谁要说四十是十四，就罚谁十四。</p><p><strong>练习提示</strong>：先慢后快，把“四（sì）”与“十（shí）”的平翘舌读准。</p>', '绕口令', ['声母', '韵母'], 'cover-raokouling.jpg', 1, 0, 0],
+            ['绕口令：吃葡萄不吐葡萄皮', 'raokouling-chiputao', '一句绕口令，练好 b、p 双唇音。', '<h2>吃葡萄不吐葡萄皮</h2><p>吃葡萄不吐葡萄皮，不吃葡萄倒吐葡萄皮。</p><p><strong>练习提示</strong>：重点体会 b 与 p 的送气区别，由慢到快，保持每个字清晰。</p>', '绕口令', ['声母', '朗读'], 'cover-raokouling.jpg', 1, 0, 0],
+            ['绕口令：扁担长，板凳宽', 'raokouling-biandan', '长短宽窄，字字分明——经典的语音对比练习。', '<h2>扁担长，板凳宽</h2><p>扁担长，板凳宽，板凳没有扁担长，扁担没有板凳宽。</p><p>扁担要绑在板凳上，板凳偏不让扁担绑在板凳上。</p><p><strong>练习提示</strong>：注意“长（cháng）”与“宽（kuān）”的韵母归音。</p>', '绕口令', ['声母', '韵母'], 'cover-raokouling.jpg', 0, 1, 0],
+            ['绕口令：打南边来了个喇嘛', 'raokouling-lama', '喇嘛与哑巴，提鳎目与吹喇叭——绕口令里的“高峰挑战”。', '<h2>打南边来了个喇嘛</h2><p>打南边来了个喇嘛，手里提拉着五斤鳎目；打北边来了个哑巴，腰里别着个喇叭。</p><p>南边提拉着鳎目的喇嘛，要拿鳎目换北边别喇叭的哑巴的喇叭；哑巴不愿意拿喇叭换提拉着鳎目的喇嘛的鳎目。</p><p><strong>练习提示</strong>：这段绕口令难度较高，建议先分段慢读，再逐步加速。</p>', '绕口令', ['朗读'], 'cover-raokouling.jpg', 0, 0, 1],
+            // 经典语句
+            ['论语治学名句', 'jingdian-lunyu', '学而时习之，不亦说乎——从《论语》中汲取学习的智慧。', '<h2>《论语》治学名句</h2><blockquote>学而时习之，不亦说乎？有朋自远方来，不亦乐乎？——《论语·学而》</blockquote><blockquote>学而不思则罔，思而不学则殆。——《论语·为政》</blockquote><blockquote>知之为知之，不知为不知，是知也。——《论语·为政》</blockquote><p>反复诵读，体会经典语句的韵律与含义。</p>', '经典语句', ['名言'], 'cover-jingdian.jpg', 0, 1, 0],
+            ['劝学：积跬步以至千里', 'jingdian-quanxue', '不积跬步，无以至千里——荀子劝学中的坚持之道。', '<h2>荀子《劝学》名句</h2><blockquote>不积跬步，无以至千里；不积小流，无以成江海。——《荀子·劝学》</blockquote><blockquote>锲而舍之，朽木不折；锲而不舍，金石可镂。——《荀子·劝学》</blockquote><p>学习贵在积累，日拱一卒，功不唐捐。</p>', '经典语句', ['名言'], 'cover-jingdian.jpg', 0, 1, 1],
+            ['中华诗词名句选', 'jingdian-shici', '从“长风破浪”到“一览众山小”，品读诗词里的豪情与境界。', '<h2>诗词名句</h2><blockquote>长风破浪会有时，直挂云帆济沧海。——李白《行路难》</blockquote><blockquote>会当凌绝顶，一览众山小。——杜甫《望岳》</blockquote><blockquote>天行健，君子以自强不息。——《周易》</blockquote>', '经典语句', ['名言'], 'cover-jingdian.jpg', 0, 0, 0],
+            ['谚语俗语：生活的智慧', 'jingdian-yanyu', '一句谚语，一段生活——俗语中的朴素哲理。', '<h2>谚语俗语精选</h2><ul><li>千里之行，始于足下。——《道德经》</li><li>宝剑锋从磨砺出，梅花香自苦寒来。</li><li>冰冻三尺，非一日之寒。</li><li>人心齐，泰山移。</li></ul><p>谚语短小精悍，适合晨读与朗诵练习。</p>', '经典语句', ['谚语'], 'cover-jingdian.jpg', 0, 0, 1],
+        ];
+
+        foreach ($postData as $i => [$title, $url, $excerpt, $content, $cat, $tagNames, $cover, $slider, $featured, $recommended]) {
+            $tagIds = array_map(fn ($t) => $tags[$t], $tagNames);
+            $this->addContent($project, $c['posts'], [
+                'title' => $title, 'slug' => $url, 'excerpt' => $excerpt, 'content' => $content,
+                'featured-image' => $media[$cover], 'category' => $categories[$cat],
+                'tags' => implode(',', $tagIds),
+                'slider' => $slider, 'featured' => $featured, 'recommended' => $recommended,
+            ], published: true, daysAgo: max(16 - $i, 1), locale: 'zh')->id;
+        }
+
+        /* --- Globals --- */
+        foreach ([
+            ['label' => 'site-name', 'value' => '普通话演讲学习平台'],
+            ['label' => 'site-description', 'value' => '普通话学习文本、演讲稿、绕口令与经典语句'],
+            ['label' => 'footer-text', 'value' => '© 2026 普通话演讲学习平台 —— 基于 Aine 构建'],
+            ['label' => 'support-email', 'value' => 'support@speech.example'],
+        ] as $i => $data) {
+            $this->addContent($project, $c['globals'], $data, published: true, daysAgo: 15 - $i, locale: 'zh');
+        }
+
+        /* --- Project translations (zh, the base locale) --- */
+        foreach ([
+            'Pages' => '页面', 'Posts' => '文章', 'Categories' => '分类', 'Tags' => '标签', 'Globals' => '全局',
+            'Title' => '标题', 'Path' => '路径', 'Content' => '内容', 'Image' => '图片',
+            'Excerpt' => '摘要', 'Featured Image' => '特色图片', 'Category' => '分类', 'Tag' => '标签',
+            'Slider' => '幻灯片', 'Featured' => '精选', 'Recommended' => '推荐',
+            'Label' => '标签名', 'Value' => '值', 'Description' => '描述',
+        ] as $source => $value) {
+            ProjectTranslation::updateOrCreate(
+                ['project_id' => $project->id, 'locale' => 'zh', 'source' => $source],
+                ['value' => $value]
+            );
+        }
+
+        $this->seedProjectFeatures($project, $c['posts']);
     }
 }

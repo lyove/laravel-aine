@@ -43,6 +43,8 @@ return [
 
     'frontend_directory_project' => env('FRONTEND_DIRECTORY_PROJECT', 'business-directory'),
 
+    'frontend_speech_project' => env('FRONTEND_SPEECH_PROJECT', 'speech'),
+
     /*
     |--------------------------------------------------------------------------
     | Content Security Policy
@@ -60,7 +62,7 @@ return [
         'script-src'   => ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://cdn.tailwindcss.com'],
         'style-src'    => ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         'img-src'      => ["'self'", 'data:', 'blob:', 'https:'],
-        'font-src'     => ["'self'", 'data:', 'https://fonts.gstatic.com'],
+                    'font-src'     => ["'self'", 'data:', 'https://fonts.gstatic.com'],
         'frame-src'    => ["'self'", 'https:'],
         'connect-src'  => ["'self'", 'https:'],
         'media-src'    => ["'self'"],

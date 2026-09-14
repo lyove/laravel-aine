@@ -81,12 +81,13 @@ export const useFrontendStore = defineStore("frontend", {
         },
 
         /**
-         * Load both projects and settle the language. Uses the CMS project's
-         * locales as the site language list.
+         * Load all three projects and settle the language. Uses the CMS
+         * project's locales as the site language list.
          */
         async initLocale() {
             const cms = await this.loadProject(PROJECTS.cms.identifier);
             await this.loadProject(PROJECTS.directory.identifier);
+            await this.loadProject(PROJECTS.speech.identifier);
 
             const locales = this.cmsProjectLocales;
             if (!this.locale || !locales.includes(this.locale)) {

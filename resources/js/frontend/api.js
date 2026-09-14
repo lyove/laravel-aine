@@ -6,9 +6,11 @@ import http from "./http";
 import { PROJECTS, COLLECTIONS } from "./config";
 
 const cms = PROJECTS.cms.identifier;
-const dir = PROJECTS.directory.identifier;
+const directory = PROJECTS.directory.identifier;
+const speech = PROJECTS.speech.identifier;
 const articles = PROJECTS.cms.contentCollection;
 const listings = PROJECTS.directory.contentCollection;
+const posts = PROJECTS.speech.contentCollection;
 
 const endpoints = {
   // =================================================================
@@ -154,43 +156,43 @@ const endpoints = {
   // =================================================================
   getListings: {
     type: "get",
-    project: dir,
+    project: directory,
     collection: listings,
   },
   getListing: {
     type: "get",
-    project: dir,
+    project: directory,
     collection: listings,
     id: true,
   },
   getListingBySlug: {
     type: "get",
-    project: dir,
+    project: directory,
     collection: listings,
     id: true,
     bySlug: true,
   },
   searchListings: {
     type: "get",
-    project: dir,
+    project: directory,
     collection: listings,
     action: "search",
   },
   createListing: {
     type: "post",
-    project: dir,
+    project: directory,
     collection: listings,
   },
   updateListing: {
     type: "post",
-    project: dir,
+    project: directory,
     collection: listings,
     id: true,
     action: "update",
   },
   deleteListing: {
     type: "delete",
-    project: dir,
+    project: directory,
     collection: listings,
     id: true,
   },
@@ -200,19 +202,19 @@ const endpoints = {
   // =================================================================
   getDirectoryCategories: {
     type: "get",
-    project: dir,
+    project: directory,
     collection: COLLECTIONS.categories,
   },
   getCategoryListings: {
     type: "get",
-    project: dir,
+    project: directory,
     source: COLLECTIONS.categories,
     id: true,
     related: listings,
   },
   getCategoryListingsBySlug: {
     type: "get",
-    project: dir,
+    project: directory,
     source: COLLECTIONS.categories,
     id: true,
     bySlug: true,
@@ -220,31 +222,31 @@ const endpoints = {
   },
   getDirectoryTags: {
     type: "get",
-    project: dir,
+    project: directory,
     collection: COLLECTIONS.tags,
   },
   getDirectoryTagListings: {
     type: "get",
-    project: dir,
+    project: directory,
     source: COLLECTIONS.tags,
     id: true,
     related: listings,
   },
   getLocations: {
     type: "get",
-    project: dir,
+    project: directory,
     collection: "locations",
   },
   getLocationListings: {
     type: "get",
-    project: dir,
+    project: directory,
     source: "locations",
     id: true,
     related: listings,
   },
   getListingReviews: {
     type: "get",
-    project: dir,
+    project: directory,
     source: listings,
     id: true,
     related: "reviews",
@@ -255,7 +257,87 @@ const endpoints = {
   // =================================================================
   getDirectoryPortal: {
     type: "get",
-    project: dir,
+    project: directory,
+    action: "portal",
+  },
+
+  // =================================================================
+  // Speech project — posts
+  // =================================================================
+  getSpeechPosts: {
+    type: "get",
+    project: speech,
+    collection: posts,
+  },
+  getSpeechPost: {
+    type: "get",
+    project: speech,
+    collection: posts,
+    id: true,
+  },
+  getSpeechPostBySlug: {
+    type: "get",
+    project: speech,
+    collection: posts,
+    id: true,
+    bySlug: true,
+  },
+
+  // =================================================================
+  // Speech project — categories
+  // =================================================================
+  getSpeechCategories: {
+    type: "get",
+    project: speech,
+    collection: COLLECTIONS.categories,
+  },
+  getSpeechCategoryPosts: {
+    type: "get",
+    project: speech,
+    source: COLLECTIONS.categories,
+    id: true,
+    related: posts,
+  },
+  getSpeechCategoryPostsBySlug: {
+    type: "get",
+    project: speech,
+    source: COLLECTIONS.categories,
+    id: true,
+    bySlug: true,
+    related: posts,
+  },
+
+  // =================================================================
+  // Speech project — tags
+  // =================================================================
+  getSpeechTags: {
+    type: "get",
+    project: speech,
+    collection: COLLECTIONS.tags,
+  },
+  getSpeechTagPosts: {
+    type: "get",
+    project: speech,
+    source: COLLECTIONS.tags,
+    id: true,
+    related: posts,
+  },
+
+  // =================================================================
+  // Speech project — pages
+  // =================================================================
+  getSpeechPages: {
+    type: "get",
+    project: speech,
+    collection: COLLECTIONS.pages,
+  },
+
+  // =================================================================
+  // Speech project — portal
+  // =================================================================
+  getSpeechPortal: {
+    type: "get",
+    project: speech,
     action: "portal",
   },
 
@@ -295,7 +377,11 @@ const endpoints = {
   },
   getDirectoryProject: {
     type: "get",
-    project: dir,
+    project: directory,
+  },
+  getSpeechProject: {
+    type: "get",
+    project: speech,
   },
 };
 

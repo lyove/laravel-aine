@@ -1,9 +1,5 @@
 /**
  * Frontend configuration.
- *
- * The frontend consumes TWO projects from the headless API:
- *   - CMS project      → served under /content/*   (articles, pages, ...)
- *   - Directory project → served under /directory/* (business listings, ...)
  */
 
 const meta = (name) => {
@@ -15,7 +11,7 @@ const meta = (name) => {
 };
 
 /**
- * The two systems and their collection slugs.
+ * Systems and their collection slugs.
  */
 export const PROJECTS = {
     cms: {
@@ -32,6 +28,14 @@ export const PROJECTS = {
         path: "/directory",
         label: "Directory",
         portal: ["featured", "categoryTabs"],
+    },
+    speech: {
+        identifier: meta("speech-project-identifier") || "speech",
+        contentCollection: "posts",
+        path: "/speech",
+        label: "Speech",
+        portal: ["slider", "featured", "recommended", "categoryTabs", "pages"],
+        fallbackToLatest: true,
     },
 };
 

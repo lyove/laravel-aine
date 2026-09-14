@@ -37,6 +37,19 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Speech area -->
+            <div class="pt-10">
+                <div class="mb-7 h-8 w-36 animate-pulse rounded bg-gray-200"></div>
+                <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:col-span-2 xl:grid-cols-2">
+                        <div v-for="n in 4" :key="n" class="h-64 animate-pulse rounded-xl bg-gray-100"></div>
+                    </div>
+                    <div class="grid gap-6">
+                        <div v-for="n in 3" :key="n" class="h-28 animate-pulse rounded-xl bg-gray-100"></div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- Real content once the data is loaded -->
@@ -118,6 +131,52 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Speech hero: banner slider (speech posts) — full width -->
+            <section v-if="showSpeechSlider" class="mx-auto w-full max-w-6xl px-4 pt-8">
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-2xl font-bold tracking-tight text-gray-900">Speech</h2>
+                    <span class="text-xs text-gray-400">{{ speechSliderPosts.length }} featured posts</span>
+                </div>
+                <banner-slider :slides="speechSliderPosts" path-prefix="/speech" />
+            </section>
+
+            <!-- Speech: full-width heading, then two columns
+                 (left: category tabs / right: Featured | Recommended) -->
+            <section v-if="showSpeechSection" class="mx-auto w-full max-w-6xl px-4 pb-16">
+                <div class="pt-10">
+                    <div class="mb-7 flex items-center gap-4">
+                        <h2 class="shrink-0 text-2xl font-bold tracking-tight text-gray-900">Speech</h2>
+                        <pages-ticker :pages="speechPages" path-prefix="/speech" class="min-w-0 flex-1" />
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                        <!-- Left: category tabs (the posts) -->
+                        <div class="lg:col-span-2">
+                            <category-tabs-section
+                                :show-title="false"
+                                path-prefix="/speech"
+                                :sections="speechSections"
+                                grid-class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-2"
+                            >
+                                <template #card="{ item }">
+                                    <article-card :item="item" path-prefix="/speech" />
+                                </template>
+                            </category-tabs-section>
+                        </div>
+
+                        <!-- Right: Featured | Recommended tabs -->
+                        <div class="lg:col-span-1">
+                            <featured-sidebar
+                                :featured="speechFeaturedPosts"
+                                :recommended="speechRecommendedPosts"
+                                path-prefix="/speech"
+                                more-prefix="/speech"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </section>
         </template>
     </div>
 </template>
@@ -148,6 +207,7 @@ export default {
         return {
             cms: PROJECTS.cms,
             directory: PROJECTS.directory,
+            speech: PROJECTS.speech,
             loading: true,
             sliderArticles: [],
             featuredArticles: [],
@@ -156,6 +216,11 @@ export default {
             cmsPages: [],
             cmsSections: [],
             directorySections: [],
+            speechSliderPosts: [],
+            speechFeaturedPosts: [],
+            speechRecommendedPosts: [],
+            speechPages: [],
+            speechSections: [],
         };
     },
     computed: {
@@ -168,15 +233,23 @@ export default {
         showDirectorySection() {
             return this.hasAnyBlock(this.directory, ["categoryTabs", "featured"]);
         },
+        showSpeechSlider() {
+            return this.hasBlock(this.speech, "slider");
+        },
+        showSpeechSection() {
+            return this.hasAnyBlock(this.speech, ["categoryTabs", "featured", "recommended", "pages"]);
+        },
     },
     async mounted() {
         try {
             const cms = this.cms;
             const directory = this.directory;
+            const speech = this.speech;
 
-            const [cmsPortal, directoryPortal] = await Promise.all([
+            const [cmsPortal, directoryPortal, speechPortal] = await Promise.all([
                 api.getCmsPortal({ collection: cms.contentCollection }).catch(() => null),
                 api.getDirectoryPortal({ collection: directory.contentCollection }).catch(() => null),
+                api.getSpeechPortal({ collection: speech.contentCollection, _skipLocale: true }).catch(() => null),
             ]);
 
             const cmsData = this.mapSections(cms, cmsPortal, true);
@@ -189,6 +262,13 @@ export default {
             const directoryData = this.mapSections(directory, directoryPortal, false);
             this.featuredListings = directoryData.featured;
             this.directorySections = directoryData.sections;
+
+            const speechData = this.mapSections(speech, speechPortal, true);
+            this.speechFeaturedPosts = speechData.featured;
+            this.speechRecommendedPosts = speechData.recommended;
+            this.speechSliderPosts = speechData.slider;
+            this.speechPages = speechData.pages;
+            this.speechSections = speechData.sections;
         } catch (error) {
             console.error("Failed to load home data:", error);
         } finally {

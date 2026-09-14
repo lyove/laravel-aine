@@ -17,13 +17,22 @@ const DirectoryTagPage = () => import("./views/directory/TagPage.vue");
 const DirectorySectionPage = () => import("./views/directory/SectionPage.vue");
 const DirectoryListingDetail = () => import("./views/directory/ListingDetail.vue");
 
+const SpeechArchive = () => import("./views/speech/Archive.vue");
+const SpeechCategoryPage = () => import("./views/speech/CategoryPage.vue");
+const SpeechTagPage = () => import("./views/speech/TagPage.vue");
+const SpeechSectionPage = () => import("./views/speech/SectionPage.vue");
+const SpeechPostDetail = () => import("./views/speech/PostDetail.vue");
+const SpeechPageDetail = () => import("./views/speech/PageDetail.vue");
+const SpeechPagesList = () => import("./views/speech/PagesList.vue");
+
 /**
  * Routes
  *
- * The site is split into two systems:
+ * The site is split into three independent systems:
  *   /content/*    — the CMS project (articles, categories, tags, pages)
  *   /directory/*  — the Business Directory project (listings, categories,
  *                   tags, locations)
+ *   /speech/*     — the Speech project (posts, categories, tags, pages)
  */
 const routes = [
     { path: "/", name: "home", component: Home },
@@ -46,6 +55,17 @@ const routes = [
     { path: "/directory/tag/:slug", name: "directory.tag", component: DirectoryTagPage, props: { project: "directory" } },
     { path: "/directory/location/:slug", name: "directory.location", component: DirectoryArchive, props: { project: "directory", mode: "location" } },
     { path: "/directory/:category/:listing", name: "directory.listing", component: DirectoryListingDetail },
+
+    // ---- Speech system (/speech) ----
+    { path: "/speech", name: "speech.index", component: SpeechArchive, props: { project: "speech", mode: "all" } },
+    { path: "/speech/pages", name: "speech.pages", component: SpeechPagesList },
+    { path: "/speech/slider", name: "speech.slider", component: SpeechSectionPage, props: { project: "speech", mode: "slider" } },
+    { path: "/speech/featured", name: "speech.featured", component: SpeechSectionPage, props: { project: "speech", mode: "featured" } },
+    { path: "/speech/recommended", name: "speech.recommended", component: SpeechSectionPage, props: { project: "speech", mode: "recommended" } },
+    { path: "/speech/category/:slug", name: "speech.category", component: SpeechCategoryPage, props: { project: "speech" } },
+    { path: "/speech/tag/:slug", name: "speech.tag", component: SpeechTagPage, props: { project: "speech" } },
+    { path: "/speech/:category/:post", name: "speech.post", component: SpeechPostDetail },
+    { path: "/speech/:slug", name: "speech.page", component: SpeechPageDetail },
 ];
 
 const router = createRouter({

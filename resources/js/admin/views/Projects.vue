@@ -182,6 +182,25 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="col-span-1">
+                                    <div class="p-5 border border-gray-300 rounded-md text-sm space-x-2 h-32 relative">
+                                        <label for="speech_template" class="absolute inset-0 w-full h-full cursor-pointer"></label>
+                                        <div class="flex mb-2">
+                                            <input
+                                                type="radio"
+                                                id="speech_template"
+                                                v-model="new_project.type"
+                                                value="4"
+                                            />
+                                            <div class="ml-2">
+                                                {{ __('Speech Template') }}
+                                            </div>
+                                        </div>
+                                        <div class="block">
+                                            {{ __('Speech (Pages, Posts, Categories, Tags, Globals)') }}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </form>
