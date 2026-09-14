@@ -74,7 +74,7 @@
                 <div class="flex-1 overflow-y-auto p-4 space-y-4">
                     <div class="w-full p-5 bg-white rounded-md overflow-x-hidden">
                         <form class="space-y-6" @submit.prevent>
-                            <div v-for="field in collection.fields" :key="field.id" :class="`field-${field.type}`">
+                            <div v-for="field in editableFields" :key="field.id" :class="`field-${field.type}`">
                                 <label v-formlabel>
                                     {{ field.label }}
                                 </label>
@@ -983,6 +983,11 @@ export default {
     },
 
     computed: {
+        // The author field is filled automatically by the backend with the
+        // current user's name on create — hide the manual input.
+        editableFields() {
+            return (this.collection.fields || []).filter((field) => field.name !== 'author');
+        },
     },
 };
 </script>

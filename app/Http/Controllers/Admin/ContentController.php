@@ -348,6 +348,10 @@ class ContentController extends Controller
             return response($uniqErrors, 422);
         }
 
+        if ($collection->fields->contains('name', 'author')) {
+            $input['author'] = Auth::user()->name;
+        }
+
         // Workflow gate.
         if ($project->workflow_enabled && $request->get('published')) {
             return $this->workflowPublishBlocked();
@@ -406,9 +410,7 @@ class ContentController extends Controller
         ContentValidationService::registerCustomValidators();
         Validator::make($request->all(), $rules, $messages)->validate();
 
-        // Unique validation (exclude current content; for draft branches
-        // the unique check is against the draft's own meta, which is fine
-        // because the main row's meta is untouched until publish).
+        // Unique validation
         $input = $request->get('data', []);
         if ($uniqErrors = $this->validation->validateUniqueFields($fields, $input, $collection->id, $content->id)) {
             return response($uniqErrors, 422);
@@ -423,9 +425,6 @@ class ContentController extends Controller
         $isDraftSave = ! (bool) $request->get('published');
 
         if ($isDraftSave && $wasPublished && ! $content->isDraftBranch()) {
-            // The editor wants to save a draft of a live piece of content
-            // without unpublishing the current public version.
-            // → Clone a draft branch and apply changes there instead.
             $draft = $content->draftChild()->first();
             if (! $draft) {
                 $draft = $this->mutations->createDraftBranch($content, Auth::id());
@@ -460,16 +459,11 @@ class ContentController extends Controller
         // branch that was already created).
         // ─────────────────────────────────────────────────────
 
-        // If this IS a draft branch and the editor is trying to publish
-        // directly via the update endpoint, redirect to the merge flow
-        // instead of independently publishing the branch.
         if ($content->isDraftBranch() && $request->get('published')) {
-            // Workflow gate.
             if ($project->workflow_enabled) {
                 return $this->workflowPublishBlocked();
             }
 
-            // Direct publishing (workflow disabled) is an owner/admin ability.
             $this->authorizeAdmin($project);
 
             $draftId = $content->id;
@@ -563,23 +557,17 @@ class ContentController extends Controller
 
         foreach ($data as $key => &$value) {
             $meta = $fieldMap[$key] ?? null;
-            if (! $meta) continue;
+            if (! $meta) {
+                continue;
+            }
 
-            // Richtext: sanitize HTML.
             if ($meta['type'] === 'richtext' && is_string($value)) {
                 $value = HtmlSanitizer::sanitize($value);
             }
 
-            // Enumeration (multiple) / Media / Relation: join array to string
-            // (sanitizeFieldValue in the mutation service will do it for the
-            // API path; do it here too so the admin path stays consistent
-            // regardless of whether the service processes it).
             if (in_array($meta['type'], ['enumeration', 'media', 'relation']) && is_array($value)) {
                 $value = implode(',', $value);
             }
-
-            // JSON: let sanitizeFieldValue handle encoding — do NOT
-            // pre-encode here or the service will double-encode it.
         }
         unset($value);
         return $data;
@@ -1008,12 +996,9 @@ class ContentController extends Controller
         $content = Content::where('project_id', $project->id)
             ->where('collection_id', $collection_id)->where('id', $content_id)->firstOrFail();
 
-        // If trashing a draft branch, also clean up the parent's pending-draft state.
-        // If trashing a main row, also remove any pending draft branch.
         if ($content->isDraftBranch()) {
             // No cascade needed — the parent just loses the pending draft indicator.
         } else {
-            // Clean up any draft branch that belongs to this main row.
             if ($draft = $content->draftChild()->first()) {
                 $draft->meta()->forceDelete();
                 $draft->forceDelete();
