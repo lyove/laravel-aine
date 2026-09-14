@@ -241,37 +241,74 @@ export default {
 
         /** Save SSML block to TinyMCE */
         saveSsmlBlock() {
-            if (!this.ssmlEditorRef || !this.ssmlTinyEditor) return;
+            if (!this.ssmlEditorRef || !this.ssmlTinyEditor) {
+                console.warn("[TinyEditor] saveSsmlBlock fallback " + JSON.stringify({
+                    hasEditorRef: !!this.ssmlEditorRef,
+                    hasTinyEditor: !!this.ssmlTinyEditor,
+                }));
+            }
+            const model = this.ssmlEditorRef
+                ? this.ssmlEditorRef.getValue()
+                : this.parseSsmlModel(this.ssmlModel);
+            const editor = this.ssmlTinyEditor || tinymce.activeEditor;
 
-            // Get SSML model and serialize to JSON
-            const model = this.ssmlEditorRef.getValue();
-            const json = JSON.stringify(model);
-            const previewHtml = this.modelToRichPreviewHtml(model);
-
-            if (this.ssmlIsEditing && this.ssmlEditingPlaceholder) {
-                // ---- Update existing placeholder ----
-                const ph = this.ssmlEditingPlaceholder;
-                ph.setAttribute("data-ssml", json);
-                const previewEl = ph.querySelector(".ssml-rich-preview");
-                if (previewEl) {
-                    previewEl.innerHTML = previewHtml;
-                }
-            } else {
-                const safeJson = json.replace(/"/g, "&quot;");
-                const html =
-                    `<div class="ssml-block" contenteditable="false" data-ssml="${safeJson}">` +
-                    `<div class="ssml-rich-preview">${previewHtml}</div>` +
-                    `<div class="ssml-edit-hint">${this.__("Click to edit SSML speech annotations")}</div>` +
-                    `</div>` +
-                    `<p></p>`;
-                this.ssmlTinyEditor.insertContent(html);
+            if (!editor) {
+                console.error("[TinyEditor] saveSsmlBlock aborted: no editor");
+                this.closeSsmlModal();
+                return;
             }
 
-            // Sync to v-model
-            this.editorContent = this.ssmlTinyEditor.getContent();
-            this.$emit("update:modelValue", this.editorContent);
+            try {
+                const json = JSON.stringify(
+                    model && model.blocks ? model : { blocks: [], annotations: [], hints: [] }
+                );
+                const previewHtml = this.modelToRichPreviewHtml(
+                    model && model.blocks ? model : { blocks: [], annotations: [], hints: [] }
+                );
 
-            this.closeSsmlModal();
+                if (this.ssmlIsEditing && this.ssmlEditingPlaceholder) {
+                    // ---- Update existing placeholder ----
+                    const ph = this.ssmlEditingPlaceholder;
+                    ph.setAttribute("data-ssml", json);
+                    const previewEl = ph.querySelector(".ssml-rich-preview");
+                    if (previewEl) {
+                        previewEl.innerHTML = previewHtml;
+                    }
+                } else {
+                    const safeJson = json.replace(/"/g, "&quot;");
+                    const html =
+                        `<div class="ssml-block" contenteditable="false" data-ssml="${safeJson}">` +
+                        `<div class="ssml-rich-preview">${previewHtml}</div>` +
+                        `<div class="ssml-edit-hint">${this.__("Click to edit SSML speech annotations")}</div>` +
+                        `</div>` +
+                        `<p></p>`;
+                    editor.insertContent(html);
+                }
+
+                // Sync to v-model
+                this.editorContent = editor.getContent();
+                this.$emit("update:modelValue", this.editorContent);
+            } catch (e) {
+                console.error("[TinyEditor] saveSsmlBlock failed", e);
+            } finally {
+                this.closeSsmlModal();
+            }
+        },
+
+        /** Normalize an SSML model value that may be an object or a JSON string. */
+        parseSsmlModel(val) {
+            if (val === null || val === undefined || val === "") {
+                return { blocks: [], annotations: [], hints: [] };
+            }
+            if (typeof val === "object") {
+                return val;
+            }
+            try {
+                const parsed = JSON.parse(val);
+                return parsed && typeof parsed === "object" ? parsed : { blocks: [], annotations: [], hints: [] };
+            } catch (e) {
+                return { blocks: [], annotations: [], hints: [] };
+            }
         },
 
         /**
