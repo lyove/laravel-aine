@@ -19,7 +19,13 @@
                 {{ ssmlIsEditing ? __('Edit SSML block') : __('Insert SSML block') }}
             </template>
             <template #content>
-                <div ref="ssmlEditorHost" class="ssml-editor-host"></div>
+                <SsmlEditor
+                    v-if="ssmlModalShow"
+                    ref="ssmlEditorRef"
+                    v-model="ssmlModel"
+                    :placeholder="__('Enter speech synthesis text here. Select text and right-click to add phoneme/prosody/say-as annotations...')"
+                    min-height="260px"
+                />
             </template>
             <template #footer>
                 <button
@@ -39,6 +45,7 @@
 import Editor from "@tinymce/tinymce-vue";
 import tinymce from "tinymce";
 import Modal from "./Modal.vue";
+import SsmlEditor from "./SsmlEditor.vue";
 import { loadSsmlEditor } from "../utils/loadSsmlEditor";
 
 // Load TinyMCE runtime assets (theme, model, icons, plugins, skins) on
@@ -52,6 +59,7 @@ export default {
     components: {
         Editor,
         Modal,
+        SsmlEditor,
     },
     props: {
         modelValue: {
@@ -90,7 +98,7 @@ export default {
             editorContent: this.modelValue,
             ssmlModalShow: false,
             ssmlIsEditing: false,
-            ssmlEditorInstance: null,
+            ssmlModel: "",
             ssmlEditingPlaceholder: null,
             ssmlTinyEditor: null,
         };
@@ -199,69 +207,44 @@ export default {
          * Open SSML editor modal
          * @param {HTMLElement|null} placeholder - Placeholder element in TinyMCE iframe, null for new block
          */
-        async openSsmlModal(placeholder) {
+        openSsmlModal(placeholder) {
             this.ssmlIsEditing = !!placeholder;
             this.ssmlEditingPlaceholder = placeholder;
-            this.ssmlModalShow = true;
 
-            // Lazy-load SSML editor (IIFE bundle)
-            let SSMLEditor;
-            try {
-                SSMLEditor = await loadSsmlEditor();
-            } catch (e) {
-                console.error("Failed to load SSML editor:", e);
-                this.ssmlModalShow = false;
-                return;
-            }
-
-            // Init SSML editor after modal DOM is rendered
-            this.$nextTick(() => {
-                const host = this.$refs.ssmlEditorHost;
-                if (!host) return;
-
-                // Parse initial value
-                let initialValue = "";
-                if (placeholder) {
-                    const data = placeholder.getAttribute("data-ssml");
-                    if (data) {
-                        try {
-                            initialValue = JSON.parse(data);
-                        } catch (e) {
-                            initialValue = "";
-                        }
+            // Parse existing block value (or start with an empty block);
+            // the SsmlEditor component takes an object or a JSON string.
+            let initialValue = "";
+            if (placeholder) {
+                const data = placeholder.getAttribute("data-ssml");
+                if (data) {
+                    try {
+                        initialValue = JSON.parse(data);
+                    } catch (e) {
+                        initialValue = "";
                     }
                 }
+            }
+            this.ssmlModel = initialValue;
+            this.ssmlModalShow = true;
 
-                // Create SSML editor instance (full features, not read-only)
-                this.ssmlEditorInstance = new SSMLEditor({
-                    el: host,
-                    value: initialValue,
-                    placeholder: this.__(
-                        "Enter speech synthesis text here. Select text and right-click to add phoneme/prosody/say-as annotations..."
-                    ),
-                    onChange: () => {
-                        // No auto-save; persist on Confirm click
-                    },
-                });
-            });
+            // Preload the SSML editor bundle so the modal opens instantly
+            loadSsmlEditor().catch((e) =>
+                console.error("Failed to load SSML editor:", e)
+            );
         },
 
-        /** Close modal and destroy SSML editor instance */
+        /** Close modal; the SsmlEditor component unmounts (v-if) and destroys itself. */
         closeSsmlModal() {
             this.ssmlModalShow = false;
-            if (this.ssmlEditorInstance) {
-                this.ssmlEditorInstance.destroy();
-                this.ssmlEditorInstance = null;
-            }
             this.ssmlEditingPlaceholder = null;
         },
 
         /** Save SSML block to TinyMCE */
         saveSsmlBlock() {
-            if (!this.ssmlEditorInstance || !this.ssmlTinyEditor) return;
+            if (!this.ssmlEditorRef || !this.ssmlTinyEditor) return;
 
             // Get SSML model and serialize to JSON
-            const model = this.ssmlEditorInstance.getValue();
+            const model = this.ssmlEditorRef.getValue();
             const json = JSON.stringify(model);
             const previewHtml = this.modelToRichPreviewHtml(model);
 
@@ -418,10 +401,7 @@ export default {
     },
 
     beforeUnmount() {
-        if (this.ssmlEditorInstance) {
-            this.ssmlEditorInstance.destroy();
-            this.ssmlEditorInstance = null;
-        }
+        // SsmlEditor destroys its own instance; nothing to tear down here.
     },
 };
 </script>
@@ -450,28 +430,6 @@ export default {
 
 .tiny-editor-wrapper :deep(.tox-edit-area) {
     min-height: 200px;
-}
-
-/* Editor container inside modal */
-.ssml-editor-host {
-    min-height: 240px;
-    max-height: 500px;
-    overflow-y: auto;
-    padding: 4px;
-}
-
-/* Fix placeholder positioning in modal SSML editor */
-.ssml-editor-host :deep(.se-editor) {
-    min-height: 220px;
-}
-
-.ssml-editor-host :deep(.se-placeholder) {
-    top: 10px;
-    left: 14px;
-    line-height: 2rem;
-    font-size: 15px;
-    display: block;
-    width: calc(100% - 28px);
 }
 </style>
 

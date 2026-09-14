@@ -28,19 +28,19 @@
                 class="mb-8 aspect-[16/9] w-full rounded-xl object-cover"
             />
 
-            <SsmlContent class="page-body text-base leading-relaxed text-gray-800" :content="page.content" />
+            <SsmlEditor class="page-body text-base leading-relaxed text-gray-800" :model-value="page.content" read-only html />
         </template>
     </div>
 </template>
 
 <script>
 import { useFrontendStore } from "../../store";
-import SsmlContent from "../../../components/SsmlContent.vue";
+import SsmlEditor from "../../../components/SsmlEditor.vue";
 
 export default {
     name: "PageDetail",
     components: {
-        SsmlContent,
+        SsmlEditor,
     },
     data() {
         return {

@@ -47,7 +47,7 @@
                 class="mb-8 aspect-[16/9] w-full rounded-xl object-cover"
             />
 
-            <SsmlContent class="article-body text-base leading-relaxed text-gray-800" :content="item.content" />
+            <SsmlEditor class="article-body text-base leading-relaxed text-gray-800" :model-value="item.content" read-only html />
 
             <div class="mt-8 flex flex-wrap gap-2 border-t border-gray-200 pt-6">
                 <router-link
@@ -67,12 +67,12 @@
 import { formatDate } from "../../../utils/filters";
 import { api } from "../../api";
 import { PROJECTS } from "../../config";
-import SsmlContent from "../../../components/SsmlContent.vue";
+import SsmlEditor from "../../../components/SsmlEditor.vue";
 
 export default {
     name: "ArticleDetail",
     components: {
-        SsmlContent,
+        SsmlEditor,
     },
     data() {
         return {
