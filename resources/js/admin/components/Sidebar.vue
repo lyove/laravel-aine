@@ -15,67 +15,75 @@
             <div class="admin__menu-group">
                 <router-link
                     :to="{ name: 'projects' }"
-                    :class="['admin__main-menu-item flex flex-nowrap items-center px-8 py-4 hover:bg-blue-400', { 'bg-blue-500': isProjectsActive }]"
+                    :class="['admin__main-menu-item flex flex-nowrap items-center px-8 py-4 hover:bg-blue-400', { 'bg-blue-500': isProjectsActive && !isProjectPage }]"
                 >
                     <i class="admin__menu-item-icon pr-4 fas fa-list"></i>
                     <span class="text-xs">{{ __('Projects') }}</span>
                 </router-link>
-                <div v-if="isProjectPage" class="admin__project-group bg-gray-800">
-                    <div class="admin__project-name-row flex items-center px-8 py-3 border-b border-gray-700">
-                        <span
-                            @click="projectExpanded = !projectExpanded"
-                            class="cursor-pointer mr-2 w-4 text-center text-gray-400 hover:text-white select-none"
-                        >
-                            <i :class="projectExpanded ? 'fas fa-minus' : 'fas fa-plus'"></i>
-                        </span>
+                <div v-if="isProjectPage" class="admin__project-group bg-gray-800/50">
+                    <div class="admin__project-name-row flex items-center px-8 py-3 border-b border-gray-700/50">
                         <router-link
                             :to="{
                                 name: 'projects.index',
                                 params: { project_id: $route.params.project_id },
                             }"
-                            :active-class="'text-blue-500'"
-                            class="admin__project-name flex items-center flex-1 hover:text-blue-600"
+                            :active-class="'text-blue-400'"
+                            class="admin__project-name flex items-center flex-1 min-w-0 hover:text-blue-400 transition-colors"
                         >
-                            <i class="admin__menu-item-icon pr-4 fas fa-cubes"></i>
-                            <span class="text-sm font-bold truncate" :title="currentProjectName">
+                            <i class="admin__menu-item-icon pr-3 fas fa-cubes text-gray-400"></i>
+                            <span class="text-sm font-semibold truncate" :title="currentProjectName">
                                 {{ currentProjectName }}
                             </span>
                         </router-link>
+                        <button
+                            @click="projectExpanded = !projectExpanded"
+                            class="flex-shrink-0 ml-2 w-8 h-8 flex items-center justify-center rounded text-gray-400 transition-colors"
+                            :title="projectExpanded ? __('Collapse') : __('Expand')"
+                        >
+                            <i :class="projectExpanded ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" class="text-xs"></i>
+                        </button>
                     </div>
-                    <div v-show="projectExpanded" class="admin__project-sub-menu">
-                        <router-link
-                            v-if="canProject(['owner', 'admin'])"
-                            :to="{
-                                name: 'projects.collections',
-                                params: { project_id: $route.params.project_id },
-                            }"
-                            :class="['admin__sub-menu-item flex flex-nowrap items-center ml-4 pl-10 px-6 py-4 hover:text-blue-600', { 'text-blue-500': isCollectionsActive }]"
-                        >
-                            <i class="admin__menu-item-icon pr-4 fas fa-table"></i>
-                            <span class="text-xs">{{ __('Collections') }}</span>
-                        </router-link>
-                        <router-link
-                            :to="{
-                                name: 'projects.content',
-                                params: { project_id: $route.params.project_id },
-                            }"
-                            :class="['admin__sub-menu-item flex flex-nowrap items-center ml-4 pl-10 px-6 py-4 hover:text-blue-600', { 'text-blue-500': isContentActive }]"
-                        >
-                            <i class="admin__menu-item-icon pr-4 fas fa-edit"></i>
-                            <span class="text-xs">{{ __('Content') }}</span>
-                        </router-link>
-                        <router-link
-                            v-if="canProject(['owner', 'admin'])"
-                            :to="{
-                                name: 'projects.settings',
-                                params: { project_id: $route.params.project_id },
-                            }"
-                            :class="['admin__sub-menu-item flex flex-nowrap items-center ml-4 pl-10 px-6 py-4 hover:text-blue-600', { 'text-blue-500': isSettingsActive }]"
-                        >
-                            <i class="admin__menu-item-icon pr-4 fas fa-cog"></i>
-                            <span class="text-xs">{{ __('Settings') }}</span>
-                        </router-link>
-                    </div>
+                    <transition
+                        enter-active-class="transition-all duration-200 ease-out"
+                        leave-active-class="transition-all duration-150 ease-in"
+                        enter-from-class="opacity-0 max-h-0"
+                        leave-to-class="opacity-0 max-h-0"
+                    >
+                        <div v-show="projectExpanded" class="admin__project-sub-menu overflow-hidden">
+                            <router-link
+                                v-if="canProject(['owner', 'admin'])"
+                                :to="{
+                                    name: 'projects.collections',
+                                    params: { project_id: $route.params.project_id },
+                                }"
+                                :class="['admin__sub-menu-item flex flex-nowrap items-center pl-12 pr-6 py-3 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-colors', { 'text-blue-400 bg-gray-700/30': isCollectionsActive }]"
+                            >
+                                <i class="admin__menu-item-icon pr-3 fas fa-table text-sm"></i>
+                                <span class="text-xs">{{ __('Collections') }}</span>
+                            </router-link>
+                            <router-link
+                                :to="{
+                                    name: 'projects.content',
+                                    params: { project_id: $route.params.project_id },
+                                }"
+                                :class="['admin__sub-menu-item flex flex-nowrap items-center pl-12 pr-6 py-3 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-colors', { 'text-blue-400 bg-gray-700/30': isContentActive }]"
+                            >
+                                <i class="admin__menu-item-icon pr-3 fas fa-edit text-sm"></i>
+                                <span class="text-xs">{{ __('Content') }}</span>
+                            </router-link>
+                            <router-link
+                                v-if="canProject(['owner', 'admin'])"
+                                :to="{
+                                    name: 'projects.settings',
+                                    params: { project_id: $route.params.project_id },
+                                }"
+                                :class="['admin__sub-menu-item flex flex-nowrap items-center pl-12 pr-6 py-3 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-colors', { 'text-blue-400 bg-gray-700/30': isSettingsActive }]"
+                            >
+                                <i class="admin__menu-item-icon pr-3 fas fa-cog text-sm"></i>
+                                <span class="text-xs">{{ __('Settings') }}</span>
+                            </router-link>
+                        </div>
+                    </transition>
                 </div>
             </div>
         </nav>
