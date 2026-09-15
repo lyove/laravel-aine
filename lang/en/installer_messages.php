@@ -60,7 +60,7 @@ return [
      *
      */
     'requirements' => [
-        'templateTitle' => 'Step 1 | Server Requirements',
+        'templateTitle' => 'Step 2 | Server Requirements',
         'title' => 'Server Requirements',
         'next'    => 'Check Permissions',
     ],
@@ -71,7 +71,7 @@ return [
      *
      */
     'permissions' => [
-        'templateTitle' => 'Step 2 | Permissions',
+        'templateTitle' => 'Step 3 | Permissions',
         'title' => 'Permissions',
         'next' => 'Configure Environment',
     ],
@@ -83,14 +83,14 @@ return [
      */
     'environment' => [
         'menu' => [
-            'templateTitle' => 'Step 3 | Environment Settings',
+            'templateTitle' => 'Step 4 | Environment Settings',
             'title' => 'Environment Settings',
             'desc' => 'Please select how you want to configure the apps <code>.env</code> file.',
             'wizard-button' => 'Form Wizard Setup',
             'classic-button' => 'Classic Text Editor',
         ],
         'wizard' => [
-            'templateTitle' => 'Step 3 | Environment Settings | Guided Wizard',
+            'templateTitle' => 'Step 4 | Environment Settings | Guided Wizard',
             'title' => 'Guided <code>.env</code> Wizard',
             'tabs' => [
                 'environment' => 'Environment',
@@ -206,7 +206,7 @@ return [
             ],
         ],
         'classic' => [
-            'templateTitle' => 'Step 3 | Environment Settings | Classic Editor',
+            'templateTitle' => 'Step 4 | Environment Settings | Classic Editor',
             'title' => 'Classic Environment Editor',
             'save' => 'Save .env',
             'back' => 'Use Form Wizard',

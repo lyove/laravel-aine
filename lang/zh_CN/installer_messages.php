@@ -59,7 +59,7 @@ return [
      *
      */
     'requirements' => [
-        'templateTitle' => '第一步 | 环境要求',
+        'templateTitle' => '第二步 | 环境要求',
         'title' => '环境要求',
         'next' => '检查权限',
     ],
@@ -70,7 +70,7 @@ return [
      *
      */
     'permissions' => [
-        'templateTitle' => '第二步 | 权限',
+        'templateTitle' => '第三步 | 权限',
         'title' => '权限',
         'next' => '配置环境',
     ],
@@ -82,14 +82,14 @@ return [
      */
     'environment' => [
         'menu' => [
-            'templateTitle' => '第三步 | 环境设置',
+            'templateTitle' => '第四步 | 环境设置',
             'title' => '环境设置',
             'desc' => '请选择您的应用程序的<code> .env </code>文件的配置方式.',
             'wizard-button' => '表单向导设置',
             'classic-button' => '经典文本编辑器',
         ],
         'wizard' => [
-            'templateTitle' => '第三步 | 环境设置 | 向导引导',
+            'templateTitle' => '第四步 | 环境设置 | 向导引导',
             'title' => '向导引导 <code>.env</code>文件',
             'tabs' => [
                 'environment' => '环境',
@@ -205,7 +205,7 @@ return [
             ],
         ],
         'classic' => [
-            'templateTitle' => '步骤 3 | 环境设置 | 经典编辑器',
+            'templateTitle' => '第四步 | 环境设置 | 经典编辑器',
             'title' => '经典环境编辑器',
             'save' => '保存 .env',
             'back' => '使用向导表单',
