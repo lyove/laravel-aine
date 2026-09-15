@@ -7,15 +7,20 @@
                 <collection-sidebar :project="project"></collection-sidebar>
             </div>
             <div
-                class="w-6/12 p-4 overflow-x-auto overflow-y-auto"
+                class="flex-1 p-4 overflow-x-auto overflow-y-auto"
                 style="scrollbar-gutter: stable"
             >
-                <div class="mb-2 p-2 font-bold text-lg flex">
-                    <div class="flex">
+                <div class="mb-2 p-2 font-bold text-lg flex items-center">
+                    <div class="flex flex-1 min-w-0">
                         {{ __(collection.name) }}
                         <small class="text-gray-400 ml-1">#{{ collection.slug }}</small>
                     </div>
-                    <div class="flex ml-1">
+                    <div class="flex ml-auto shrink-0">
+                        <ui-button color="indigo-600" hover="indigo-700" padding="px-3 py-1" @click="openNewFieldWizard">
+                            <i class="fa fa-plus"></i> {{ __('Add Field') }}
+                        </ui-button>
+                    </div>
+                    <div class="flex ml-1 shrink-0">
                         <ui-dropdown align="left">
                             <template #trigger>
                                 <button class="text-indigo-500 hover:bg-gray-100 px-2 rounded-md">
@@ -121,294 +126,63 @@
                     </transition-group>
                 </VueDraggable>
             </div>
-            <div class="w-3/12 bg-white overflow-x-hidden overflow-y-auto" style="scrollbar-gutter: stable">
-                <div class="p-4" v-if="collection.name">
-                    <h4 class="mb-2 p-2 font-bold text-lg">{{ __('+ Fields') }}</h4>
-                    <ul>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('text')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.text.bg" class="mr-2 text-gray-100 rounded-md text-sm items-center text-center flex field_icon">
-                                        <i :class="fieldDetails.text.icon" class="w-full"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.text.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.text.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('longtext')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.longtext.bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                                        <i :class="fieldDetails.longtext.icon"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.longtext.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.longtext.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('richtext')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.richtext.bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                                        <i :class="fieldDetails.richtext.icon"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.richtext.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.richtext.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('slug')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.slug.bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                                        <i :class="fieldDetails.slug.icon"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.slug.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.slug.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('email')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.email.bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                                        <i :class="fieldDetails.email.icon"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.email.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.email.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('password')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.password.bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                                        <i :class="fieldDetails.password.icon"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.password.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.password.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('number')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.number.bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                                        <i :class="fieldDetails.number.icon"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.number.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.number.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('enumeration')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.enumeration.bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                                        <i :class="fieldDetails.enumeration.icon"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.enumeration.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.enumeration.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('boolean')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.boolean.bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                                        <i :class="fieldDetails.boolean.icon"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.boolean.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.boolean.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('color')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.color.bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                                        <i :class="fieldDetails.color.icon"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.color.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.color.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('date')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.date.bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                                        <i :class="fieldDetails.date.icon"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.date.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.date.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('time')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.time.bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                                        <i :class="fieldDetails.time.icon"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.time.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.time.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('media')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.media.bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                                        <i :class="fieldDetails.media.icon"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.media.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.media.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('relation')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.relation.bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                                        <i :class="fieldDetails.relation.icon"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.relation.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.relation.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a @click="openNewFieldModal('json')" class="block w-full p-2 cursor-pointer hover:bg-gray-100 bg-gray-50 rounded-md">
-                                <div class="flex">
-                                    <div :class="fieldDetails.json.bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                                        <i :class="fieldDetails.json.icon"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm">
-                                            {{ fieldDetails.json.label }}
-                                        </div>
-                                        <div class="text-xs mt-1">
-                                            {{ fieldDetails.json.desc }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
         </div>
 
-        <ui-modal :show="openNewFieldModalStatus" @close="closeNewFieldModal">
+        <ui-modal maxWidth="3xl" :show="openNewFieldModalStatus" @close="closeNewFieldModal">
             <template #title>
-                <div class="flex">
-                    <div>
-                        <div :class="fieldDetails[current_field_type].bg" class="mr-2 text-gray-100 rounded-md text-sm p-3 items-center text-center field_icon">
-                            <i :class="fieldDetails[current_field_type].icon"></i>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="items-center h-auto flex">
+                            <span v-if="wizardStep === 1">{{ __('Choose a Field Type') }}</span>
+                            <span v-else-if="editStatus">{{ __('Edit Field') }}</span>
+                            <span v-else>{{ __('Add new Field') }}</span>
+                        </div>
+                        <div v-if="wizardStep === 2" class="ml-3 flex items-center">
+                            <div :class="fieldDetails[current_field_type].bg" class="flex mr-2 text-gray-100 rounded-md text-sm p-2 items-center justify-center text-center field_icon">
+                                <i :class="fieldDetails[current_field_type].icon"></i>
+                            </div>
+                            <span class="text-lg">{{ fieldDetails[current_field_type].label }}</span>
                         </div>
                     </div>
-                    <div class="items-center h-auto flex w-64">
-                        <span v-if="!editStatus">{{ __('Add new Field') }}</span>
-                        <span v-if="editStatus">{{ __('Edit Field') }}</span>
-                    </div>
-                    <div class="text-right float-right w-full">
-                        <div>{{ fieldDetails[current_field_type].label }}</div>
-                        <div class="text-sm mt-1">
-                            {{ fieldDetails[current_field_type].desc }}
-                        </div>
+                    <div
+                        v-if="wizardStep === 2 && !editStatus"
+                        class="flex items-center gap-2 text-sm text-indigo-500 cursor-pointer hover:text-indigo-600"
+                        @click="backToType"
+                    >
+                        <i class="fas fa-sync-alt"></i> {{ __('Change Type') }}
                     </div>
                 </div>
             </template>
 
             <template #content>
                 <div>
-                    <form @submit.prevent="addNewFieldSubmit">
+                    <!-- Step 1: choose a field type -->
+                    <div v-if="wizardStep === 1" class="grid grid-cols-3 gap-3 my-4">
+                        <a
+                            v-for="ftype in fieldTypesList"
+                            :key="ftype"
+                            @click="selectFieldType(ftype)"
+                            class="block w-full p-3 cursor-pointer hover:bg-gray-50 bg-gray-50 rounded-md border border-transparent hover:border-indigo-300 transition-colors"
+                            :class="selectedFieldType === ftype ? 'border-indigo-500 bg-indigo-50' : ''"
+                        >
+                            <div class="flex items-start">
+                                <div :class="fieldDetails[ftype].bg" class="mr-2 text-gray-100 rounded-md text-sm p-2 items-center text-center flex field_icon">
+                                    <i :class="fieldDetails[ftype].icon" class="w-full"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-sm font-semibold">
+                                        {{ fieldDetails[ftype].label }}
+                                    </div>
+                                    <div class="text-xs mt-1 text-gray-500 leading-snug">
+                                        {{ fieldDetails[ftype].desc }}
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Step 2: configure the field -->
+                    <form v-if="wizardStep === 2" @submit.prevent="addNewFieldSubmit">
                         <div class="mt-2">
                             <label v-formlabel>{{ __('Label') }}</label>
                             <input 
@@ -819,14 +593,30 @@
             </template>
 
             <template #footer>
-                <ui-button color="gray-200" hover="gray-300" @click="closeNewFieldModal">
-                    <span class="text-gray-800">{{ __('Cancel') }}</span>
-                </ui-button>
+                <!-- Step 1: cancel / next -->
+                <template v-if="wizardStep === 1 && !editStatus">
+                    <ui-button color="gray-200" hover="gray-300" @click="closeNewFieldModal">
+                        <span class="text-gray-800">{{ __('Cancel') }}</span>
+                    </ui-button>
 
-                <ui-button color="indigo-500" @click="addNewFieldSubmit" :class="{ 'opacity-25': processingAddNewField }" :disabled="processingAddNewField">
-                    <span v-if="!editStatus">{{ __('Add new Field') }}</span>
-                    <span v-if="editStatus">{{ __('Save Changes') }}</span>
-                </ui-button>
+                    <ui-button color="indigo-500" :disabled="!selectedFieldType" @click="goToStep2">
+                        <span v-if="selectedFieldType">{{ __('Next') }}</span>
+                        <span v-else>{{ __('Select a type') }}</span>
+                        <i class="fa fa-arrow-right ml-1"></i>
+                    </ui-button>
+                </template>
+
+                <!-- Step 2: back / submit -->
+                <template v-else>
+                    <ui-button color="gray-200" hover="gray-300" @click="closeNewFieldModal">
+                        <span class="text-gray-800">{{ __('Cancel') }}</span>
+                    </ui-button>
+
+                    <ui-button color="indigo-500" @click="addNewFieldSubmit" :class="{ 'opacity-25': processingAddNewField }" :disabled="processingAddNewField">
+                        <span v-if="!editStatus">{{ __('Add new Field') }}</span>
+                        <span v-if="editStatus">{{ __('Save Changes') }}</span>
+                    </ui-button>
+                </template>
             </template>
         </ui-modal>
 
@@ -944,6 +734,9 @@ export default {
             current_field_type: "text",
             processingAddNewField: false,
             editStatus: false,
+            // Two-step wizard for adding new fields
+            wizardStep: 1,
+            selectedFieldType: null,
             openEditCollectionModal: false,
             openImportSchemaModal: false,
             importSchemaBusy: false,
@@ -1106,6 +899,24 @@ export default {
                     bg: "bg-teal-600",
                 },
             },
+            // Ordered list of selectable field types for the add-field wizard
+            fieldTypesList: [
+                "text",
+                "longtext",
+                "richtext",
+                "number",
+                "slug",
+                "email",
+                "password",
+                "enumeration",
+                "boolean",
+                "color",
+                "date",
+                "time",
+                "media",
+                "relation",
+                "json",
+            ],
         };
     },
 
@@ -1127,8 +938,12 @@ export default {
             this.new_field.type = field_type;
             this.current_field_type = field_type;
 
+            // Both creating (from wizard) and editing open the config step.
+            this.editStatus = !!edit;
+            this.wizardStep = 2;
+            this.selectedFieldType = field_type;
+
             if (edit) {
-                this.editStatus = true;
                 if (field_type == "slug") {
                     this.slug = field.options.slug || {};
                 }
@@ -1166,6 +981,35 @@ export default {
         closeNewFieldModal() {
             this.openNewFieldModalStatus = false;
             this.clearData();
+        },
+
+        // Open the add-field wizard (step 1 = choose a type)
+        openNewFieldWizard() {
+            this.clearData();
+            this.wizardStep = 1;
+            this.selectedFieldType = null;
+            this.openNewFieldModalStatus = true;
+        },
+
+        // Step 1: user clicks a type card
+        selectFieldType(field_type) {
+            this.selectedFieldType = field_type;
+        },
+
+        // Step 1 -> Step 2: configure the chosen type
+        goToStep2() {
+            if (!this.selectedFieldType) {
+                return;
+            }
+            this.openNewFieldModal(this.selectedFieldType, false, null);
+        },
+
+        // Step 2 -> Step 1: go back and change the type
+        backToType() {
+            this.clearData();
+            this.wizardStep = 1;
+            this.selectedFieldType = this.current_field_type;
+            this.openNewFieldModalStatus = true;
         },
 
         addNewFieldSubmit() {
@@ -1266,6 +1110,9 @@ export default {
                 collection: null,
                 type: 1,
             };
+            // Reset the wizard back to the type-selection step by default
+            this.wizardStep = 1;
+            this.selectedFieldType = null;
         },
 
         sortFields() {
