@@ -197,7 +197,7 @@
                             </div>
                             <div class="form-item">
                                 <label v-formlabel>{{ __('Global Role') }}</label>
-                                <select v-model="form.role" v-formselect class="w-full px-3 py-2 text-gray-700 bg-white border-gray-200 rounded-md">
+                                <select v-model="form.role" v-formselect :disabled="canEditRole" class="w-full px-3 py-2 text-gray-700 bg-white border-gray-200 rounded-md">
                                     <option value="user">{{ __('User') }}</option>
                                     <option value="super_admin">{{ __('Super Admin') }}</option>
                                 </select>
@@ -395,6 +395,9 @@ export default {
         allSelected() {
             const selectable = this.users.filter((u) => u.id !== this.currentUserId);
             return selectable.length > 0 && selectable.every((u) => this.selected.includes(u.id));
+        },
+        canEditRole() {
+            return this.modalMode === "create" || this.editingId !== this.currentUserId;
         },
     },
 
