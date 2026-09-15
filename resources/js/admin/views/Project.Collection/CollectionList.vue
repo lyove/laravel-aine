@@ -15,13 +15,11 @@
                         {{ __(collection.name) }}
                         <small class="text-gray-400 ml-1">#{{ collection.slug }}</small>
                     </div>
-                    <div class="flex ml-auto shrink-0">
+                    <div class="flex items-center gap-2 ml-2 shrink-0">
                         <ui-button color="indigo-600" hover="indigo-700" padding="px-3 py-1" @click="openNewFieldWizard">
                             <i class="fa fa-plus"></i> {{ __('Add Field') }}
                         </ui-button>
-                    </div>
-                    <div class="flex ml-1 shrink-0">
-                        <ui-dropdown align="left">
+                        <ui-dropdown align="right">
                             <template #trigger>
                                 <button class="text-indigo-500 hover:bg-gray-100 px-2 rounded-md">
                                     <i class="fa fa-ellipsis-h object-bottom"></i>
