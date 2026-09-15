@@ -14,7 +14,7 @@
                     <div class="flex flex-1 min-w-0 items-center">
                         {{ __(collection.name) }}
                         <small class="text-gray-400 ml-1">#{{ collection.slug }}</small>
-                        <ui-dropdown align="right">
+                        <ui-dropdown align="left">
                             <template #trigger>
                                 <button class="text-indigo-500 hover:bg-gray-100 px-2 rounded-md">
                                     <i class="fa fa-ellipsis-h object-bottom"></i>
