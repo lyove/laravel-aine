@@ -1,6 +1,6 @@
 <template>
-    <div class="admin__project-collection-sidebar p-4 bg-white">
-        <div class="mb-4 border-b border-gray-100">
+    <div class="admin__project-collection-sidebar p-4 bg-white flex flex-col h-full min-h-0">
+        <div class="mb-4 border-b border-gray-100 shrink-0">
             <div
                 class="mb-2 p-2 text-lg flex justify-between items-center h-10"
                 v-if="!openSearchInput"
@@ -47,36 +47,38 @@
             </div>
         </div>
 
-        <VueDraggable
-            :list="project.collections"
-            @end="sortCollections"
-            v-bind="dragOptions"
-            handle=".handle"
-            class="_drag-box"
-        >
-            <transition-group type="transition" class="_trans-group" :css="false">
-                <div
-                    class="mb-2 inline-flex items-center w-full"
-                    v-for="collection in filterSearch"
-                    :key="collection.id"
-                >
-                    <i class="fas fa-grip-vertical mr-4 text-gray-500 an__cursor-move handle"></i>
-                    <router-link
-                        :to="{
-                            name: 'projects.collections.list',
-                            params: {
-                                project_id: project.id,
-                                col_id: collection.id,
-                            },
-                        }"
-                        :active-class="'bg-blue-50 text-blue-700'"
-                        :exact-active-class="'bg-blue-100 text-blue-700 font-semibold'"
-                        class="block w-full p-2 cursor-pointer hover:bg-gray-100 rounded"
-                        >{{ __(collection.name) }}</router-link
+        <div class="flex-1 overflow-y-auto min-h-0" style="scrollbar-gutter: stable">
+            <VueDraggable
+                :list="project.collections"
+                @end="sortCollections"
+                v-bind="dragOptions"
+                handle=".handle"
+                class="_drag-box"
+            >
+                <transition-group type="transition" class="_trans-group" :css="false">
+                    <div
+                        class="mb-2 inline-flex items-center w-full"
+                        v-for="collection in filterSearch"
+                        :key="collection.id"
                     >
-                </div>
-            </transition-group>
-        </VueDraggable>
+                        <i class="fas fa-grip-vertical mr-4 text-gray-500 an__cursor-move handle"></i>
+                        <router-link
+                            :to="{
+                                name: 'projects.collections.list',
+                                params: {
+                                    project_id: project.id,
+                                    col_id: collection.id,
+                                },
+                            }"
+                            :active-class="'bg-blue-50 text-blue-700'"
+                            :exact-active-class="'bg-blue-100 text-blue-700 font-semibold'"
+                            class="block w-full p-2 cursor-pointer hover:bg-gray-100 rounded"
+                            >{{ __(collection.name) }}</router-link
+                        >
+                    </div>
+                </transition-group>
+            </VueDraggable>
+        </div>
 
         <ui-modal
             :show="openNewCollectionModal"

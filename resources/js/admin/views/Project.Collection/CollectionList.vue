@@ -7,10 +7,10 @@
                 <collection-sidebar :project="project"></collection-sidebar>
             </div>
             <div
-                class="flex-1 p-4 overflow-x-auto overflow-y-auto"
+                class="flex-1 p-4 overflow-x-auto flex flex-col min-h-0"
                 style="scrollbar-gutter: stable"
             >
-                <div class="mb-2 p-2 font-bold text-lg flex items-center">
+                <div class="mb-2 p-2 font-bold text-lg flex items-center shrink-0 bg-white z-10 border-b border-gray-100">
                     <div class="flex flex-1 min-w-0 items-center">
                         {{ __(collection.name) }}
                         <small class="text-gray-400 ml-1">#{{ collection.slug }}</small>
@@ -52,79 +52,81 @@
                     </div>
                 </div>
 
-                <VueDraggable 
-                    :list="collection.fields" 
-                    @end="sortFields" 
-                    v-bind="dragOptions" 
-                    handle=".handle"
-                    class="_drag-box"
-                >
-                    <transition-group type="transition" class="_trans-group" :css="false">
-                        <div class="w-full mb-3" v-for="field in collection.fields" :key="field.id">
-                            <div class="flex items-center w-full bg-white rounded-md p-4 shadow-sm">
-                                <span class="inline-block mr-3 text-gray-500 an__cursor-move">
-                                    <i class="fas fa-grip-vertical"></i>
-                                </span>
-                                <div :class="fieldDetails[field.type].bg" class="mr-4 text-gray-100 rounded-md text-xl items-center text-center flex field_icon_xl">
-                                    <i :class="fieldDetails[field.type].icon" class="w-full"></i>
-                                </div>
-                                <div class="items-center w-full">
-                                    <div class="w-full flex items-center justify-between">
-                                        <div class="text-base truncate">
-                                            {{ field.label }}
+                <div class="flex-1 overflow-y-auto min-h-0" style="scrollbar-gutter: stable">
+                    <VueDraggable 
+                        :list="collection.fields" 
+                        @end="sortFields" 
+                        v-bind="dragOptions" 
+                        handle=".handle"
+                        class="_drag-box"
+                    >
+                        <transition-group type="transition" class="_trans-group" :css="false">
+                            <div class="w-full mb-3" v-for="field in collection.fields" :key="field.id">
+                                <div class="flex items-center w-full bg-white rounded-md p-4 shadow-sm">
+                                    <span class="inline-block mr-3 text-gray-500 an__cursor-move">
+                                        <i class="fas fa-grip-vertical"></i>
+                                    </span>
+                                    <div :class="fieldDetails[field.type].bg" class="mr-4 text-gray-100 rounded-md text-xl items-center text-center flex field_icon_xl">
+                                        <i :class="fieldDetails[field.type].icon" class="w-full"></i>
+                                    </div>
+                                    <div class="items-center w-full">
+                                        <div class="w-full flex items-center justify-between">
+                                            <div class="text-base truncate">
+                                                {{ field.label }}
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-1 mt-1">
+                                            <span class="field_name text-blue-900 text-sm rounded-md bg-gray-200 px-2 truncate">#{{ field.name }}</span>
+                                            <span class="field_type text-blue-900 text-sm rounded-md bg-indigo-200 px-2 truncate">
+                                                {{ field.type }}
+                                                <span v-if="field.type == 'enumeration'">
+                                                    <span v-if="field.options.multiple">{{ __(': multiple') }}</span>
+                                                </span>
+                                                <span v-if="field.type == 'date'">
+                                                    <span v-if="field.options.timepicker">{{ __(': time') }}</span>
+                                                </span>
+                                                <span v-if="field.type == 'media' && field.options.media !== undefined">
+                                                    <span v-if="field.options.media.type == 1">{{ __(': single') }}</span>
+                                                    <span v-else-if="field.options.media.type == 2">{{ __(': multiple') }}</span>
+                                                </span>
+                                                <span v-else-if="field.type == 'relation' && field.options.relation !== undefined">
+                                                    <span v-if="field.options.relation.type == 1">{{ __(': one-to-one') }}</span>
+                                                    <span v-else-if="field.options.relation.type == 2">{{ __(': one-to-many') }}</span>
+                                                </span>
+                                            </span>
+                                            <span class="field_validations text-blue-900 text-sm rounded-md bg-gray-100 px-2 truncate" v-if="field.validations.required.status">
+                                                <i class="fas fa-star-of-life text-xs"></i> {{ __('required') }}
+                                            </span>
+                                            <span class="field_validations text-blue-900 text-sm rounded-md bg-gray-100 px-2 truncate" v-if="field.validations.unique.status">
+                                                <i class="fas fa-fingerprint text-xs"></i> {{ __('unique') }}
+                                            </span>
+                                            <span class="field_options text-blue-900 text-sm rounded-md bg-gray-100 px-2 truncate" v-if="field.options.repeatable">
+                                                <i class="fas fa-redo text-xs"></i> {{ __('repeatable') }}
+                                            </span>
+                                            <span class="field_options text-blue-900 text-sm rounded-md bg-gray-100 px-2 truncate hidden" v-if="field.options.hideInContentList">
+                                                {{ __('hide in content list') }}
+                                            </span>
+                                            <span class="field_options text-blue-900 text-sm rounded-md bg-gray-100 px-2 truncate hidden" v-if="field.options.hiddenInAPI">
+                                                {{ __('hidden in api') }}
+                                            </span>
                                         </div>
                                     </div>
-                                    <div class="flex items-center space-x-1 mt-1">
-                                        <span class="field_name text-blue-900 text-sm rounded-md bg-gray-200 px-2 truncate">#{{ field.name }}</span>
-                                        <span class="field_type text-blue-900 text-sm rounded-md bg-indigo-200 px-2 truncate">
-                                            {{ field.type }}
-                                            <span v-if="field.type == 'enumeration'">
-                                                <span v-if="field.options.multiple">{{ __(': multiple') }}</span>
-                                            </span>
-                                            <span v-if="field.type == 'date'">
-                                                <span v-if="field.options.timepicker">{{ __(': time') }}</span>
-                                            </span>
-                                            <span v-if="field.type == 'media' && field.options.media !== undefined">
-                                                <span v-if="field.options.media.type == 1">{{ __(': single') }}</span>
-                                                <span v-else-if="field.options.media.type == 2">{{ __(': multiple') }}</span>
-                                            </span>
-                                            <span v-else-if="field.type == 'relation' && field.options.relation !== undefined">
-                                                <span v-if="field.options.relation.type == 1">{{ __(': one-to-one') }}</span>
-                                                <span v-else-if="field.options.relation.type == 2">{{ __(': one-to-many') }}</span>
-                                            </span>
-                                        </span>
-                                        <span class="field_validations text-blue-900 text-sm rounded-md bg-gray-100 px-2 truncate" v-if="field.validations.required.status">
-                                            <i class="fas fa-star-of-life text-xs"></i> {{ __('required') }}
-                                        </span>
-                                        <span class="field_validations text-blue-900 text-sm rounded-md bg-gray-100 px-2 truncate" v-if="field.validations.unique.status">
-                                            <i class="fas fa-fingerprint text-xs"></i> {{ __('unique') }}
-                                        </span>
-                                        <span class="field_options text-blue-900 text-sm rounded-md bg-gray-100 px-2 truncate" v-if="field.options.repeatable">
-                                            <i class="fas fa-redo text-xs"></i> {{ __('repeatable') }}
-                                        </span>
-                                        <span class="field_options text-blue-900 text-sm rounded-md bg-gray-100 px-2 truncate hidden" v-if="field.options.hideInContentList">
-                                            {{ __('hide in content list') }}
-                                        </span>
-                                        <span class="field_options text-blue-900 text-sm rounded-md bg-gray-100 px-2 truncate hidden" v-if="field.options.hiddenInAPI">
-                                            {{ __('hidden in api') }}
-                                        </span>
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <a
+                                            @click="openNewFieldModal(field.type, true, field)"
+                                            class="inline-block text-white text-sm rounded-md bg-indigo-500 px-3 cursor-pointer hover:bg-indigo-600 whitespace-nowrap"
+                                        >
+                                            <i class="fa fa-edit text-xs"></i>
+                                        </a>
+                                        <a @click="deleteField(field)" class="inline-block text-white text-sm rounded-md bg-red-500 px-3 cursor-pointer hover:bg-red-600 whitespace-nowrap">
+                                            <i class="fa fa-trash-alt text-xs"></i>
+                                        </a>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-1.5 shrink-0">
-                                    <a
-                                        @click="openNewFieldModal(field.type, true, field)"
-                                        class="inline-block text-white text-sm rounded-md bg-indigo-500 px-3 cursor-pointer hover:bg-indigo-600 whitespace-nowrap"
-                                    >
-                                        <i class="fa fa-edit text-xs"></i>
-                                    </a>
-                                    <a @click="deleteField(field)" class="inline-block text-white text-sm rounded-md bg-red-500 px-3 cursor-pointer hover:bg-red-600 whitespace-nowrap">
-                                        <i class="fa fa-trash-alt text-xs"></i>
-                                    </a>
-                                </div>
                             </div>
-                        </div>
-                    </transition-group>
-                </VueDraggable>
+                        </transition-group>
+                    </VueDraggable>
+                </div>
             </div>
         </div>
 
