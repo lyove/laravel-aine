@@ -897,7 +897,7 @@ class DemoProjectsSeeder extends Seeder
         $project = $this->createProject([
             'name' => '笔记',
             'slug' => 'note',
-            'description' => '云笔记平台',
+            'description' => '云笔记、记事本与备忘录应用——用结构化的方式记录灵感、待办与日常。',
             'default_locale' => 'zh',
             'locales' => 'zh,en',
             'disk' => 'local',
@@ -911,7 +911,7 @@ class DemoProjectsSeeder extends Seeder
 
         ProjectTranslation::updateOrCreate(
             ['project_id' => $project->id, 'locale' => 'en', 'source' => $project->description],
-            ['value' => 'Cloud Notes Platform']
+            ['value' => 'Cloud notes, notepad and memo app — capture ideas, to-dos and journals in a structured way.']
         );
 
         ProjectTranslation::updateOrCreate(
@@ -922,17 +922,17 @@ class DemoProjectsSeeder extends Seeder
         $c = ProjectTemplates::apply($project, ProjectTemplates::get(ProjectTemplates::NOTE));
 
         $media = $this->seedMedia($project, [
-            ['cover-putonghua.jpg', '云笔记', [13, 148, 136], [14, 165, 233], 1200, 630, false],
-            ['cover-yanjiang.jpg', '演讲稿', [217, 119, 6], [239, 68, 68], 1200, 630, false],
-            ['cover-raokouling.jpg', '绕口令', [124, 58, 237], [236, 72, 153], 1200, 630, false],
-            ['cover-jingdian.jpg', '经典语句', [37, 99, 235], [6, 182, 212], 1200, 630, false],
+            ['cover-notes.jpg', 'Notes', [13, 148, 136], [14, 165, 233], 1200, 630, false],
+            ['cover-memo.jpg', 'Memo', [217, 119, 6], [239, 68, 68], 1200, 630, false],
+            ['cover-todo.jpg', 'Todo', [124, 58, 237], [236, 72, 153], 1200, 630, false],
+            ['cover-diary.jpg', 'Diary', [37, 99, 235], [6, 182, 212], 1200, 630, false],
         ]);
 
         /* --- Pages --- */
         foreach ([
-            ['title' => '首页', 'slug' => 'home', 'content' => '<h1>欢迎来到文本笔记平台</h1><p>这里汇集<strong>普通话学习文本、演讲稿、绕口令与经典语句</strong>，助你练好发音、开口自信。</p>'],
-            ['title' => '关于我们', 'slug' => 'about', 'content' => '<h2>关于文本笔记平台</h2><p>本平台由 Aine 驱动，专注于普通话正音、演讲表达与语言素养提升，内容全部支持通过公共 API 接入你的网站或应用。</p>'],
-            ['title' => '学习指南', 'slug' => 'guide', 'content' => '<h2>如何用好这个平台</h2><ol><li>先做<strong>声母、韵母、声调</strong>的基础练习；</li><li>再通过<strong>绕口令</strong>强化口腔控制与吐字归音；</li><li>最后在<strong>演讲稿与经典语句</strong>中体会语感与表达。</li></ol>'],
+            ['title' => '首页', 'slug' => 'home', 'content' => '<h1>欢迎来到云笔记平台</h1><p>这里汇集<strong>云笔记、记事本、备忘录与日记</strong>，助你高效记录灵感、管理待办、留住生活点滴。</p>'],
+            ['title' => '关于我们', 'slug' => 'about', 'content' => '<h2>关于云笔记平台</h2><p>本平台由 Aine 驱动，专注于笔记记录、待办管理与知识整理，所有内容均支持通过公共 API 接入你的网站或应用。</p>'],
+            ['title' => '使用指南', 'slug' => 'guide', 'content' => '<h2>如何用好这个平台</h2><ol><li>先用<strong>云笔记</strong>整理知识体系与长文记录；</li><li>再用<strong>记事本</strong>做速记与会议记录；</li><li>最后用<strong>备忘录与日记</strong>管理待办、复盘成长。</li></ol>'],
         ] as $i => $data) {
             $this->addContent($project, $c['pages'], $data, published: true, daysAgo: 20 - $i, locale: 'zh');
         }
@@ -940,42 +940,42 @@ class DemoProjectsSeeder extends Seeder
         /* --- Categories --- */
         $categories = [];
         foreach ([
-            ['普通话学习', 'putonghua-xuexi', '声母、韵母、声调与语流音变的基础知识与练习文本。'],
-            ['演讲稿', 'yanjiang-gao', '励志、校园、职场等不同场合的演讲稿范文与写作方法。'],
-            ['绕口令', 'raokouling', '经典绕口令，训练唇舌力度与吐字归音。'],
-            ['经典语句', 'jingdian-yuju', '名言警句、诗词名句与谚语俗语，积累表达素材。'],
+            ['云笔记', 'yunbiji', '知识管理与长文记录：用结构化的方式沉淀所学所思。'],
+            ['记事本', 'jishiben', '速记、会议记录与读书笔记——快速捕捉，随时查阅。'],
+            ['备忘录', 'beiwanglu', '待办清单、提醒与习惯追踪，帮你管理日常事务。'],
+            ['日记', 'riji', '晨间日记、周回顾与情绪记录，复盘让你更快成长。'],
         ] as $i => [$title, $url, $description]) {
             $categories[$title] = $this->addContent($project, $c['categories'], ['title' => $title, 'slug' => $url, 'description' => $description], published: true, daysAgo: 19 - $i, locale: 'zh')->id;
         }
 
         /* --- Tags --- */
         $tags = [];
-        foreach (['声母', '韵母', '声调', '轻声', '儿化', '多音字', '朗读', '演讲', '励志', '校园', '职场', '口才', '名言', '谚语'] as $i => $tag) {
+        foreach (['知识管理', '灵感', '速记', '会议记录', '读书笔记', '待办', '清单', '提醒', '习惯', '复盘', '模板', '标签', '归档', '搜索'] as $i => $tag) {
             $tags[$tag] = $this->addContent($project, $c['tags'], ['tag' => $tag], published: true, daysAgo: 17 - $i, locale: 'zh')->id;
         }
 
         /* --- Posts --- */
         $postData = [
-            // 普通话学习
-            ['声母发音入门：b p m f', 'putonghua-shengmu-bpmf', '双唇音与唇齿音的发音要领，配上对比练习，帮你打好普通话基础。', '<h2>双唇音 b 与 p</h2><p><strong>b</strong> 是不送气清音，<strong>p</strong> 是送气清音。练习时把手掌放在嘴前，读 b 几乎感觉不到气流，读 p 能明显感到气流冲出。</p><h2>鼻音 m 与唇齿音 f</h2><p><strong>m</strong> 双唇闭合、气流从鼻腔通过；<strong>f</strong> 上齿轻触下唇，气流从唇齿间挤出。</p><h3>对比练习</h3><ul><li>爸爸（bà ba）—— 爬坡（pá pō）</li><li>妈妈（mā ma）—— 丰富（fēng fù）</li></ul>', '普通话学习', ['声母'], 'cover-putonghua.jpg', 0, 1, 0],
-            ['韵母与声调：普通话的“四声”', 'putonghua-yunmu-shengdiao', '一声平、二声扬、三声拐弯、四声降——声调是普通话的“灵魂”。', '<h2>四个声调</h2><p>普通话有四个基本声调：阴平（55）、阳平（35）、上声（214）、去声（51）。</p><h2>声调与意义</h2><p>同一个音节，声调不同意思完全不同：mā（妈）、má（麻）、mǎ（马）、mà（骂）。</p><h3>练习方法</h3><ol><li>用“ā á ǎ à”做长音练习；</li><li>把词语按声调组合朗读：山河锦绣、光明磊落。</li></ol>', '普通话学习', ['韵母', '声调'], 'cover-putonghua.jpg', 0, 1, 0],
-            ['轻声与儿化：让普通话更自然', 'putonghua-qingsheng-erhua', '轻声不是“读得轻”，儿化不是“随便加”——掌握规律，普通话说得更地道。', '<h2>什么是轻声</h2><p>轻声是一种又短又轻的变调，如“爸爸”“妈妈”的第二个音节，以及助词“的、地、得”。</p><h2>什么是儿化</h2><p>儿化韵在韵母后加上卷舌动作，如“小孩儿”“一点儿”。</p><h3>常见轻声词</h3><p>萝卜、豆腐、耳朵、事情、朋友。</p>', '普通话学习', ['轻声', '儿化'], 'cover-putonghua.jpg', 0, 0, 1],
-            ['常见多音字辨析', 'putonghua-duoyinzi', '好读书不好读书，好读书不好读书——多音字一错，意思全变。', '<h2>为什么会有多音字</h2><p>多音字因意义不同而读音不同，是普通话学习中的重点难点。</p><h3>常见多音字</h3><ul><li><strong>好</strong>：hǎo（很好）/ hào（爱好）</li><li><strong>行</strong>：xíng（行走）/ háng（银行）</li><li><strong>长</strong>：cháng（长短）/ zhǎng（成长）</li><li><strong>重</strong>：zhòng（重要）/ chóng（重复）</li></ul><p>建议结合词语记忆，不要孤立背读音。</p>', '普通话学习', ['多音字'], 'cover-putonghua.jpg', 0, 1, 1],
-            // 演讲稿
-            ['励志演讲稿：向着光奔跑', 'yanjiang-lizhi-guang', '与其在黑暗里等待，不如向着光奔跑。一篇关于坚持与勇气的演讲。', '<h2>向着光奔跑</h2><p>尊敬的老师、亲爱的同学们：</p><p>大家好！今天我想和大家聊一个词——<strong>奔跑</strong>。</p><p>人生难免有低谷，就像夜里赶路。有人停在原地抱怨天黑，有人点亮火把继续前行。其实，光不是等来的，是跑出来的。</p><p>每一次练习、每一次失败后的重来，都是在为自己的路铺灯。请相信，当你决定出发，最难的时刻已经过去。</p><p>愿我们都能——向着光，奔跑。</p>', '演讲稿', ['演讲', '励志'], 'cover-yanjiang.jpg', 1, 1, 0],
-            ['毕业致辞：致我们滚烫的青春', 'yanjiang-biye-qingchun', '当毕业钟声响起，把最美的祝愿送给每一位即将远行的你。', '<h2>致我们滚烫的青春</h2><p>尊敬的老师们、亲爱的同学们：</p><p>大家好！今天，我们站在毕业的门槛上，回望这滚烫的青春。</p><p>还记得教室里朗朗的读书声，操场上挥洒的汗水，深夜里互相打气的朋友圈。这些细碎的片段，拼成了我们最珍贵的时光。</p><p>毕业不是句号，而是新的逗号。愿我们带着勇气出发，在各自的世界里闪闪发光。</p>', '演讲稿', ['演讲', '校园'], 'cover-yanjiang.jpg', 0, 1, 0],
-            ['竞聘演讲稿：以实干作答', 'yanjiang-jingpin', '不喊口号、不摆姿态，用一件件实事证明自己——竞聘演讲的务实范本。', '<h2>以实干作答</h2><p>各位领导、各位同事：</p><p>大家好！今天我竞聘的岗位是项目主管。我不打算说太多漂亮话，只想用三件事回答大家。</p><p><strong>第一，我能干活。</strong>过去一年，我牵头完成了三项跨部门协作项目，全部按期交付。</p><p><strong>第二，我肯学习。</strong>我利用业余时间完成了管理课程进修，并把它用在了团队协作上。</p><p><strong>第三，我愿担责。</strong>遇到问题不推诿，先解决问题，再复盘原因。</p><p>如果大家给我这个机会，我会用行动证明：选择我，不会错。</p>', '演讲稿', ['演讲', '职场'], 'cover-yanjiang.jpg', 0, 0, 1],
-            ['即兴演讲的开场与收尾技巧', 'yanjiang-jixing-jiqiao', '好的开场三秒抓住听众，好的收尾让人记住你——即兴演讲的实用技巧。', '<h2>开场：三秒抓住听众</h2><ul><li><strong>提问式</strong>：你们有没有想过……</li><li><strong>故事式</strong>：上周我遇到一件事……</li><li><strong>数据式</strong>：据统计，……</li></ul><h2>收尾：让人记住你</h2><p>把核心观点浓缩成一句话，再用一个动作或一句祝愿收束，如“谢谢大家，愿我们都能成为想成为的人。”</p><p><em>技巧的核心：先想“听众要什么”，再想“我要说什么”。</em></p>', '演讲稿', ['演讲', '口才'], 'cover-yanjiang.jpg', 0, 1, 0],
-            // 绕口令
-            ['绕口令：四是四，十是十', 'raokouling-sishi-shishi', '数字绕口令的经典，专治平翘舌不分。', '<h2>四是四，十是十</h2><p>四是四，十是十，十四是十四，四十是四十。</p><p>谁要说十四是四十，就打谁四十；谁要说四十是十四，就罚谁十四。</p><p><strong>练习提示</strong>：先慢后快，把“四（sì）”与“十（shí）”的平翘舌读准。</p>', '绕口令', ['声母', '韵母'], 'cover-raokouling.jpg', 1, 0, 0],
-            ['绕口令：吃葡萄不吐葡萄皮', 'raokouling-chiputao', '一句绕口令，练好 b、p 双唇音。', '<h2>吃葡萄不吐葡萄皮</h2><p>吃葡萄不吐葡萄皮，不吃葡萄倒吐葡萄皮。</p><p><strong>练习提示</strong>：重点体会 b 与 p 的送气区别，由慢到快，保持每个字清晰。</p>', '绕口令', ['声母', '朗读'], 'cover-raokouling.jpg', 1, 0, 0],
-            ['绕口令：扁担长，板凳宽', 'raokouling-biandan', '长短宽窄，字字分明——经典的语音对比练习。', '<h2>扁担长，板凳宽</h2><p>扁担长，板凳宽，板凳没有扁担长，扁担没有板凳宽。</p><p>扁担要绑在板凳上，板凳偏不让扁担绑在板凳上。</p><p><strong>练习提示</strong>：注意“长（cháng）”与“宽（kuān）”的韵母归音。</p>', '绕口令', ['声母', '韵母'], 'cover-raokouling.jpg', 0, 1, 0],
-            ['绕口令：打南边来了个喇嘛', 'raokouling-lama', '喇嘛与哑巴，提鳎目与吹喇叭——绕口令里的“高峰挑战”。', '<h2>打南边来了个喇嘛</h2><p>打南边来了个喇嘛，手里提拉着五斤鳎目；打北边来了个哑巴，腰里别着个喇叭。</p><p>南边提拉着鳎目的喇嘛，要拿鳎目换北边别喇叭的哑巴的喇叭；哑巴不愿意拿喇叭换提拉着鳎目的喇嘛的鳎目。</p><p><strong>练习提示</strong>：这段绕口令难度较高，建议先分段慢读，再逐步加速。</p>', '绕口令', ['朗读'], 'cover-raokouling.jpg', 0, 0, 1],
-            // 经典语句
-            ['论语治学名句', 'jingdian-lunyu', '学而时习之，不亦说乎——从《论语》中汲取学习的智慧。', '<h2>《论语》治学名句</h2><blockquote>学而时习之，不亦说乎？有朋自远方来，不亦乐乎？——《论语·学而》</blockquote><blockquote>学而不思则罔，思而不学则殆。——《论语·为政》</blockquote><blockquote>知之为知之，不知为不知，是知也。——《论语·为政》</blockquote><p>反复诵读，体会经典语句的韵律与含义。</p>', '经典语句', ['名言'], 'cover-jingdian.jpg', 0, 1, 0],
-            ['劝学：积跬步以至千里', 'jingdian-quanxue', '不积跬步，无以至千里——荀子劝学中的坚持之道。', '<h2>荀子《劝学》名句</h2><blockquote>不积跬步，无以至千里；不积小流，无以成江海。——《荀子·劝学》</blockquote><blockquote>锲而舍之，朽木不折；锲而不舍，金石可镂。——《荀子·劝学》</blockquote><p>学习贵在积累，日拱一卒，功不唐捐。</p>', '经典语句', ['名言'], 'cover-jingdian.jpg', 0, 1, 1],
-            ['中华诗词名句选', 'jingdian-shici', '从“长风破浪”到“一览众山小”，品读诗词里的豪情与境界。', '<h2>诗词名句</h2><blockquote>长风破浪会有时，直挂云帆济沧海。——李白《行路难》</blockquote><blockquote>会当凌绝顶，一览众山小。——杜甫《望岳》</blockquote><blockquote>天行健，君子以自强不息。——《周易》</blockquote>', '经典语句', ['名言'], 'cover-jingdian.jpg', 0, 0, 0],
-            ['谚语俗语：生活的智慧', 'jingdian-yanyu', '一句谚语，一段生活——俗语中的朴素哲理。', '<h2>谚语俗语精选</h2><ul><li>千里之行，始于足下。——《道德经》</li><li>宝剑锋从磨砺出，梅花香自苦寒来。</li><li>冰冻三尺，非一日之寒。</li><li>人心齐，泰山移。</li></ul><p>谚语短小精悍，适合晨读与朗诵练习。</p>', '经典语句', ['谚语'], 'cover-jingdian.jpg', 0, 0, 1],
+            // 云笔记
+            ['如何用云笔记构建你的知识体系', 'yunbiji-zhishitixi', '从碎片信息到结构化知识，云笔记帮你搭建属于自己的第二大脑。', '<h2>为什么要建知识体系</h2><p>每天我们接触大量信息，但大部分读完就忘。云笔记的核心价值在于<strong>沉淀</strong>——把碎片信息归类、整理、连接，变成可复用的知识。</p><h2>三层结构</h2><ol><li><strong>收件箱</strong>：所有新笔记先进这里，不加筛选。</li><li><strong>整理区</strong>：定期回顾，打标签、归分类。</li><li><strong>知识库</strong>：成熟笔记最终归档于此，随时检索。</li></ol><p>关键是<strong>持续</strong>而非完美——先记下来，再慢慢整理。</p>', '云笔记', ['知识管理', '灵感'], 'cover-notes.jpg', 0, 1, 0],
+            ['Markdown 让笔记更高效', 'yunbiji-markdown', '学会 Markdown，用最少的排版动作写出结构清晰的笔记。', '<h2>什么是 Markdown</h2><p>Markdown 是一种轻量标记语言，用纯文本就能写出标题、列表、代码块等格式。</p><h2>常用语法</h2><ul><li><code># 标题</code> — 几个 # 就是几级标题</li><li><code>- 项目</code> — 无序列表</li><li><code>**加粗**</code> — 粗体</li><li><code>[链接](url)</code> — 超链接</li></ul><h3>为什么适合笔记</h3><p>双手不离键盘，专注内容本身，排版自动完成。几乎所有主流云笔记都支持 Markdown。</p>', '云笔记', ['知识管理', '速记'], 'cover-notes.jpg', 0, 1, 0],
+            ['笔记分类与标签的最佳实践', 'yunbiji-fenlei-biaoqian', '分类是骨架，标签是血肉——掌握二者配合，笔记再多也井井有条。', '<h2>分类 vs 标签</h2><p><strong>分类</strong>是树状结构，一篇笔记只属于一个分类；<strong>标签</strong>是网状结构，一篇笔记可以打多个标签。</p><h2>建议</h2><ol><li>分类按<strong>领域</strong>划分，如“技术”“读书”“生活”。</li><li>标签按<strong>主题</strong>划分，如“前端”“心理学”“复盘”。</li><li>分类不超过 7 个，标签不限量但定期清理。</li></ol><p>一句话原则：<strong>分类找得到，标签连得起</strong>。</p>', '云笔记', ['知识管理', '标签'], 'cover-notes.jpg', 0, 0, 1],
+            ['从纸质笔记到云笔记：我的迁移之路', 'yunbiji-qianyi', '十年手账党的数字化转型：哪些习惯要保留，哪些要抛弃。', '<h2>为什么迁移</h2><p>纸质笔记有手感与温度，但<strong>搜索</strong>和<strong>同步</strong>是致命痛点。当我第三次翻箱倒柜找某条记录后，决定迁移到云端。</p><h2>迁移策略</h2><ol><li><strong>拍照存档</strong>：旧本子拍照导入，先保底。</li><li><strong>逐步重录</strong>：常查阅的优先录入，低频的暂缓。</li><li><strong>保留仪式感</strong>：纸质用于 brainstorm 草稿，云端用于长期沉淀。</li></ol><p>迁移不是一刀切——纸质和云笔记各有所长，混合使用效果最好。</p>', '云笔记', ['知识管理', '灵感'], 'cover-notes.jpg', 0, 1, 1],
+            // 记事本
+            ['速记技巧：三秒捕捉灵感', 'jishiben-sujilinggan', '灵感稍纵即逝——用最短路径把它记下来，别让它跑了。', '<h2>为什么强调速度</h2><p>灵感有个特点：<strong>越想记好，忘得越快</strong>。与其追求排版，不如先记关键词。</p><h2>三秒原则</h2><ol><li>打开笔记 App（快捷键 / 小组件）。</li><li>写下<strong>关键词</strong>，不追求完整句子。</li><li>保存，继续手头的事。</li></ol><h3>后续整理</h3><p>每天花 5 分钟回顾速记，把有价值的搬到云笔记，无用的直接删。</p>', '记事本', ['灵感', '速记'], 'cover-memo.jpg', 1, 1, 0],
+            ['会议记录模板与规范', 'jishiben-huiyijilu', '一份好的会议记录，让每个人都知道下一步该做什么。', '<h2>会议记录三要素</h2><ul><li><strong>决议</strong>：讨论出了什么结论。</li><li><strong>待办</strong>：谁在什么时间完成什么。</li><li><strong>遗留问题</strong>：本次未决、下次继续。</li></ul><h2>推荐模板</h2><pre>会议主题：xxx\n时间 / 参会人\n决议：\n  1. ...\n待办：\n  - [ ] 张三 — 11/15 前完成 A\n  - [ ] 李四 — 11/20 前完成 B\n遗留问题：\n  - C 方案待数据确认</pre><p>会后 10 分钟内发出，趁记忆还热。</p>', '记事本', ['会议记录', '待办'], 'cover-memo.jpg', 0, 1, 0],
+            ['读书笔记的正确打开方式', 'jishiben-dushubiji', '读完就忘？因为你只“读”不“记”。读书笔记让每本书真正变成你的。', '<h2>读书笔记三层法</h2><ol><li><strong>摘录</strong>：划线、抚金句——积累素材。</li><li><strong>转述</strong>：用自己的话概括核心观点——检验理解。</li><li><strong>关联</strong>：联系自身经历或其他书——内化知识。</li></ol><h2>工具建议</h2><p>用云笔记建一个“读书”分类，每本书一篇笔记。纸质书拍照存图，电子书直接摘抝。</p><p>关键是<strong>用自己的话写</strong>——照抓只是搬运，转述才是消化。</p>', '记事本', ['读书笔记', '知识管理'], 'cover-memo.jpg', 0, 0, 1],
+            ['记事本 vs 云笔记：何时用哪个', 'jishiben-vs-yunbiji', '快速捕捉用记事本，长期沉淀用云笔记——别搞反了。', '<h2>定位区别</h2><p><strong>记事本</strong>：快进快出，适合临时记录——灵感、待办、购物清单。强调<strong>速度</strong>。</p><p><strong>云笔记</strong>：长期保存，适合结构化沉淀——知识体系、读书笔记、项目文档。强调<strong>组织</strong>。</p><h2>配合方式</h2><ol><li>灵感来了 → 先进记事本（快）。</li><li>定期回顾 → 有价值的搬到云笔记（整理）。</li><li>记事本里超过 7 天没看的 → 删（断舍离）。</li></ol>', '记事本', ['速记', '知识管理'], 'cover-memo.jpg', 0, 1, 0],
+            // 备忘录
+            ['每日待办清单的制定方法', 'beiwanglu-daiban-qingdan', '不是列出来就完了——好的待办清单会让你做事更有方向。', '<h2>清单不是备忘录</h2><p>备忘录是“别忘了”，待办清单是“今天先做什么”。二者要分开。</p><h2>制定方法</h2><ol><li><strong>前一晚写</strong>：睡前花 5 分钟列明天 3 件最重要的事。</li><li><strong>限三项</strong>：TOP 3 原则——多了反而焦虑。</li><li><strong>写动词开头</strong>：“写报告”而非“报告”——明确动作。</li></ol><h3>执行</h3><p>早上先做 TOP 1，做完再做 TOP 2。零碎事务集中在下午批量处理。</p>', '备忘录', ['待办', '清单'], 'cover-todo.jpg', 1, 0, 0],
+            ['备忘录提醒：别再忘记重要的事', 'beiwanglu-tixing', '好记性不如烂笔头——更不如一个准时弹出的提醒。', '<h2>提醒的核心</h2><p>人的记忆有“<strong>时间盲区</strong>”——你以为记得，到点就忘。所以提醒要<strong>写下来 + 设时间</strong>。</p><h2>提醒分类</h2><ul><li><strong>一次性</strong>：周五 15:00 开会。</li><li><strong>周期性</strong>：每周一 9:00 周报。</li><li><strong>条件性</strong>：到家后取快递。</li></ul><h3>建议</h3><p>提醒越少越有效——设太多会习惯性忽略。只给真正重要的事设提醒。</p>', '备忘录', ['待办', '提醒'], 'cover-todo.jpg', 1, 0, 0],
+            ['习惯追踪：用备忘录养成好习惯', 'beiwanglu-xiguan-zhuizong', '打卡不是目的，持续才是——用最简单的工具帮自己坚持下去。', '<h2>为什么追踪</h2><p>习惯的养成需要<strong>可视化反馈</strong>——看到连续打卡的天数，就不想断。</p><h2>方法</h2><ol><li><strong>一次只追一个习惯</strong>，别贪多。</li><li>每天睡前打勾，不超过 10 秒。</li><li>连续 30 天后，从“追踪”变成“自然”。</li></ol><h3>常见误区</h3><p>别用复杂 App——一个备忘录清单加日期就够。工具越简单，越容易坚持。</p>', '备忘录', ['习惯', '清单'], 'cover-todo.jpg', 0, 1, 0],
+            ['项目跟进：用看板管理你的任务', 'beiwanglu-xiangmu-kanban', '待办、进行中、已完成——三列看板让项目一目了然。', '<h2>看板的核心</h2><p>把任务按状态分成三列：<strong>待办 → 进行中 → 已完成</strong>。每张卡片就是一个任务。</p><h2>规则</h2><ul><li><strong>进行中不超过 3 张</strong>——这是限制并发的关键。</li><li>每天早上把“待办”里最优先的拉到“进行中”。</li><li>完成的卡片移到“已完成”，别删——看着有成就感。</li></ul><p>个人用备忘录就能模拟，团队协作则推荐专用工具。</p>', '备忘录', ['清单', '待办'], 'cover-todo.jpg', 0, 0, 1],
+            // 日记
+            ['晨间日记：开启高效的一天', 'riji-chenjian-riji', '花 5 分钟写晨间日记，让一天从清晰开始。', '<h2>什么是晨间日记</h2><p>起床后花 5 分钟，用固定模板写下：今天要做什么、感恩什么、想成为什么样的人。</p><h2>推荐模板</h2><pre>日期：xxx\n\n今天最重要的 3 件事：\n  1. ...\n  2. ...\n  3. ...\n\n感恩：...\n\n自我肯定：我今天是个 ___ 的人。</pre><p>模板固定下来后，写日记就不再是“想写什么”而是“填空”，阻力小很多。</p>', '日记', ['复盘', '模板'], 'cover-diary.jpg', 0, 1, 0],
+            ['周回顾模板：复盘让你更快成长', 'riji-zhouhuigu-moban', '一周过完不回顾，等于白过——5 个问题帮你复盘。', '<h2>为什么要周回顾</h2><p>忙碌一周后不总结，经验就散落了。周回顾把<strong>经历变成经验</strong>。</p><h2>五个问题</h2><ol><li>本周完成了什么？</li><li>哪些做得好？</li><li>哪些可以改进？</li><li>学到了什么？</li><li>下周最重要的 3 件事是什么？</li></ol><p>每周日晚上花 15 分钟回答，坚持一个月，你会看到变化。</p>', '日记', ['复盘', '模板'], 'cover-diary.jpg', 0, 1, 1],
+            ['情绪日记：记录与觉察自己的内心', 'riji-qingxu-riji', '写下来本身就是一种疗愈——情绪日记帮你理解自己。', '<h2>什么是情绪日记</h2><p>不需要文采，只是<strong>如实记录</strong>：发生了什么、我感受到了什么、身体哪里不舒服。</p><h2>写法</h2><pre>事件：xxx\n情绪：焦虑/愤怒/失落...\n身体反应：胸闷/手心出汗\n想法：我觉得 xxx\n\n问自己：这个想法 100% 是真的吗？</pre><p>写完后你会发现，<strong>命名情绪</strong>本身就能降低它的强度。</p>', '日记', ['复盘', '灵感'], 'cover-diary.jpg', 0, 0, 0],
+            ['旅行日记：把路上的故事留下来', 'riji-lvxing-riji', '照片会忘，文字不会——旅行日记让每段旅程都有迹可循。', '<h2>为什么要写</h2><p>旅行回来照片堆在相册里，但<strong>当时的感受</strong>只有文字能留住。</p><h2>记录要点</h2><ul><li><strong>当天就写</strong>：哪怕只写 3 句话。</li><li><strong>写感受</strong>而非攻略：攻略网上有，感受只有你有。</li><li><strong>附照片</strong>：一图胜千言，一话胜千图。</li></ul><p>用云笔记建一个“旅行”分类，每次出行一篇，多年后翻看是一笔巨大财富。</p>', '日记', ['灵感', '归档'], 'cover-diary.jpg', 0, 0, 1],
         ];
 
         foreach ($postData as $i => [$title, $url, $excerpt, $content, $cat, $tagNames, $cover, $slider, $featured, $recommended]) {
