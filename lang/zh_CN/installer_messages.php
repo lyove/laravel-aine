@@ -152,8 +152,11 @@ return [
                     'queue_placeholder' => '队列驱动程序',
                     'redis_label' => 'Redis 驱动程序',
                     'redis_host' => 'Redis 主机',
+                    'redis_host_placeholder' => '127.0.0.1',
                     'redis_password' => 'Redis 密码',
+                    'redis_password_placeholder' => '无密码则留空',
                     'redis_port' => 'Redis 端口',
+                    'redis_port_placeholder' => '6379',
 
                     'mail_label' => '邮件',
                     'mail_driver_label' => '邮件驱动程序',
@@ -173,15 +176,17 @@ return [
                     'mail_encryption_placeholder' => '邮件加密',
                     'mail_optional_hint' => '邮件配置为可选项。保持 "Log" 即可跳过 SMTP 设置，之后可在 .env 中配置',
                     'mail_from_address_label' => '发件地址',
+                    'mail_from_address_placeholder' => 'noreply@example.com',
                     'mail_from_name_label' => '发件人名称',
+                    'mail_from_name_placeholder' => 'Aine',
 
                     'pusher_label' => '推送',
                     'pusher_app_id_label' => 'Pusher 应用程序 Id',
-                    'pusher_app_id_palceholder' => 'Pusher 应用程序 Id',
+                    'pusher_app_id_placeholder' => 'Pusher 应用程序 Id',
                     'pusher_app_key_label' => 'Pusher 应用程序 Key',
-                    'pusher_app_key_palceholder' => 'Pusher 应用程序 Key',
+                    'pusher_app_key_placeholder' => 'Pusher 应用程序 Key',
                     'pusher_app_secret_label' => 'Pusher 应用程序 Secret',
-                    'pusher_app_secret_palceholder' => 'Pusher 应用程序 Secret',
+                    'pusher_app_secret_placeholder' => 'Pusher 应用程序 Secret',
 
 
                     'other_label' => '其他',

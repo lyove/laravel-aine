@@ -153,8 +153,11 @@ return [
                     'queue_placeholder' => 'Queue Driver',
                     'redis_label' => 'Redis Driver',
                     'redis_host' => 'Redis Host',
+                    'redis_host_placeholder' => '127.0.0.1',
                     'redis_password' => 'Redis Password',
+                    'redis_password_placeholder' => 'Leave blank if none',
                     'redis_port' => 'Redis Port',
+                    'redis_port_placeholder' => '6379',
 
                     'mail_label' => 'Mail',
                     'mail_driver_label' => 'Mail Driver',
@@ -174,15 +177,17 @@ return [
                     'mail_encryption_placeholder' => 'Mail Encryption',
                     'mail_optional_hint' => 'Mail configuration is optional. Leave as "Log" to skip SMTP setup — you can configure it later in .env',
                     'mail_from_address_label' => 'Mail From Address',
+                    'mail_from_address_placeholder' => 'noreply@example.com',
                     'mail_from_name_label' => 'Mail From Name',
+                    'mail_from_name_placeholder' => 'Aine',
 
                     'pusher_label' => 'Pusher',
                     'pusher_app_id_label' => 'Pusher App Id',
-                    'pusher_app_id_palceholder' => 'Pusher App Id',
+                    'pusher_app_id_placeholder' => 'Pusher App Id',
                     'pusher_app_key_label' => 'Pusher App Key',
-                    'pusher_app_key_palceholder' => 'Pusher App Key',
+                    'pusher_app_key_placeholder' => 'Pusher App Key',
                     'pusher_app_secret_label' => 'Pusher App Secret',
-                    'pusher_app_secret_palceholder' => 'Pusher App Secret',
+                    'pusher_app_secret_placeholder' => 'Pusher App Secret',
 
 
                     'other_label' => 'Other',
