@@ -1108,9 +1108,6 @@ export default {
                 collection: null,
                 type: 1,
             };
-            // Reset the wizard back to the type-selection step by default
-            this.wizardStep = 1;
-            this.selectedFieldType = null;
         },
 
         sortFields() {
