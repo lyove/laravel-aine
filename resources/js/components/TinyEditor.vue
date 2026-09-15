@@ -24,7 +24,6 @@
                     ref="ssmlEditorRef"
                     v-model="ssmlModel"
                     :placeholder="__('Enter speech synthesis text here. Select text and right-click to add phoneme/prosody/say-as annotations...')"
-                    min-height="260px"
                 />
             </template>
             <template #footer>

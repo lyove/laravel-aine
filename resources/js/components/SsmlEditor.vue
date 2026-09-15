@@ -3,8 +3,7 @@
     <div v-if="html" ref="htmlHost" class="ssml-editor-html" v-html="modelValue"></div>
 
     <!-- Model mode: single SSML model, editable or read-only -->
-    <div v-else ref="host" class="ssml-editor" :class="{ 'ssml-editor--readonly': readOnly }"
-        :style="{ minHeight: minHeight }"></div>
+    <div v-else ref="host" class="ssml-editor" :class="{ 'ssml-editor--readonly': readOnly }" :style="{ minHeight: minHeight }"></div>
 </template>
 
 <script>
@@ -34,7 +33,6 @@ export default {
         },
         minHeight: {
             type: String,
-            default: "260px",
         },
         className: {
             type: String,
@@ -135,7 +133,9 @@ export default {
         async renderHtmlBlocks() {
             this.destroyHtmlBlocks();
 
-            if (!this.$refs.htmlHost) return;
+            if (!this.$refs.htmlHost) {
+                return;
+            }
 
             const blocks = this.$refs.htmlHost.querySelectorAll(".ssml-block");
             if (blocks.length === 0) {
@@ -311,12 +311,6 @@ export default {
 .ssml-editor {
     width: 100%;
     box-sizing: border-box;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.375rem;
-    padding: 6px;
-    background: #fff;
-    overflow-y: auto;
-    max-height: 500px;
 }
 
 .ssml-editor :deep(.se-editor) {

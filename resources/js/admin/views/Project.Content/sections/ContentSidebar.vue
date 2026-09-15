@@ -1,12 +1,12 @@
 <template>
     <div class="admin__project-content-sidebar w-full p-4 bg-white">
         <div class="mb-4 border-b border-gray-100">
-            <h4 class="mb-2 p-2 font-bold text-lg flex justify-between items-center h-10" v-if="!openSearchInput">
-                <div>{{ __('Content') }}</div>
-                <div>
-                    <a class="text-sm text-blue-500 p-1 px-3 cursor-pointer rounded-md hover:bg-gray-100" @click="openSearchInput = true"><i class="fas fa-search"></i></a>
-                </div>
-            </h4>
+            <div class="mb-2 p-2 text-lg flex justify-between items-center h-10" v-if="!openSearchInput">
+                <h4>{{ __('Content') }}</h4>
+                <span class="text-sm text-blue-500 p-1 px-3 cursor-pointer rounded-md hover:bg-gray-100" @click="openSearchInput = true">
+                    <i class="fas fa-search"></i>
+                </span>
+            </div>
 
             <div v-if="openSearchInput" class="mb-2 relative flex w-full flex-wrap items-stretch mb-2 h-10">
                 <span class="h-full leading-snug font-normal absolute text-center text-gray-400 absolute bg-transparent rounded-md text-base items-center justify-center w-8 pl-3 py-3">

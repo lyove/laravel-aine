@@ -1,28 +1,26 @@
 <template>
     <div class="admin__project-collection-sidebar p-4 bg-white">
         <div class="mb-4 border-b border-gray-100">
-            <h4
-                class="mb-2 p-2 font-bold text-lg flex justify-between items-center h-10"
+            <div
+                class="mb-2 p-2 text-lg flex justify-between items-center h-10"
                 v-if="!openSearchInput"
             >
-                <div>{{ __('Collections') }}</div>
-                <div>
-                    <a
+                <div class="flex">
+                    <h4 class="mr-1">{{ __('Collections') }}</h4>
+                    <span
                         class="text-sm text-blue-500 p-1 px-3 cursor-pointer rounded-md hover:bg-gray-100 whitespace-nowrap"
                         @click="openNewCollectionModal = true"
                     >
                         {{ __('+ Add New') }}
-                    </a>
+                    </span>
                 </div>
-                <div>
-                    <a
-                        class="text-sm text-blue-500 p-1 px-3 cursor-pointer rounded-md hover:bg-gray-100"
-                        @click="openSearchInput = true"
-                    >
-                        <i class="fas fa-search"></i>
-                    </a>
-                </div>
-            </h4>
+                <span
+                    class="text-sm text-blue-500 p-1 px-3 cursor-pointer rounded-md hover:bg-gray-100"
+                    @click="openSearchInput = true"
+                >
+                    <i class="fas fa-search"></i>
+                </span>
+            </div>
 
             <div
                 v-if="openSearchInput"

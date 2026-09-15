@@ -62,7 +62,9 @@
                     <transition-group type="transition" class="_trans-group" :css="false">
                         <div class="w-full mb-3" v-for="field in collection.fields" :key="field.id">
                             <div class="flex items-center w-full bg-white rounded-md p-4 shadow-sm">
-                                <i class="fas fa-grip-vertical mr-3 text-gray-500 an__cursor-move handle"></i>
+                                <span class="inline-block mr-3 text-gray-500 an__cursor-move">
+                                    <i class="fas fa-grip-vertical"></i>
+                                </span>
                                 <div :class="fieldDetails[field.type].bg" class="mr-4 text-gray-100 rounded-md text-xl items-center text-center flex field_icon_xl">
                                     <i :class="fieldDetails[field.type].icon" class="w-full"></i>
                                 </div>
@@ -70,17 +72,6 @@
                                     <div class="w-full flex items-center justify-between">
                                         <div class="text-base truncate">
                                             {{ field.label }}
-                                        </div>
-                                        <div class="flex items-center gap-1.5 shrink-0">
-                                            <a
-                                                @click="openNewFieldModal(field.type, true, field)"
-                                                class="inline-block text-white text-sm rounded-md bg-indigo-500 px-3 cursor-pointer hover:bg-indigo-600 whitespace-nowrap"
-                                            >
-                                                <i class="fa fa-edit text-xs"></i>
-                                            </a>
-                                            <a @click="deleteField(field)" class="inline-block text-white text-sm rounded-md bg-red-500 px-3 cursor-pointer hover:bg-red-600 whitespace-nowrap">
-                                                <i class="fa fa-trash-alt text-xs"></i>
-                                            </a>
                                         </div>
                                     </div>
                                     <div class="flex items-center space-x-1 mt-1">
@@ -118,6 +109,17 @@
                                             {{ __('hidden in api') }}
                                         </span>
                                     </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <a
+                                        @click="openNewFieldModal(field.type, true, field)"
+                                        class="inline-block text-white text-sm rounded-md bg-indigo-500 px-3 cursor-pointer hover:bg-indigo-600 whitespace-nowrap"
+                                    >
+                                        <i class="fa fa-edit text-xs"></i>
+                                    </a>
+                                    <a @click="deleteField(field)" class="inline-block text-white text-sm rounded-md bg-red-500 px-3 cursor-pointer hover:bg-red-600 whitespace-nowrap">
+                                        <i class="fa fa-trash-alt text-xs"></i>
+                                    </a>
                                 </div>
                             </div>
                         </div>
