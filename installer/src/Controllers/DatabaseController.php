@@ -3,12 +3,9 @@
 namespace Aine\Installer\Controllers;
 
 use App\Models\Setting;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Routing\Controller;
 use Aine\Installer\Helpers\DatabaseManager;
-use Spatie\Permission\Models\Role;
 
 class DatabaseController extends Controller
 {
@@ -38,7 +35,14 @@ class DatabaseController extends Controller
             return redirect()->route('LaravelInstaller::environmentWizard');
         }
 
-        $response = $this->databaseManager->migrateAndSeed();
+        $admin = $request->session()->get('installer_admin');
+
+        if (empty($admin['email'])) {
+            return redirect()->route('LaravelInstaller::environmentWizard')
+                ->withErrors(['admin_email' => trans('installer_messages.confirm.admin_email_missing')]);
+        }
+
+        $response = $this->databaseManager->migrateAndSeed($admin);
 
         if (($response['status'] ?? null) === 'error') {
             return redirect()->route('LaravelInstaller::environment')
@@ -46,32 +50,7 @@ class DatabaseController extends Controller
                 ->withInput();
         }
 
-        $admin = $request->session()->pull('installer_admin');
-
-        if (empty($admin['email'])) {
-            return redirect()->route('LaravelInstaller::environmentWizard')
-                ->withErrors(['admin_email' => trans('installer_messages.confirm.admin_email_missing')]);
-        }
-
-        $user = User::firstOrCreate(
-            ['email' => $admin['email']],
-            [
-                'name' => $admin['name'] ?? '',
-                'password' => Hash::make($admin['password']),
-            ]
-        );
-
-        $user->name = $admin['name'] ?? $user->name;
-        $user->password = Hash::make($admin['password']);
-        $user->email_verified_at = now();
-        $user->save();
-
-        $role = Role::firstOrCreate(['name' => 'super_admin']);
-        if (! $user->hasRole('super_admin')) {
-            $user->assignRole($role);
-        }
-
-        Role::firstOrCreate(['name' => 'user']);
+        $request->session()->pull('installer_admin');
 
         $setting = Setting::first();
         if (! $setting) {

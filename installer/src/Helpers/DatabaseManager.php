@@ -2,11 +2,14 @@
 
 namespace Aine\Installer\Helpers;
 
+use App\Models\User;
 use Exception;
 use Illuminate\Database\SQLiteConnection;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 class DatabaseManager
@@ -14,28 +17,30 @@ class DatabaseManager
     /**
      * Migrate and seed the database.
      *
+     * @param  array|null  $admin  Admin credentials from the wizard form
      * @return array
      */
-    public function migrateAndSeed()
+    public function migrateAndSeed(?array $admin = null)
     {
         $outputLog = new BufferedOutput;
 
         $this->sqlite($outputLog);
 
-        return $this->migrate($outputLog);
+        return $this->migrate($outputLog, $admin);
     }
 
     /**
      * Run the migration and call the seeder.
      *
      * @param \Symfony\Component\Console\Output\BufferedOutput $outputLog
+     * @param array|null  $admin  Admin credentials from the wizard form
      * @return array
      */
-    private function migrate(BufferedOutput $outputLog)
+    private function migrate(BufferedOutput $outputLog, ?array $admin = null)
     {
         try {
             Artisan::call('migrate', ['--force'=> true], $outputLog);
-            
+
             try {
                 Artisan::call('storage:link');
             } catch (\Throwable $e) {
@@ -59,6 +64,28 @@ class DatabaseManager
                 $outputLog->write('storage:link skipped: public/storage symlink could not be created — the /storage fallback route will serve media files.', 1);
             }
 
+            if ($admin && ! empty($admin['email'])) {
+                $user = User::firstOrCreate(
+                    ['email' => $admin['email']],
+                    [
+                        'name' => $admin['name'] ?? '',
+                        'password' => Hash::make($admin['password']),
+                    ]
+                );
+
+                $user->name = $admin['name'] ?? $user->name;
+                $user->password = Hash::make($admin['password']);
+                $user->email_verified_at = now();
+                $user->save();
+
+                $role = Role::firstOrCreate(['name' => 'super_admin']);
+                if (! $user->hasRole('super_admin')) {
+                    $user->assignRole($role);
+                }
+
+                Role::firstOrCreate(['name' => 'user']);
+            }
+
             $other_commands = config('installer.artisan_command');
             if (!empty($other_commands)) {
                 config(['installer.seed_demo_skip_admin' => true]);
@@ -67,12 +94,6 @@ class DatabaseManager
                 }
             }
 
-            // Normalize permissions on the whole public storage tree created
-            // while seeding. The process umask often leaves directories at
-            // 700, which makes web servers / PHP-FPM running under another
-            // user return 403/404 for media and thumbnails. Normalize so
-            // every file and directory under storage/app/public is servable
-            // right after install, without any manual chmod.
             $publicRoot = storage_path('app/public');
             if (is_dir($publicRoot)) {
                 $iterator = new \RecursiveIteratorIterator(

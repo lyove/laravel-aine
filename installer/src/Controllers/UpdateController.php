@@ -42,9 +42,6 @@ class UpdateController extends Controller
     {
         $databaseManager = new DatabaseManager;
 
-        // Updates must never re-seed demo data: the seeder rebuilds the
-        // demo projects from scratch (deleting content/media/collections)
-        // and would silently wipe any changes made in them since install.
         config(['installer.artisan_command' => []]);
 
         $response = $databaseManager->migrateAndSeed();
@@ -66,8 +63,6 @@ class UpdateController extends Controller
      */
     public function finish(InstalledFileManager $fileManager)
     {
-        // This route lives outside the 'update' middleware group (the marker
-        // is written after migrations run), so re-check the toggle here.
         if (! filter_var(config('installer.updaterEnabled'), FILTER_VALIDATE_BOOLEAN)) {
             abort(404);
         }
