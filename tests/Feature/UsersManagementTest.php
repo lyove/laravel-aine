@@ -41,7 +41,7 @@ class UsersManagementTest extends TestCase
         $this->actingAs($this->plainUser);
 
         $this->getJson('/admin-api/users')->assertStatus(403);
-        $this->postJson('/admin-api/users', ['name' => 'X', 'email' => 'x@test.local', 'password' => 'password', 'role' => 'user'])->assertStatus(403);
+        $this->postJson('/admin-api/users', ['name' => 'X', 'email' => 'x@test.local', 'password' => 'StrongPass1234!', 'role' => 'user'])->assertStatus(403);
         $this->postJson('/admin-api/users/1', ['name' => 'X', 'email' => 'x@test.local', 'role' => 'user'])->assertStatus(403);
         $this->deleteJson('/admin-api/users/1')->assertStatus(403);
     }
@@ -79,7 +79,7 @@ class UsersManagementTest extends TestCase
         $this->postJson('/admin-api/users', [
             'name' => 'New Person',
             'email' => 'new@test.local',
-            'password' => 'password',
+            'password' => 'StrongPass1234!',
             'role' => 'user',
         ])->assertStatus(201)
             ->assertJsonPath('data.name', 'New Person')
@@ -91,7 +91,7 @@ class UsersManagementTest extends TestCase
         $this->postJson('/admin-api/users', [
             'name' => 'Second Boss',
             'email' => 'boss2@test.local',
-            'password' => 'password',
+            'password' => 'StrongPass1234!',
             'role' => 'super_admin',
         ])->assertStatus(201);
         $this->assertTrue(User::where('email', 'boss2@test.local')->firstOrFail()->hasRole('super_admin'));
@@ -104,7 +104,7 @@ class UsersManagementTest extends TestCase
         $this->postJson('/admin-api/users', [
             'name' => 'Bad',
             'email' => 'bad@test.local',
-            'password' => 'password',
+            'password' => 'StrongPass1234!',
             'role' => 'owner',
         ])->assertStatus(422);
     }
@@ -143,11 +143,11 @@ class UsersManagementTest extends TestCase
         $this->postJson("/admin-api/users/{$this->plainUser->id}", [
             'name' => 'Plain',
             'email' => 'plain@test.local',
-            'password' => 'newpass123',
-            'password_confirmation' => 'newpass123',
+            'password' => 'StrongPass1234!',
+            'password_confirmation' => 'StrongPass1234!',
             'role' => 'user',
         ])->assertOk();
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('newpass123', $this->plainUser->fresh()->password));
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('StrongPass1234!', $this->plainUser->fresh()->password));
     }
 
     public function test_cannot_delete_self(): void
@@ -362,7 +362,7 @@ class UsersManagementTest extends TestCase
         $this->postJson("/admin-api/users/{$this->plainUser->id}", [
             'name' => 'Plain',
             'email' => 'plain@test.local',
-            'password' => 'newpass123',
+            'password' => 'StrongPass1234!',
             'password_confirmation' => 'different',
             'role' => 'user',
         ])->assertStatus(422);
@@ -370,10 +370,10 @@ class UsersManagementTest extends TestCase
         $this->postJson("/admin-api/users/{$this->plainUser->id}", [
             'name' => 'Plain',
             'email' => 'plain@test.local',
-            'password' => 'newpass123',
-            'password_confirmation' => 'newpass123',
+            'password' => 'StrongPass1234!',
+            'password_confirmation' => 'StrongPass1234!',
             'role' => 'user',
         ])->assertOk();
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('newpass123', $this->plainUser->fresh()->password));
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('StrongPass1234!', $this->plainUser->fresh()->password));
     }
 }

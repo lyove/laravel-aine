@@ -37,13 +37,16 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         channels: __DIR__.'/../routes/channels.php',
-        then: function () {
-            // All web routes are registered in RouteServiceProvider::boot() in a
-            // fixed order (admin -> frontend -> auth) so the configurable admin
-            // routes match before the frontend catch-all.
-        },
+        then: function () {},
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $trustedProxies = env('TRUSTED_PROXIES');
+        $middleware->trustProxies(
+            at: $trustedProxies
+                ? array_map('trim', explode(',', (string) $trustedProxies))
+                : null,
+        );
+
         $middleware->prepend(\App\Http\Middleware\ConvertDotNotationQueryParams::class);
         $middleware->prepend(\App\Http\Middleware\RedirectIfNotInstalled::class);
         $middleware->prepend(\App\Http\Middleware\DynamicCors::class);
@@ -77,6 +80,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'validate.project.access' => \App\Http\Middleware\ValidateProjectAccess::class,
             'dynamic.cors' => \App\Http\Middleware\DynamicCors::class,
             'project.readonly' => \App\Http\Middleware\BlockInactiveProjectWrites::class,
+            'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
+            'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
         ]);
 
         $middleware->redirectUsersTo(\App\Support\AdminPath::prefix());
@@ -144,6 +149,13 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'success' => false, 'code' => 403,
                     'message' => 'Forbidden', 'data' => null,
+                ], 403);
+            }
+
+            if ($exception instanceof \Laravel\Sanctum\Exceptions\MissingAbilityException) {
+                return response()->json([
+                    'success' => false, 'code' => 403,
+                    'message' => 'Token lacks the required ability for this action.', 'data' => null,
                 ], 403);
             }
 

@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role;
 
 /**
@@ -130,7 +131,7 @@ class UsersManagementController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', Password::min(14)->mixedCase()->numbers()->symbols()],
             'role' => ['required', 'string', 'in:' . implode(',', self::ROLES)],
         ]);
 
@@ -157,7 +158,7 @@ class UsersManagementController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'password' => ['nullable', 'string', Password::min(14)->mixedCase()->numbers()->symbols(), 'confirmed'],
             'role' => ['required', 'string', 'in:' . implode(',', self::ROLES)],
         ]);
 

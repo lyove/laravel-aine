@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Aine\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,12 @@ use Illuminate\Support\Str;
  */
 class AuthController extends Controller
 {
+    /** Account-level lockout: max failed attempts per account (across all IPs). */
+    private const ACCOUNT_MAX_ATTEMPTS = 10;
+
+    /** Account-level lockout decay in seconds. */
+    private const ACCOUNT_DECAY_SECONDS = 600;
+
     public function me(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -61,11 +68,21 @@ class AuthController extends Controller
             return $rateLimited;
         }
 
+        if ($accountLocked = $this->ensureAccountNotLocked($request)) {
+            return $accountLocked;
+        }
+
         $account = $request->input('account');
         $user = User::where('email', $account)->orWhere('name', $account)->first();
 
         if (! $user || ! Hash::check($request->input('password'), $user->password)) {
             RateLimiter::hit($this->throttleKey($request));
+            RateLimiter::hit($this->accountLockoutKey($request), self::ACCOUNT_DECAY_SECONDS);
+
+            AuditLogger::log('failed_login', 'user', $user?->id, $account, [
+                'ip' => $request->ip(),
+                'account_failures' => RateLimiter::attempts($this->accountLockoutKey($request)),
+            ]);
 
             return response()->json([
                 'success' => false,
@@ -90,6 +107,11 @@ class AuthController extends Controller
 
             if (! $valid) {
                 RateLimiter::hit($this->throttleKey($request));
+                RateLimiter::hit($this->accountLockoutKey($request), self::ACCOUNT_DECAY_SECONDS);
+
+                AuditLogger::log('failed_2fa', 'user', $user->id, $user->email, [
+                    'ip' => $request->ip(),
+                ]);
 
                 return response()->json([
                     'success' => false,
@@ -101,6 +123,9 @@ class AuthController extends Controller
         }
 
         RateLimiter::clear($this->throttleKey($request));
+        RateLimiter::clear($this->accountLockoutKey($request));
+
+        AuditLogger::log('login', 'user', $user->id, $user->email, ['ip' => $request->ip()]);
 
         $expiresAt = now()->addDays(30);
         $token = $user->createToken(
@@ -156,5 +181,33 @@ class AuthController extends Controller
     protected function throttleKey(Request $request): string
     {
         return Str::lower((string) $request->input('account')).'|'.$request->ip();
+    }
+
+    /**
+     * Account-level lockout: same account failing from any IP.
+     *
+     * @return JsonResponse|null  A 429 response when locked out, null otherwise.
+     */
+    protected function ensureAccountNotLocked(Request $request): ?JsonResponse
+    {
+        $key = $this->accountLockoutKey($request);
+
+        if (! RateLimiter::tooManyAttempts($key, self::ACCOUNT_MAX_ATTEMPTS)) {
+            return null;
+        }
+
+        $seconds = RateLimiter::availableIn($key);
+
+        return response()->json([
+            'success' => false,
+            'code' => 429,
+            'message' => '账号尝试次数过多，请在 '.ceil($seconds / 60).' 分钟后重试。',
+            'data' => null,
+        ], 429);
+    }
+
+    protected function accountLockoutKey(Request $request): string
+    {
+        return 'login:account:'.Str::lower((string) $request->input('account'));
     }
 }

@@ -36,6 +36,9 @@ Route::middleware(['web', 'auth:web,sanctum'])->group(function () {
     Route::get('/me/favorites', [ProfileController::class, 'favorites']);
     Route::get('/me/likes', [ProfileController::class, 'likes']);
     Route::get('/me/comments', [ProfileController::class, 'comments']);
+    Route::get('/me/tokens', [ProfileController::class, 'tokens']);
+    Route::post('/me/tokens/revoke-others', [ProfileController::class, 'revokeOtherTokens'])->middleware('throttle:api-write');
+    Route::delete('/me/tokens/{token}', [ProfileController::class, 'revokeToken'])->middleware('throttle:api-write');
 });
 
 // ============================================
@@ -59,8 +62,8 @@ Route::middleware(['verify.domain.whitelist'])->prefix('project')->group(functio
     Route::get('/{project_identifier}/media/name/{media_name}', [MediaController::class, 'getMediaByName']);
     Route::get('/{project_identifier}/media/{media_id}', [MediaController::class, 'getMediaByID']);
     Route::get('/{project_identifier}/media', [MediaController::class, 'getMediaList']);
-    Route::delete('/{project_identifier}/media/{media_id}', [MediaController::class, 'deleteMedia'])->middleware('auth:sanctum', 'throttle:api-write');
-    Route::post('/{project_identifier}/media/upload', [MediaController::class, 'uploadMedia'])->middleware('auth:sanctum', 'throttle:api-write');
+    Route::delete('/{project_identifier}/media/{media_id}', [MediaController::class, 'deleteMedia'])->middleware(['auth:sanctum', 'throttle:api-write', 'abilities:delete']);
+    Route::post('/{project_identifier}/media/upload', [MediaController::class, 'uploadMedia'])->middleware(['auth:sanctum', 'throttle:api-write', 'abilities:create']);
     Route::get('/{project_identifier}/{slug}/slug/{slug_value}', [ContentController::class, 'getProjectContentBySlug']);
     Route::get('/{project_identifier}/{slug}/slug/{slug_value}/{related_slug}', [ContentController::class, 'getProjectContentBySlugRelation']);
     Route::get('/{project_identifier}/{slug}/{slug_id}/{related_slug}', [ContentController::class, 'getProjectContentByRelation']);
@@ -71,9 +74,9 @@ Route::middleware(['verify.domain.whitelist'])->prefix('project')->group(functio
     Route::get('/{project_identifier}/{slug}/{slug_id}', [ContentController::class, 'getProjectContentByID']);
     Route::get('/{project_identifier}/{slug}', [ContentController::class, 'getContentList']);
     Route::get('/{project_identifier}', [ProjectsController::class, 'getProject']);
-    Route::post('/{project_identifier}/{slug}', [ContentController::class, 'createContent'])->middleware('auth:sanctum', 'throttle:api-write');
-    Route::post('/{project_identifier}/{slug}/update/{slug_id}', [ContentController::class, 'updateContent'])->middleware('auth:sanctum', 'throttle:api-write');
-    Route::delete('/{project_identifier}/{slug}/{slug_id}', [ContentController::class, 'deleteContent'])->middleware('auth:sanctum', 'throttle:api-write');
+    Route::post('/{project_identifier}/{slug}', [ContentController::class, 'createContent'])->middleware(['auth:sanctum', 'throttle:api-write', 'abilities:create']);
+    Route::post('/{project_identifier}/{slug}/update/{slug_id}', [ContentController::class, 'updateContent'])->middleware(['auth:sanctum', 'throttle:api-write', 'abilities:update']);
+    Route::delete('/{project_identifier}/{slug}/{slug_id}', [ContentController::class, 'deleteContent'])->middleware(['auth:sanctum', 'throttle:api-write', 'abilities:delete']);
 });
 
 // ============================================
@@ -83,21 +86,24 @@ Route::middleware(['verify.domain.whitelist'])->prefix('project')->group(functio
 //           Prevents unauthorized cross-domain access from any website
 // ============================================
 Route::middleware(['validate.project.access', 'auth:sanctum'])->group(function () {
-    Route::get('/{uuid}/project-media/name/{media_name}', [MediaController::class, 'getMediaByName']);
-    Route::get('/{uuid}/project-media/{media_id}', [MediaController::class, 'getMediaByID']);
-    Route::get('/{uuid}/project-media', [MediaController::class, 'getMediaList']);
-    Route::delete('/{uuid}/project-media/{media_id}', [MediaController::class, 'deleteMedia'])->middleware('throttle:api-write');
-    Route::post('/{uuid}/project-media/upload', [MediaController::class, 'uploadMedia'])->middleware('throttle:api-write');
-    Route::get('/{uuid}/{slug}/slug/{slug_value}', [ContentController::class, 'getProjectContentBySlug']);
-    Route::get('/{uuid}/{slug}/slug/{slug_value}/{related_slug}', [ContentController::class, 'getProjectContentBySlugRelation']);
-    Route::get('/{uuid}/{slug}/{slug_id}/{related_slug}', [ContentController::class, 'getProjectContentByRelation']);
-    Route::get('/{uuid}/{slug}/search', [ContentController::class, 'searchContent'])->middleware('throttle:api-search');
-    Route::get('/{uuid}/{slug}/{slug_id}', [ContentController::class, 'getProjectContentByID']);
-    Route::get('/{uuid}/{slug}', [ContentController::class, 'getContentList']);
-    Route::get('/{uuid}', [ProjectsController::class, 'getProject']);
-    Route::post('/{uuid}/{slug}', [ContentController::class, 'createContent'])->middleware('throttle:api-write');
-    Route::post('/{uuid}/{slug}/update/{slug_id}', [ContentController::class, 'updateContent'])->middleware('throttle:api-write');
-    Route::delete('/{uuid}/{slug}/{slug_id}', [ContentController::class, 'deleteContent'])->middleware('throttle:api-write');
+    Route::middleware('abilities:read')->group(function () {
+        Route::get('/{uuid}/project-media/name/{media_name}', [MediaController::class, 'getMediaByName']);
+        Route::get('/{uuid}/project-media/{media_id}', [MediaController::class, 'getMediaByID']);
+        Route::get('/{uuid}/project-media', [MediaController::class, 'getMediaList']);
+        Route::get('/{uuid}/{slug}/slug/{slug_value}', [ContentController::class, 'getProjectContentBySlug']);
+        Route::get('/{uuid}/{slug}/slug/{slug_value}/{related_slug}', [ContentController::class, 'getProjectContentBySlugRelation']);
+        Route::get('/{uuid}/{slug}/{slug_id}/{related_slug}', [ContentController::class, 'getProjectContentByRelation']);
+        Route::get('/{uuid}/{slug}/search', [ContentController::class, 'searchContent'])->middleware('throttle:api-search');
+        Route::get('/{uuid}/{slug}/{slug_id}', [ContentController::class, 'getProjectContentByID']);
+        Route::get('/{uuid}/{slug}', [ContentController::class, 'getContentList']);
+        Route::get('/{uuid}', [ProjectsController::class, 'getProject']);
+    });
+
+    Route::post('/{uuid}/{slug}', [ContentController::class, 'createContent'])->middleware(['throttle:api-write', 'abilities:create']);
+    Route::post('/{uuid}/{slug}/update/{slug_id}', [ContentController::class, 'updateContent'])->middleware(['throttle:api-write', 'abilities:update']);
+    Route::delete('/{uuid}/{slug}/{slug_id}', [ContentController::class, 'deleteContent'])->middleware(['throttle:api-write', 'abilities:delete']);
+    Route::post('/{uuid}/project-media/upload', [MediaController::class, 'uploadMedia'])->middleware(['throttle:api-write', 'abilities:create']);
+    Route::delete('/{uuid}/project-media/{media_id}', [MediaController::class, 'deleteMedia'])->middleware(['throttle:api-write', 'abilities:delete']);
 });
 
 Route::options('{any}', function () {

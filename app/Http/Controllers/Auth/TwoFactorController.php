@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Aine\TwoFactor;
+use App\Aine\AuditLogger;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,6 +57,8 @@ class TwoFactorController extends Controller
         $user->two_factor_confirmed_at = now();
         $user->save();
 
+        AuditLogger::log('update', 'user', $user->id, $user->email, ['field' => '2fa', 'action' => 'enable']);
+
         return response()->json(['recovery_codes' => $codes], 200);
     }
 
@@ -76,6 +79,8 @@ class TwoFactorController extends Controller
 
         $user->disableTwoFactor();
 
+        AuditLogger::log('update', 'user', $user->id, $user->email, ['field' => '2fa', 'action' => 'disable']);
+
         return response()->json(['message' => 'Two factor authentication has been disabled.'], 200);
     }
 
@@ -93,6 +98,8 @@ class TwoFactorController extends Controller
         $codes = TwoFactor::generateRecoveryCodes();
         $user->setTwoFactorRecoveryCodes($codes);
         $user->save();
+
+        AuditLogger::log('update', 'user', $user->id, $user->email, ['field' => '2fa', 'action' => 'recovery-codes']);
 
         return response()->json(['recovery_codes' => $codes], 200);
     }

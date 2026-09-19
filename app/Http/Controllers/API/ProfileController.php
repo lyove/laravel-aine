@@ -9,10 +9,12 @@ use App\Models\ContentMeta;
 use App\Models\Favorite;
 use App\Models\Like;
 use App\Models\Project;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Collection as BaseCollection;
+use Laravel\Sanctum\PersonalAccessToken;
 
 /**
  * Frontend user profile: own information, avatar, and the user's
@@ -49,7 +51,7 @@ class ProfileController extends Controller
     {
         $request->validate([
             'current_password' => 'required|string',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'string', \Illuminate\Validation\Rules\Password::default(), 'confirmed'],
         ]);
 
         $user = $request->user();
@@ -132,6 +134,77 @@ class ProfileController extends Controller
             ->all();
 
         return $this->ok($comments);
+    }
+
+    /**
+     * List the user's active API tokens (devices) — the current one first.
+     */
+    public function tokens(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $currentTokenId = $request->user()->currentAccessToken()?->id;
+
+        $tokens = PersonalAccessToken::where('tokenable_id', $user->id)
+            ->where('tokenable_type', User::class)
+            ->orderByDesc('id')
+            ->get()
+            ->map(function (PersonalAccessToken $token) use ($currentTokenId) {
+                return [
+                    'id' => $token->id,
+                    'name' => $token->name,
+                    'abilities' => $token->abilities ?? [],
+                    'last_used_at' => $token->last_used_at?->toDateTimeString(),
+                    'created_at' => $token->created_at?->toDateTimeString(),
+                    'expires_at' => method_exists($token, 'expires_at') ? $token->expires_at?->toDateTimeString() : null,
+                    'current' => (int) $token->id === (int) $currentTokenId,
+                ];
+            })
+            ->values();
+
+        return $this->ok(['tokens' => $tokens]);
+    }
+
+    /**
+     * Revoke one of the user's tokens by id.
+     */
+    public function revokeToken(Request $request, int $tokenId): JsonResponse
+    {
+        $user = $request->user();
+
+        $token = PersonalAccessToken::where('tokenable_id', $user->id)
+            ->where('tokenable_type', User::class)
+            ->findOrFail($tokenId);
+
+        $isCurrent = $token->id === (int) $request->user()->currentAccessToken()?->id;
+
+        $token->delete();
+
+        return $this->ok([
+            'message' => $isCurrent
+                ? 'The current device has been signed out.'
+                : 'Device has been signed out.',
+            'current' => $isCurrent,
+        ]);
+    }
+
+    /**
+     * Revoke every token except the one currently being used — "sign out
+     * all other devices".
+     */
+    public function revokeOtherTokens(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $currentTokenId = $request->user()->currentAccessToken()?->id;
+
+        $deleted = PersonalAccessToken::where('tokenable_id', $user->id)
+            ->where('tokenable_type', User::class)
+            ->when($currentTokenId, fn ($q) => $q->where('id', '!=', $currentTokenId))
+            ->delete();
+
+        return $this->ok([
+            'message' => "{$deleted} other device(s) have been signed out.",
+            'revoked' => $deleted,
+        ]);
     }
 
     // -----------------------------------------------------------------

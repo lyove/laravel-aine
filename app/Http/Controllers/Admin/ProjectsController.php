@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Laravel\Sanctum\PersonalAccessToken;
 use Spatie\Permission\Models\Role;
 
@@ -543,7 +544,7 @@ class ProjectsController extends Controller
         $request->validate([
             'name' => 'required|max:255',
             'email' => 'required|email|unique:users',
-            'password' => 'required|min:8',
+            'password' => ['required', Password::default()],
         ]);
 
         $role = $request->get('role', ProjectUser::ROLE_EDITOR);
@@ -604,8 +605,12 @@ class ProjectsController extends Controller
 
         $token = $project->createToken(
             $request->get('name'),
-            $request->input('permissions', [])
+            $request->input('permissions', ['read'])
         );
+
+        AuditLogger::log('create', 'token', $token->accessToken->id, $request->get('name'), [
+            'abilities' => $request->input('permissions', ['read']),
+        ], $project->id);
 
         return explode('|', $token->plainTextToken, 2)[1];
     }
@@ -636,6 +641,10 @@ class ProjectsController extends Controller
             'name' => $request->get('name'),
             'abilities' => $request->get('permissions'),
         ]);
+
+        AuditLogger::log('update', 'token', $token_id, $request->get('name'), [
+            'abilities' => $request->get('permissions'),
+        ], $project->id);
     }
 
     /**
@@ -650,7 +659,13 @@ class ProjectsController extends Controller
 
         $this->authorize('updateSettings', $project);
 
+        $token = PersonalAccessToken::where('tokenable_id', $project->id)
+            ->where('tokenable_type', Project::class)
+            ->find($request->get('id'));
+
         $project->tokens()->where('id', $request->get('id'))->delete();
+
+        AuditLogger::log('delete', 'token', $request->get('id'), $token->name ?? null, null, $project->id);
     }
 
     /**

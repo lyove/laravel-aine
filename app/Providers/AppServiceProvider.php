@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
+use Illuminate\Validation\Rules\Password;
 use League\Flysystem\Filesystem;
 use App\Aine\ContentSerializer;
 use App\Filesystem\CosAdapter;
@@ -33,11 +34,13 @@ class AppServiceProvider extends ServiceProvider
     {
         JsonResource::withoutWrapping();
 
-        // Object-storage drivers used when the global Media setting
-        // "Image processing library" is set to a cloud provider. Each is
-        // wrapped in the Laravel FilesystemAdapter so url()/temporaryUrl()
-        // work through the adapter's getUrl()/config. S3 is built into
-        // Laravel and does not need registration here.
+        Password::defaults(function () {
+            return Password::min(12)
+                ->mixedCase()
+                ->numbers()
+                ->symbols();
+        });
+
         Storage::extend('oss', function ($app, array $config) {
             $adapter = new OssAdapter($config);
 

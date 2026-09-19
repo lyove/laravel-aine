@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Aine\AuditLogger;
 use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
@@ -12,6 +13,12 @@ use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
+    /** Account-level lockout: max failed attempts per account (across all IPs). */
+    private const ACCOUNT_MAX_ATTEMPTS = 10;
+
+    /** Account-level lockout decay in seconds. */
+    private const ACCOUNT_DECAY_SECONDS = 600; // 10 minutes
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -49,6 +56,7 @@ class LoginRequest extends FormRequest
     public function authenticate()
     {
         $this->ensureIsNotRateLimited();
+        $this->ensureAccountNotLocked();
 
         $credentials = $this->only('email', 'password');
 
@@ -56,6 +64,12 @@ class LoginRequest extends FormRequest
 
         if (! $user || ! Auth::validate($credentials)) {
             RateLimiter::hit($this->throttleKey());
+            RateLimiter::hit($this->accountLockoutKey(), self::ACCOUNT_DECAY_SECONDS);
+
+            AuditLogger::log('failed_login', 'user', $user?->id, $this->string('email'), [
+                'ip' => $this->ip(),
+                'account_failures' => RateLimiter::attempts($this->accountLockoutKey()),
+            ]);
 
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
@@ -63,6 +77,7 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+        RateLimiter::clear($this->accountLockoutKey());
 
         // Two-factor enabled: hold off authentication until the code is verified.
         if ($user->twoFactorEnabled()) {
@@ -75,7 +90,7 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Ensure the login request is not rate limited.
+     * Ensure the login request is not rate limited per {email, IP}.
      *
      * @return void
      *
@@ -100,12 +115,46 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Get the rate limiting throttle key for the request.
+     * Ensure the account itself is not locked due to cross-IP failed attempts.
+     *
+     * @return void
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    public function ensureAccountNotLocked()
+    {
+        if (! RateLimiter::tooManyAttempts($this->accountLockoutKey(), self::ACCOUNT_MAX_ATTEMPTS)) {
+            return;
+        }
+
+        $seconds = RateLimiter::availableIn($this->accountLockoutKey());
+
+        throw ValidationException::withMessages([
+            'email' => trans('auth.throttle', [
+                'seconds' => $seconds,
+                'minutes' => ceil($seconds / 60),
+            ]),
+        ]);
+    }
+
+    /**
+     * Get the per-request (email + IP) throttle key.
      *
      * @return string
      */
     public function throttleKey()
     {
         return Str::lower($this->input('email')).'|'.$this->ip();
+    }
+
+    /**
+     * Get the account-level lockout key (ignores IP — blocks distributed
+     * brute-force across multiple source IPs targeting the same account).
+     *
+     * @return string
+     */
+    public function accountLockoutKey()
+    {
+        return 'login:account:'.Str::lower($this->input('email'));
     }
 }

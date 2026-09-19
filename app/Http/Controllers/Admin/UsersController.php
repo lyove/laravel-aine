@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use App\Aine\AuditLogger;
 
 class UsersController extends Controller
@@ -68,7 +69,7 @@ class UsersController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $request->validate([
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'string', Password::default(), 'confirmed'],
             // Prevent a hijacked session from changing the password.
             'current_password' => ['required', function ($attribute, $value, $fail) use ($user) {
                 if (! Hash::check($value, $user->password)) {
@@ -100,7 +101,7 @@ class UsersController extends Controller
         $rules = [
             'name' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|string|email|max:255|unique:users,email,'.$user->id,
-            'password' => 'sometimes|required|string|min:8|confirmed',
+            'password' => ['sometimes', 'required', 'string', Password::default(), 'confirmed'],
         ];
 
         // Changing the e-mail or password requires the current password.

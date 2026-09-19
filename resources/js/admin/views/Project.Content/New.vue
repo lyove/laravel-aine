@@ -62,7 +62,7 @@
                                             <div v-for="(input, index) in newData.data[field.name]" :key="index">
                                                 <div class="flex space-between">
                                                     <div class="relative flex w-full flex-wrap items-stretch">
-                                                        <input type="text" v-model="input.value" :placeholder="field.placeholder" class="mb-1" v-forminput />
+                                                        <input type="text" v-model="input.value" :placeholder="placeholderFor(field)" class="mb-1" v-forminput />
                                                     </div>
                                                     <div class="w-auto h-auto text-right" v-if="index !== 0">
                                                         <div
@@ -89,14 +89,14 @@
                                                 v-if="field.slug_field === undefined"
                                                 type="text"
                                                 v-model="newData.data[field.name]"
-                                                :placeholder="field.placeholder"
+                                                :placeholder="placeholderFor(field)"
                                                 v-forminput
                                             />
                                             <input
                                                 v-else
                                                 type="text"
                                                 v-model="newData.data[field.name]"
-                                                :placeholder="field.placeholder"
+                                                :placeholder="placeholderFor(field)"
                                                 v-forminput
                                                 @input="newData.data[field.slug_field] = $slugify(newData.data[field.name])"
                                             />
@@ -107,7 +107,7 @@
                                             <div v-for="(input, index) in newData.data[field.name]" :key="index">
                                                 <div class="flex space-between">
                                                     <div class="relative flex w-full flex-wrap items-stretch">
-                                                        <textarea v-model="input.value" :placeholder="field.placeholder" class="mb-1" v-forminput></textarea>
+                                                        <textarea v-model="input.value" :placeholder="placeholderFor(field)" class="mb-1" v-forminput></textarea>
                                                     </div>
                                                     <div class="w-auto h-auto text-right" v-if="index !== 0">
                                                         <div
@@ -130,13 +130,13 @@
                                             </div>
                                         </div>
                                         <div v-else>
-                                            <textarea v-model="newData.data[field.name]" :placeholder="field.placeholder" v-forminput></textarea>
+                                            <textarea v-model="newData.data[field.name]" :placeholder="placeholderFor(field)" v-forminput></textarea>
                                         </div>
                                     </div>
                                     <div v-if="field.type == 'richtext'" class="w-full relative">
                                         <tiny-editor
                                             :modelValue="newData.data[field.name]"
-                                            :placeholder="field.placeholder"
+                                            :placeholder="placeholderFor(field)"
                                             height="320px"
                                             :editor-id="'tinyEditor_' + field.name"
                                             @update:modelValue="newData.data[field.name] = $event"
@@ -165,7 +165,7 @@
                                                 :readonly="field.options.slug.readonly"
                                                 :disabled="field.options.slug.readonly"
                                                 :class="{ 'cursor-not-allowed': field.options.slug.readonly }"
-                                                :placeholder="field.placeholder"
+                                                :placeholder="placeholderFor(field)"
                                                 v-forminput
                                             />
                                         </div>
@@ -176,7 +176,7 @@
                                                 :readonly="field.options.slug.readonly"
                                                 :disabled="field.options.slug.readonly"
                                                 :class="{ 'cursor-not-allowed': field.options.slug.readonly }"
-                                                :placeholder="field.placeholder"
+                                                :placeholder="placeholderFor(field)"
                                                 v-forminput
                                             />
                                         </div>
@@ -190,7 +190,7 @@
                                                             <span class="inline-flex items-center px-3 rounded-l-sm border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
                                                                 <i class="fa fa-at"></i>
                                                             </span>
-                                                            <input type="email" v-model="input.value" :placeholder="field.placeholder" v-forminput class="rounded-l-none" />
+                                                            <input type="email" v-model="input.value" :placeholder="placeholderFor(field)" v-forminput class="rounded-l-none" />
                                                         </div>
                                                     </div>
                                                     <div class="w-auto h-auto text-right" v-if="index !== 0">
@@ -218,7 +218,7 @@
                                                 <span class="inline-flex items-center px-3 rounded-l-sm border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
                                                     <i class="fa fa-at"></i>
                                                 </span>
-                                                <input type="email" v-model="newData.data[field.name]" :placeholder="field.placeholder" v-forminput class="rounded-l-none" />
+                                                <input type="email" v-model="newData.data[field.name]" :placeholder="placeholderFor(field)" v-forminput class="rounded-l-none" />
                                             </div>
                                         </div>
                                     </div>
@@ -227,7 +227,7 @@
                                             <span class="inline-flex items-center px-3 rounded-l-sm border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm"
                                                 ><i class="fa fa-lock"></i
                                             ></span>
-                                            <input :type="passwordShow[field.name] ? 'text' : 'password'" v-model="newData.data[field.name]" v-forminput class="rounded-l-none" />
+                                            <input :type="passwordShow[field.name] ? 'text' : 'password'" v-model="newData.data[field.name]" :placeholder="placeholderFor(field)" v-forminput class="rounded-l-none" />
                                             <span
                                                 class="inline-flex items-center px-3 rounded-r-sm border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm cursor-pointer"
                                                 @click="showPassword(field.name)"
@@ -248,7 +248,7 @@
                                             <div v-for="(input, index) in newData.data[field.name]" :key="index">
                                                 <div class="flex space-between">
                                                     <div class="relative flex w-full flex-wrap items-stretch mb-1">
-                                                        <input type="number" step="any" v-model="input.value" v-forminput />
+                                                        <input type="number" step="any" v-model="input.value" :placeholder="placeholderFor(field)" v-forminput />
                                                     </div>
                                                     <div class="w-auto h-auto text-right" v-if="index !== 0">
                                                         <div
@@ -271,7 +271,7 @@
                                             </div>
                                         </div>
                                         <div v-else>
-                                            <input type="number" step="any" v-model="newData.data[field.name]" v-forminput />
+                                            <input type="number" step="any" v-model="newData.data[field.name]" :placeholder="placeholderFor(field)" v-forminput />
                                         </div>
                                     </div>
                                     <div class="w-full" v-if="field.type == 'enumeration'">
@@ -338,7 +338,7 @@
                                                                     >
                                                                         <i class="fa fa-calendar-alt"></i>
                                                                     </span>
-                                                                    <input type="text" v-forminput :value="inputValue" @click="togglePopover" />
+                                                                    <input type="text" v-forminput :value="inputValue" :placeholder="placeholderFor(field)" @click="togglePopover" />
                                                                 </div>
                                                             </template>
                                                         </v-date-picker>
@@ -373,7 +373,7 @@
                                                         >
                                                             <i class="fa fa-calendar-alt"></i>
                                                         </span>
-                                                        <input type="text" v-forminput :value="inputValue" @click="togglePopover" />
+                                                        <input type="text" v-forminput :value="inputValue" :placeholder="placeholderFor(field)" @click="togglePopover" />
                                                     </div>
                                                 </template>
                                             </v-date-picker>
@@ -384,7 +384,7 @@
                                             <div v-for="(input, index) in newData.data[field.name]" :key="index">
                                                 <div class="flex space-between">
                                                     <div class="relative flex w-full flex-wrap items-stretch mb-1">
-                                                        <input type="time" v-model="input.value" v-forminput />
+                                                        <input type="time" v-model="input.value" :placeholder="placeholderFor(field)" v-forminput />
                                                     </div>
                                                     <div class="w-auto h-auto text-right" v-if="index !== 0">
                                                         <div
@@ -407,7 +407,7 @@
                                             </div>
                                         </div>
                                         <div v-else>
-                                            <input type="time" v-model="newData.data[field.name]" v-forminput />
+                                            <input type="time" v-model="newData.data[field.name]" :placeholder="placeholderFor(field)" v-forminput />
                                         </div>
                                     </div>
                                     <div v-if="field.type == 'media' && field.options.media !== undefined" class="w-full">
@@ -947,6 +947,16 @@ export default {
 
         getLocale(locale) {
             return localesJson[locale];
+        },
+
+        // When a field has no custom placeholder, fall back to a translated
+        // prompt that names the field itself, so every input still shows a
+        // helpful hint even when the admin left the placeholder blank.
+        placeholderFor(field) {
+            if (field.placeholder) {
+                return field.placeholder;
+            }
+            return __('Enter "{label}"', { label: field.label });
         },
 
         canProject(roles) {

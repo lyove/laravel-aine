@@ -48,6 +48,7 @@ return [
     'Edit',
     'Email',
     'Enter',
+    'Enter "{label}"',
     'Expand',
     'Export',
     'Generate',

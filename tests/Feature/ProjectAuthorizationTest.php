@@ -57,8 +57,8 @@ class ProjectAuthorizationTest extends TestCase
         $response = $this->post('/register', [
             'name' => 'Newbie',
             'email' => 'newbie@test.local',
-            'password' => 'secret-password',
-            'password_confirmation' => 'secret-password',
+            'password' => 'StrongPass1234!',
+            'password_confirmation' => 'StrongPass1234!',
         ]);
 
         $response->assertRedirect();

@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Aine\TwoFactor;
 use App\Models\User;
-use App\Providers\RouteServiceProvider;
+use App\Support\AdminPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Spatie\Permission\Models\Role;
@@ -152,13 +152,19 @@ class TwoFactorTest extends TestCase
 
     public function test_login_without_2fa_redirects_home(): void
     {
+        $user = User::create([
+            'name' => 'Reader',
+            'email' => 'reader@2fa.test',
+            'password' => bcrypt('password'),
+        ]);
+
         $response = $this->post('/login', [
-            'email' => 'admin@2fa.test',
+            'email' => 'reader@2fa.test',
             'password' => 'password',
         ]);
 
-        $response->assertRedirect(RouteServiceProvider::HOME);
-        $this->assertAuthenticatedAs($this->user);
+        $response->assertRedirect('/');
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_login_with_2fa_redirects_to_challenge(): void
@@ -189,7 +195,7 @@ class TwoFactorTest extends TestCase
 
         $response = $this->post('/two-factor-challenge', ['code' => $code]);
 
-        $response->assertRedirect(RouteServiceProvider::HOME);
+        $response->assertRedirect(AdminPath::prefix());
         $this->assertAuthenticatedAs($this->user);
     }
 
@@ -222,7 +228,7 @@ class TwoFactorTest extends TestCase
 
         $response = $this->post('/two-factor-challenge', ['recovery_code' => $code]);
 
-        $response->assertRedirect(RouteServiceProvider::HOME);
+        $response->assertRedirect(AdminPath::prefix());
         $this->assertAuthenticatedAs($this->user);
 
         // Recovery code is consumed

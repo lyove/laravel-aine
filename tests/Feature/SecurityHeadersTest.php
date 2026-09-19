@@ -41,12 +41,11 @@ class SecurityHeadersTest extends TestCase
 
     public function test_admin_pages_are_frame_restricted(): void
     {
-        // Any /admin/* path is protected against framing. Guests are
-        // redirected to the login page, and the middleware applies the
-        // headers to the redirect response as well.
+        // The admin login page is public (guest) and returns 200, but any
+        // /admin/* response must still carry the clickjacking header.
         $response = $this->get('/admin/login');
 
-        $response->assertRedirect('/login');
+        $response->assertOk();
         $response->assertHeader('X-Frame-Options', 'SAMEORIGIN');
         $response->assertHeader('X-Content-Type-Options', 'nosniff');
     }
