@@ -1,0 +1,127 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Aine\AuditLogger;
+use App\Aine\PublicCache;
+use App\Events\ContentPublished;
+use App\Events\ContentUpdated;
+use App\Http\Controllers\Controller;
+use App\Models\Content;
+use App\Models\Project;
+use App\Services\Content\ContentMutationService;
+use App\Services\Content\ContentValidationService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class WorkflowController extends Controller
+{
+    protected ContentMutationService $mutations;
+
+    public function __construct()
+    {
+        $this->mutations = new ContentMutationService(new ContentValidationService());
+    }
+    public function submitReview(int $project_id, int $collection_id, int $content_id)
+    {
+        $project = Project::findOrFail($project_id);
+        $this->authorizeWriter($project);
+
+        $content = Content::where('project_id', $project->id)
+            ->where('collection_id', $collection_id)
+            ->where('id', $content_id)
+            ->firstOrFail();
+
+        if (in_array($content->workflow_state, ['published', 'in_review'], true)) {
+            return response()->json(['success' => false, 'code' => 422, 'message' => 'Content is already published or already under review.', 'data' => null], 422);
+        }
+
+        $content->workflow_state = 'in_review';
+        $content->updated_by = Auth::id();
+        $content->save();
+
+        event(new ContentUpdated(['source' => 'User', 'content' => $content->fresh()]));
+
+        return response()->json(['success' => true, 'message' => 'Submitted for review.', 'data' => ['workflow_state' => $content->workflow_state]]);
+    }
+
+    public function approve(int $project_id, int $collection_id, int $content_id)
+    {
+        $project = Project::findOrFail($project_id);
+        $this->authorizeReviewer($project);
+
+        $content = Content::where('project_id', $project->id)
+            ->where('collection_id', $collection_id)
+            ->where('id', $content_id)
+            ->firstOrFail();
+
+        if ($content->workflow_state !== 'in_review') {
+            return response()->json(['success' => false, 'code' => 422, 'message' => 'Only content currently under review can be approved.', 'data' => null], 422);
+        }
+
+        // If this is a draft branch, merge it back into the main row.
+        if ($content->isDraftBranch()) {
+            $main = $this->mutations->publishDraftBranch($content, Auth::id());
+            $publishedContent = $main;
+        } else {
+            $content->workflow_state = 'published';
+            $content->published_at = now();
+            $content->published_by = Auth::id();
+            $content->updated_by = Auth::id();
+            $content->save();
+            $publishedContent = $content->fresh();
+        }
+
+        $this->bumpPublicCacheVersion($publishedContent->project_id, $publishedContent->collection?->slug);
+        event(new ContentPublished(['source' => 'User', 'content' => $publishedContent]));
+
+        AuditLogger::log('publish', 'content', $publishedContent->id, 'Content #' . $publishedContent->id, [
+            'collection_id' => $collection_id,
+            'workflow'      => 'approve',
+            'draft_branch'  => $content->isDraftBranch() ? $content->id : null,
+        ], $project->id);
+
+        return response()->json(['success' => true, 'message' => 'Approved and published.', 'data' => ['workflow_state' => 'published']]);
+    }
+
+    public function reject(Request $request, int $project_id, int $collection_id, int $content_id)
+    {
+        $project = Project::findOrFail($project_id);
+        $this->authorizeReviewer($project);
+
+        $content = Content::where('project_id', $project->id)
+            ->where('collection_id', $collection_id)
+            ->where('id', $content_id)
+            ->firstOrFail();
+
+        if ($content->workflow_state !== 'in_review') {
+            return response()->json(['success' => false, 'code' => 422, 'message' => 'Only content currently under review can be rejected.', 'data' => null], 422);
+        }
+
+        $content->workflow_state = 'rejected';
+        $content->reviewer_comment = $request->get('reason') ?: null;
+        $content->updated_by = Auth::id();
+        $content->save();
+
+        $this->bumpPublicCacheVersion($content->project_id, $content->collection?->slug);
+        event(new ContentUpdated(['source' => 'User', 'content' => $content->fresh()]));
+
+        return response()->json(['success' => true, 'message' => 'Rejected.', 'data' => ['workflow_state' => $content->workflow_state, 'reviewer_comment' => $content->reviewer_comment]]);
+    }
+
+    private function authorizeWriter(Project $project): void
+    {
+        $this->authorize('manageContent', $project);
+    }
+
+    private function authorizeReviewer(Project $project): void
+    {
+        $this->authorize('publishContent', $project);
+    }
+
+    private function bumpPublicCacheVersion(?int $projectId, ?string $collectionSlug = null): void
+    {
+        if ($projectId === null) return;
+        PublicCache::bump($projectId, $collectionSlug);
+    }
+}
