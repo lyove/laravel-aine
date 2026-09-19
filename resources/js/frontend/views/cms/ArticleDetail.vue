@@ -95,7 +95,7 @@
                     <div v-for="comment in comments" :key="comment.id" class="rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
                         <div class="flex flex-wrap items-center gap-2">
                             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-xs font-bold text-white">
-                                {{ comment.name.charAt(0).toUpperCase() }}
+                                {{ (comment.name || "?").charAt(0).toUpperCase() }}
                             </div>
                             <span class="font-semibold text-gray-800">{{ comment.name }}</span>
                             <span class="text-xs text-gray-400">{{ formatCommentDate(comment.created_at) }}</span>
@@ -115,7 +115,7 @@
                     <form v-else @submit.prevent="submitComment" class="rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
                         <div class="mb-3 flex items-center gap-2 text-sm text-gray-600">
                             <div class="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-xs font-bold text-white">
-                                {{ currentUser.name.charAt(0).toUpperCase() }}
+                                {{ (currentUser.name || "?").charAt(0).toUpperCase() }}
                             </div>
                             Commenting as <span class="font-semibold text-gray-800">{{ currentUser.name }}</span>
                         </div>

@@ -87,7 +87,7 @@ class FormController extends Controller
         /** @var \App\Models\User $user */
         $this->authorize('manageContent', $project);
 
-        $form = Form::findOrFail($form_id);
+        $form = Form::where('project_id', $project->id)->findOrFail($form_id);
 
         $form->name = $request->get('name');
         $form->description = $request->get('description');
@@ -105,7 +105,7 @@ class FormController extends Controller
         /** @var \App\Models\User $user */
         $this->authorize('manageContent', $project);
 
-        $form = Form::findOrFail($form_id);
+        $form = Form::where('project_id', $project->id)->findOrFail($form_id);
         $form->delete();
 
         return response('', 200);

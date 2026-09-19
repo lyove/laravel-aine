@@ -21,9 +21,9 @@ class CreateWebhooksTable extends Migration
             $table->string('url');
             $table->string('secret')->nullable();
 
-            $table->string('collection_ids');
-            $table->string('events');
-            $table->string('sources');
+            $table->json('collection_ids');
+            $table->json('events');
+            $table->json('sources');
 
             $table->boolean('payload')->default(true);
             $table->boolean('status')->default(true);

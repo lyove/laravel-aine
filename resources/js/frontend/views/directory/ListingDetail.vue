@@ -182,7 +182,7 @@
                     >
                         <div class="mb-2 flex items-center gap-2">
                             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-xs font-bold text-white">
-                                {{ review.name.charAt(0).toUpperCase() }}
+                                {{ (review.name || "?").charAt(0).toUpperCase() }}
                             </div>
                             <span class="text-sm font-semibold text-gray-800">{{ review.name }}</span>
                             <span class="text-sm text-amber-500">{{ stars(review.rating) }}</span>

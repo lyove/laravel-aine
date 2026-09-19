@@ -71,7 +71,7 @@ services:
     volumes:
       - aine-mysql:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${DB_ROOT_PASSWORD:-secret} --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${DB_PASSWORD:-secret} --silent"]
       interval: 10s
       timeout: 5s
       retries: 10

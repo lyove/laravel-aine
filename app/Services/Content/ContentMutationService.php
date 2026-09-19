@@ -171,8 +171,9 @@ class ContentMutationService
                     }
 
                     if ($isUpdate && ! empty($rfItem['id'])) {
-                        // Try to update existing repeatable row.
                         $existing = ContentMeta::where('id', $rfItem['id'])
+                            ->where('content_id', $content->id)
+                            ->where('project_id', $content->project_id)
                             ->where('field_name', $key)
                             ->first();
                         if ($existing) {
@@ -193,7 +194,6 @@ class ContentMutationService
                 continue;
             }
 
-            // Non-repeatable field: upsert or create.
             if ($isUpdate) {
                 $existing = ContentMeta::where('content_id', $content->id)
                     ->where('field_name', $key)

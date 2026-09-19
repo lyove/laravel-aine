@@ -748,7 +748,6 @@ export default {
             },
             new_field: {
                 type: null,
-                options: {},
                 project_id: this.$route.params.project_id,
                 collection_id: this.$route.params.col_id,
                 errors: {
@@ -1262,10 +1261,7 @@ export default {
                     if (result.isConfirmed) {
                         axios.delete("collections/delete/" + this.$route.params.project_id + "/" + collection.id).then((response) => {
                             this.$toast.success(__('Collection deleted.'));
-                            this.$router.push({
-                                name: "projects",
-                                params: { id: this.project.id },
-                            });
+                            this.$router.push({ name: "projects" });
                         });
                     }
                 });

@@ -13,7 +13,6 @@ class ProjectUser extends Pivot
 
     protected $table = 'project_user';
 
-    public $incrementing = true;
 
     public $timestamps = true;
 

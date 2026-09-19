@@ -117,8 +117,8 @@ export default {
             const category =
                 item.category?.slug || item.categories?.[0]?.slug || item.location?.slug || "";
             if (project === "cms") return category ? `/content/${category}/${item.slug}` : `/content/${item.slug}`;
-            if (project === "directory") return category ? `/directory/${category}/${item.slug}` : `/directory/${item.slug}`;
-            return category ? `/note/${category}/${item.slug}` : `/note/${item.slug}`;
+            if (project === "directory") return category ? `/directory/${category}/${item.slug}` : `/directory`;
+            return category ? `/note/${category}/${item.slug}` : `/note`;
         },
         async search(q) {
             this.query = q;

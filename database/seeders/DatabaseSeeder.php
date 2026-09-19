@@ -17,16 +17,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        $user = User::firstOrCreate(
+            ['email' => 'admin@admin.com'],
+            [
+                'name' => 'Admin',
+                'password' => Hash::make('admin'),
+            ]
+        );
 
-        $user = User::create([
-            'name' => "Admin",
-            'email' => 'admin@admin.com',
-            'password' => Hash::make('admin')
-        ]);
+        $role = Role::firstOrCreate(['name' => 'super_admin']);
 
-        $role = Role::create(['name' => 'super_admin']);
-
-        $user->assignRole($role);
+        if (! $user->hasRole('super_admin')) {
+            $user->assignRole($role);
+        }
 
         Role::firstOrCreate(['name' => 'user']);
 
@@ -39,6 +42,5 @@ class DatabaseSeeder extends Seeder
                 'description' => 'My Website Description',
             ]
         );
-
     }
 }

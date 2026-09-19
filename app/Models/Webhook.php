@@ -43,7 +43,7 @@ class Webhook extends Model
 
     public function collections()
     {
-        return $this->belongsToMany('App\Models\Collection', 'webhook_collections')->select(['name']);
+        return $this->belongsToMany('App\Models\Collection', 'webhook_collections')->select(['collections.id', 'collections.name']);
     }
 
     public function logs(){

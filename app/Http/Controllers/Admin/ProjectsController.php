@@ -803,7 +803,7 @@ class ProjectsController extends Controller
 
         $this->authorize('updateSettings', $project);
 
-        $webhook = Webhook::findOrFail($request->get('id'));
+        $webhook = Webhook::where('project_id', $project->id)->findOrFail($request->get('id'));
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -844,7 +844,7 @@ class ProjectsController extends Controller
 
         $this->authorize('updateSettings', $project);
 
-        $webhook = Webhook::findOrFail($request->get('id'));
+        $webhook = Webhook::where('project_id', $project->id)->findOrFail($request->get('id'));
 
         $webhook->logs()->delete();
         $webhook->collections()->detach();
@@ -867,7 +867,7 @@ class ProjectsController extends Controller
         $this->authorize('updateSettings', $project);
 
         $data['project'] = $project->presentFor(auth()->user());
-        $data['webhook'] = Webhook::findOrFail($webhook_id);
+        $data['webhook'] = Webhook::where('project_id', $project->id)->findOrFail($webhook_id);
         $data['logs'] = WebhookLog::where('webhook_id', $webhook_id)->paginate(25);
 
         return $data;
@@ -886,7 +886,7 @@ class ProjectsController extends Controller
 
         $this->authorize('updateSettings', $project);
 
-        $webhook = Webhook::findOrFail($webhook_id);
+        $webhook = Webhook::where('project_id', $project->id)->findOrFail($webhook_id);
         $logs = WebhookLog::where('webhook_id', $webhook_id)->delete();
 
         return response([], 200);

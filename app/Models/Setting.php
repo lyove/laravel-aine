@@ -38,11 +38,23 @@ class Setting extends Model
     ];
 
     /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'mail_password',
+        'media_storage_config',
+    ];
+
+    /**
      * The attributes that should be cast.
      *
      * @var array
      */
     protected $casts = [
         'media_enable_chunk_upload' => 'boolean',
+        'mail_password' => 'encrypted',
+        'media_storage_config' => 'encrypted',
     ];
 }

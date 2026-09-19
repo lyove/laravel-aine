@@ -242,13 +242,14 @@ Route::middleware(['auth:web', 'backend.user'])->prefix(\App\Support\AdminPath::
     Route::prefix('audit-logs')->group(function(){
         Route::get('/project/{project_id}', [AuditLogController::class, 'index']);
     });
+
+    Route::post('/logout', [AdminLoginController::class, 'destroy'])->name('admin.logout');
 });
 
 // Admin login
 Route::middleware('guest')->prefix(\App\Support\AdminPath::slug())->group(function () {
     Route::get('/login', [AdminLoginController::class, 'create'])->name('admin.login');
     Route::post('/login', [AdminLoginController::class, 'store'])->middleware('throttle:5,1');
-    Route::post('/logout', [AdminLoginController::class, 'destroy'])->middleware('auth')->name('admin.logout');
     Route::get('/forgot-password', [AdminPasswordResetLinkController::class, 'create'])->name('admin.password.request');
     Route::post('/forgot-password', [AdminPasswordResetLinkController::class, 'store'])->middleware('throttle:5,1')->name('admin.password.email');
     Route::get('/reset-password/{token}', [AdminNewPasswordController::class, 'create'])->name('admin.password.reset');

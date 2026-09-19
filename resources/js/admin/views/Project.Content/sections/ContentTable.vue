@@ -688,7 +688,7 @@
                                         field.type != 'json' &&
                                         field.type != 'block' &&
                                         field.type != 'relation' &&
-                                        !JSON.parse(field.options).hideInContentList
+                                        !safeOptions(field).hideInContentList
                                     "
                                 >
                                     <div class="w-full flex justify-between item-center">
@@ -723,14 +723,14 @@
                                     field.type != 'json' &&
                                     field.type != 'block' &&
                                     field.type != 'relation' &&
-                                    !JSON.parse(field.options).hideInContentList
+                                    !safeOptions(field).hideInContentList
                                 "
                             >
                                 <span v-for="meta in item.meta" :key="meta.id">
                                     <span
                                         v-if="meta.field_name == field.name"
                                         :class="{
-                                            'rounded-md bg-gray-100 p-1 mr-1': JSON.parse(field.options).repeatable && meta.value !== null,
+                                            'rounded-md bg-gray-100 p-1 mr-1': safeOptions(field).repeatable && meta.value !== null,
                                         }"
                                     >
                                         <span v-if="field.type == 'date'">{{ $filters.date(meta.value) }}</span>
@@ -883,6 +883,32 @@ export default {
     },
 
     methods: {
+        safeOptions(field) {
+            if (!field.options) return {};
+            if (typeof field.options === "string") {
+                try {
+                    return JSON.parse(field.options);
+                } catch (e) {
+                    return {};
+                }
+            }
+            return field.options;
+        },
+
+        sanitizeHtml(html) {
+            if (!html) return "";
+            const doc = new DOMParser().parseFromString(html, "text/html");
+            const dangerous = doc.querySelectorAll("script, iframe, object, embed, link, meta");
+            dangerous.forEach(el => el.remove());
+            doc.querySelectorAll("*").forEach(el => {
+                for (const attr of Array.from(el.attributes)) {
+                    if (attr.name.startsWith("on") || attr.name === "srcdoc") {
+                        el.removeAttribute(attr.name);
+                    }
+                }
+            });
+            return doc.body.innerHTML;
+        },
         canProject(roles) {
             const store = useAdminStore();
             const p = store.currentProject || this.project;
@@ -1071,9 +1097,19 @@ export default {
         },
 
         exportContent() {
-            const appUrl = (document.querySelector('meta[name="APP_URL"]')?.content || "").replace(/\/+$/, "");
-            const apiBase = (window.ADMIN_API_BASE || "/admin-api").replace(/\/+$/, ""); const url = appUrl + apiBase + "/content/export/" + this.$route.params.project_id + "/" + this.collection_id + "?format=json";
-            window.open(url, "_blank");
+            axios({
+                url: "content/export/" + this.$route.params.project_id + "/" + this.collection_id + "?format=json",
+                method: "GET",
+                responseType: "blob",
+            }).then((response) => {
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", "content-export.json");
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            });
         },
 
         importContent(event) {
@@ -1117,7 +1153,7 @@ export default {
 
         showText(field, value) {
             this.openTextModal = true;
-            this.textRecord = value;
+            this.textRecord = this.sanitizeHtml(value);
             this.textModalFieldName = field.label;
         },
 
