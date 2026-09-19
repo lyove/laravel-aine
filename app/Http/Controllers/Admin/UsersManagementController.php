@@ -79,7 +79,7 @@ class UsersManagementController extends Controller
         if ($users->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No matching users found.',
+                'message' => __('No matching users found.'),
             ], 422);
         }
 
@@ -87,7 +87,7 @@ class UsersManagementController extends Controller
         if ($users->contains('id', Auth::id())) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bulk actions cannot include your own account.',
+                'message' => __('Bulk actions cannot include your own account.'),
             ], 422);
         }
 
@@ -97,7 +97,7 @@ class UsersManagementController extends Controller
             if ($superAdmins->isNotEmpty() && $superAdmins->count() >= $this->superAdminCount()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cannot delete the last super admin.',
+                    'message' => __('Cannot delete the last super admin.'),
                 ], 422);
             }
 
@@ -113,7 +113,7 @@ class UsersManagementController extends Controller
         if ($validated['role'] !== 'super_admin' && $superAdmins->isNotEmpty() && $superAdmins->count() >= $this->superAdminCount()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot remove the last super admin.',
+                'message' => __('Cannot remove the last super admin.'),
             ], 422);
         }
 
@@ -166,7 +166,7 @@ class UsersManagementController extends Controller
         if ($validated['role'] !== 'super_admin' && $user->isSuperAdmin() && $this->superAdminCount() === 1) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot remove the last super admin.',
+                'message' => __('Cannot remove the last super admin.'),
             ], 422);
         }
 
@@ -197,14 +197,14 @@ class UsersManagementController extends Controller
         if ($user->id === Auth::id()) {
             return response()->json([
                 'success' => false,
-                'message' => 'You cannot delete your own account.',
+                'message' => __('You cannot delete your own account.'),
             ], 422);
         }
 
         if ($user->isSuperAdmin() && $this->superAdminCount() === 1) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot delete the last super admin.',
+                'message' => __('Cannot delete the last super admin.'),
             ], 422);
         }
 

@@ -226,11 +226,11 @@ export default {
             project: p,
             activeTab: 'general',
             tabs: [
-                { key: 'general', label: 'General' },
-                { key: 'logo', label: 'Logo & Favicon' },
-                { key: 'custom', label: 'Custom Code' },
-                { key: 'seo', label: 'SEO' },
-                { key: 'contact', label: 'Contact' },
+                { key: 'general', label: __('General') },
+                { key: 'logo', label: __('Logo & Favicon') },
+                { key: 'custom', label: __('Custom Code') },
+                { key: 'seo', label: __('SEO') },
+                { key: 'contact', label: __('Contact') },
             ],
             form: {
                 ...p,

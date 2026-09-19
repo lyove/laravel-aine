@@ -129,7 +129,7 @@ class TranslationsController extends Controller
                 // Same count, and (for named placeholders) same name set.
                 if (count($srcNames) !== count($valNames) || array_diff($srcNames, $valNames) || array_diff($valNames, $srcNames)) {
                     return response([
-                        'error' => 'Placeholder mismatch',
+                        'error' => __('Placeholder mismatch'),
                         'source' => $source,
                         'source_placeholders' => count($srcNames),
                         'value_placeholders' => count($valNames),
@@ -195,7 +195,7 @@ class TranslationsController extends Controller
 
         $source = trim($request->get('source'));
         if ($source === '') {
-            return response(['error' => 'Source string is empty'], 422);
+            return response(['error' => __('Source string is empty')], 422);
         }
 
         // Also register the string in the registry table, so it stays

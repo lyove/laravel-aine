@@ -28,7 +28,7 @@ class CommentsController extends Controller
 
         $commentsCollection = Collection::where('project_id', $project->id)->where('slug', 'comments')->first();
         if (! $commentsCollection) {
-            return response(['success' => false, 'message' => 'Comments are not enabled for this project'], 404);
+            return response(['success' => false, 'message' => __('Comments are not enabled for this project')], 404);
         }
 
         $filter = $request->get('filter', 'pending'); // pending | approved | spam | trash | all
@@ -103,17 +103,17 @@ class CommentsController extends Controller
 
         $action = $request->get('action');
         if (! in_array($action, ['approve', 'spam', 'trash', 'restore', 'delete'], true)) {
-            return response(['success' => false, 'message' => 'Invalid action'], 422);
+            return response(['success' => false, 'message' => __('Invalid action')], 422);
         }
 
         $commentsCollection = Collection::where('project_id', $project->id)->where('slug', 'comments')->first();
         if (! $commentsCollection) {
-            return response(['success' => false, 'message' => 'Comments are not enabled for this project'], 404);
+            return response(['success' => false, 'message' => __('Comments are not enabled for this project')], 404);
         }
 
         $ids = array_filter(array_map('intval', (array) $request->get('ids', [])));
         if ($ids === []) {
-            return response(['success' => false, 'message' => 'No comments selected'], 422);
+            return response(['success' => false, 'message' => __('No comments selected')], 422);
         }
 
         if ($action === 'delete') {
@@ -122,7 +122,7 @@ class CommentsController extends Controller
                 ->whereIn('id', $ids)
                 ->forceDelete();
 
-            return response(['success' => true, 'message' => 'Comments deleted', 'updated' => $deleted], 200);
+            return response(['success' => true, 'message' => __('Comments deleted'), 'updated' => $deleted], 200);
         }
 
         $target = match ($action) {
@@ -141,7 +141,7 @@ class CommentsController extends Controller
             $this->setStatus($project, $comment, $target);
         }
 
-        return response(['success' => true, 'message' => 'Comments updated', 'updated' => $comments->count()], 200);
+        return response(['success' => true, 'message' => __('Comments updated'), 'updated' => $comments->count()], 200);
     }
 
     // -----------------------------------------------------------------

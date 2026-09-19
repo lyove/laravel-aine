@@ -61,6 +61,6 @@ class NotificationsController extends Controller
             $user->unreadNotifications->each->markAsRead();
         }
 
-        return response()->json(['message' => 'Notifications marked as read.'], 200);
+        return response()->json(['message' => __('Notifications marked as read.')], 200);
     }
 }

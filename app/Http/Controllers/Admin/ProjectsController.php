@@ -250,7 +250,7 @@ class ProjectsController extends Controller
             return response()->json([
                 'success' => false,
                 'code' => 403,
-                'message' => 'Please reactivate the project before deleting.',
+                'message' => __('Please reactivate the project before deleting.'),
                 'data' => null,
             ], 403);
         }
@@ -728,7 +728,7 @@ class ProjectsController extends Controller
             }
         }
 
-        return response()->json(['message' => 'Domain whitelist updated successfully']);
+        return response()->json(['message' => __('Domain whitelist updated successfully')]);
     }
 
     /**

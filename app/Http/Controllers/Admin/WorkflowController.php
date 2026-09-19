@@ -33,7 +33,7 @@ class WorkflowController extends Controller
             ->firstOrFail();
 
         if (in_array($content->workflow_state, ['published', 'in_review'], true)) {
-            return response()->json(['success' => false, 'code' => 422, 'message' => 'Content is already published or already under review.', 'data' => null], 422);
+            return response()->json(['success' => false, 'code' => 422, 'message' => __('Content is already published or already under review.'), 'data' => null], 422);
         }
 
         $content->workflow_state = 'in_review';
@@ -42,7 +42,7 @@ class WorkflowController extends Controller
 
         event(new ContentUpdated(['source' => 'User', 'content' => $content->fresh()]));
 
-        return response()->json(['success' => true, 'message' => 'Submitted for review.', 'data' => ['workflow_state' => $content->workflow_state]]);
+        return response()->json(['success' => true, 'message' => __('Submitted for review.'), 'data' => ['workflow_state' => $content->workflow_state]]);
     }
 
     public function approve(int $project_id, int $collection_id, int $content_id)
@@ -56,7 +56,7 @@ class WorkflowController extends Controller
             ->firstOrFail();
 
         if ($content->workflow_state !== 'in_review') {
-            return response()->json(['success' => false, 'code' => 422, 'message' => 'Only content currently under review can be approved.', 'data' => null], 422);
+            return response()->json(['success' => false, 'code' => 422, 'message' => __('Only content currently under review can be approved.'), 'data' => null], 422);
         }
 
         // If this is a draft branch, merge it back into the main row.
@@ -81,7 +81,7 @@ class WorkflowController extends Controller
             'draft_branch'  => $content->isDraftBranch() ? $content->id : null,
         ], $project->id);
 
-        return response()->json(['success' => true, 'message' => 'Approved and published.', 'data' => ['workflow_state' => 'published']]);
+        return response()->json(['success' => true, 'message' => __('Approved and published.'), 'data' => ['workflow_state' => 'published']]);
     }
 
     public function reject(Request $request, int $project_id, int $collection_id, int $content_id)
@@ -95,7 +95,7 @@ class WorkflowController extends Controller
             ->firstOrFail();
 
         if ($content->workflow_state !== 'in_review') {
-            return response()->json(['success' => false, 'code' => 422, 'message' => 'Only content currently under review can be rejected.', 'data' => null], 422);
+            return response()->json(['success' => false, 'code' => 422, 'message' => __('Only content currently under review can be rejected.'), 'data' => null], 422);
         }
 
         $content->workflow_state = 'rejected';
@@ -106,7 +106,7 @@ class WorkflowController extends Controller
         $this->bumpPublicCacheVersion($content->project_id, $content->collection?->slug);
         event(new ContentUpdated(['source' => 'User', 'content' => $content->fresh()]));
 
-        return response()->json(['success' => true, 'message' => 'Rejected.', 'data' => ['workflow_state' => $content->workflow_state, 'reviewer_comment' => $content->reviewer_comment]]);
+        return response()->json(['success' => true, 'message' => __('Rejected.'), 'data' => ['workflow_state' => $content->workflow_state, 'reviewer_comment' => $content->reviewer_comment]]);
     }
 
     private function authorizeWriter(Project $project): void

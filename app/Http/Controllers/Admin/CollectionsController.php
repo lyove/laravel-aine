@@ -213,14 +213,14 @@ class CollectionsController extends Controller
         $data = json_decode($content, true);
 
         if(!is_array($data) || !isset($data['collection']) || !isset($data['fields'])){
-            return response()->json(['message' => 'Invalid schema file. Expected { "collection": {...}, "fields": [...] }.'], 422);
+            return response()->json(['message' => __('Invalid schema file. Expected { \"collection\": {...}, \"fields\": [...] }.')], 422);
         }
 
         $collectionName = $data['collection']['name'] ?? null;
         $collectionSlug = $data['collection']['slug'] ?? null;
 
         if(!$collectionName || !$collectionSlug){
-            return response()->json(['message' => 'Schema must include a collection name and slug.'], 422);
+            return response()->json(['message' => __('Schema must include a collection name and slug.')], 422);
         }
 
         $collection = Collection::where('project_id', $project->id)->where('slug', $collectionSlug)->first();
@@ -273,7 +273,7 @@ class CollectionsController extends Controller
         PublicCache::bump($project->id, $collection->slug);
 
         return response()->json([
-            'message' => 'Schema imported.',
+            'message' => __('Schema imported.'),
             'collection_id' => $collection->id,
             'fields_created' => $created,
             'fields_updated' => $updated,

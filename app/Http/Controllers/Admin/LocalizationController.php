@@ -123,7 +123,7 @@ class LocalizationController extends Controller
     public function destroy($code)
     {
         if ($code === self::baseLocale()) {
-            return response(['error' => 'The default language cannot be removed.'], 422);
+            return response(['error' => __('The default language cannot be removed.')], 422);
         }
 
         UiLocale::where('code', $code)->delete();

@@ -252,20 +252,26 @@ class ContentController extends Controller
     public function getProjectContentBySlugRelation($project_identifier, $slug, $slug_value, $related_slug, Request $request)
     {
         $project = $request->attributes->get('resolved_project');
-        if (! $project) return $this->notFound('Project not resolved');
+        if (! $project) {
+            return $this->notFound('Project not resolved');
+        }
         return $this->getContentBySlugRelationByUuid($project->uuid, $slug, $slug_value, $related_slug, $request);
     }
 
     private function resolveContentBySlugRelation(Project $project, $slug, $slugValue, $relatedSlug, Request $request)
     {
         $sourceCollection = Collection::where('project_id', $project->id)->where('slug', $slug)->first();
-        if (! $sourceCollection) return $this->notFound('Source collection "' . $slug . '" not found in project');
+        if (! $sourceCollection) {
+            return $this->notFound('Source collection "' . $slug . '" not found in project');
+        }
 
         $source = $this->contentBySlug(
             $project, $sourceCollection, $slugValue,
             $this->resolveLocale($request, $project), ['id']
         );
-        if (! $source) return $this->notFound('No content with slug "' . $slugValue . '" in collection "' . $slug . '"');
+        if (! $source) {
+            return $this->notFound('No content with slug "' . $slugValue . '" in collection "' . $slug . '"');
+        }
 
         return $this->resolveContentByRelation($project, $slug, $source->id, $relatedSlug, $request);
     }
@@ -327,12 +333,7 @@ class ContentController extends Controller
             }
         }
 
-        // --- state filter ---
-        if ($request->has('state')) {
-            if ($request->get('state') === 'only_draft') $content->whereNull('published_at');
-        } else {
-            $content->whereNotNull('published_at');
-        }
+        $content->whereNotNull('published_at');
 
         if ($request->has('offset') && ! $request->has('limit')) {
             return $this->validationError('Incorrect offset statement.');
@@ -388,7 +389,7 @@ class ContentController extends Controller
             $project, $slug, $query,
             (int) ($request->get('limit') ?: 20),
             (int) ($request->get('offset') ?: 0),
-            $request->get('state'),
+            null,
             $this->resolveLocale($request, $project)
         );
 
@@ -709,12 +710,7 @@ class ContentController extends Controller
             }
         }
 
-        // --- state filter ---
-        if ($request->has('state') && $request->get('state') === 'only_draft') {
-            $content->whereNull('published_at');
-        } else {
-            $content->whereNotNull('published_at');
-        }
+        $content->whereNotNull('published_at');
         if ($request->has('offset') && ! $request->has('limit')) {
             return $this->validationError('Incorrect offset statement.');
         }

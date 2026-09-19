@@ -718,7 +718,7 @@ class ContentController extends Controller
 
         $snapshot = is_array($revision->data) ? $revision->data : json_decode($revision->data, true);
         if (! is_array($snapshot)) {
-            return response()->json(['message' => 'Revision data is corrupted.'], 422);
+            return response()->json(['message' => __('Revision data is corrupted.')], 422);
         }
 
         $fieldsToDelete = ContentMeta::where('content_id', $content->id)
@@ -731,7 +731,7 @@ class ContentController extends Controller
             return response()->json([
                 'success' => false,
                 'code' => 409,
-                'message' => 'Restoring this revision will permanently delete data from fields that do not exist in that snapshot.',
+                'message' => __('Restoring this revision will permanently delete data from fields that do not exist in that snapshot.'),
                 'data' => [
                     'confirmation_required' => true,
                     'fields_to_delete' => $fieldsToDelete,
@@ -768,7 +768,7 @@ class ContentController extends Controller
             'collection_id' => $collection_id, 'revision_id' => $revision_id,
         ], $project->id);
 
-        return response()->json(['message' => 'Revision restored successfully.'], 200);
+        return response()->json(['message' => __('Revision restored successfully.')], 200);
     }
 
     // =================================================================
@@ -782,7 +782,7 @@ class ContentController extends Controller
 
         $format = strtolower($request->get('format', 'json'));
         if (! in_array($format, ['json', 'csv'])) {
-            return response()->json(['message' => 'Unsupported export format.'], 422);
+            return response()->json(['message' => __('Unsupported export format.')], 422);
         }
 
         $contents = Content::with('meta')
@@ -840,13 +840,13 @@ class ContentController extends Controller
         $this->authorizeEditor($project);
 
         if (! $request->hasFile('file')) {
-            return response()->json(['message' => 'No file uploaded.'], 422);
+            return response()->json(['message' => __('No file uploaded.')], 422);
         }
 
         $file      = $request->file('file');
         $extension = strtolower($file->getClientOriginalExtension());
         if (! in_array($extension, ['json', 'csv'])) {
-            return response()->json(['message' => 'Only .json and .csv files are supported.'], 422);
+            return response()->json(['message' => __('Only .json and .csv files are supported.')], 422);
         }
 
         if ($extension === 'csv') {
@@ -854,7 +854,7 @@ class ContentController extends Controller
         } else {
             $rows = json_decode(file_get_contents($file->getRealPath()), true);
             if (! is_array($rows)) {
-                return response()->json(['message' => 'Invalid JSON file.'], 422);
+                return response()->json(['message' => __('Invalid JSON file.')], 422);
             }
         }
 
@@ -902,7 +902,7 @@ class ContentController extends Controller
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Import failed: ' . $e->getMessage()], 422);
+            return response()->json(['message' => __('Import failed: ') . $e->getMessage()], 422);
         }
 
         AuditLogger::log('import', 'content', null, 'Imported ' . $created . ' content item(s)', [
@@ -952,7 +952,7 @@ class ContentController extends Controller
         if (! $draft->isDraftBranch()) {
             return response()->json([
                 'success' => false, 'code' => 422,
-                'message' => 'This content is not a draft branch.',
+                'message' => __('This content is not a draft branch.'),
             ], 422);
         }
 
@@ -994,7 +994,7 @@ class ContentController extends Controller
         if (! $draft->isDraftBranch()) {
             return response()->json([
                 'success' => false, 'code' => 422,
-                'message' => 'This content is not a draft branch.',
+                'message' => __('This content is not a draft branch.'),
             ], 422);
         }
 
@@ -1007,7 +1007,7 @@ class ContentController extends Controller
             'discarded_draft' => $draftId,
         ], $project->id);
 
-        return response()->json(['success' => true, 'message' => 'Draft discarded.'], 200);
+        return response()->json(['success' => true, 'message' => __('Draft discarded.')], 200);
     }
 
     public function unpublish($project_id, $collection_id, $content_id)
@@ -1273,7 +1273,7 @@ class ContentController extends Controller
     {
         return response()->json([
             'success' => false, 'code' => 422,
-            'message' => 'This project has the editorial workflow enabled — submit the content for review and approve it via the workflow endpoints instead of publishing directly.',
+            'message' => __('This project has the editorial workflow enabled — submit the content for review and approve it via the workflow endpoints instead of publishing directly.'),
             'data'    => null,
         ], 422);
     }

@@ -58,6 +58,7 @@
 #### Third-party clients (mini program) API
 - **Token login** — `POST /api/login` with `{ account: email|name, password }` returns `{ access_token, expired_in, user }` (Sanctum token, 30 days) for third-party clients such as the WeChat mini program.
 - **User profile over token** — `/api/me/profile`, `/api/me/favorites`, `/api/me/likes`, `/api/me/comments` accept either a web session or a Sanctum Bearer token (`auth:web,sanctum`).
+- **Device / token management over token** — `GET /api/me/tokens` lists the caller's active devices (with last-used time), `DELETE /api/me/tokens/{id}` signs out one device, and `POST /api/me/tokens/revoke-others` signs out every other device in one call — reducing blast radius if a token leaks.
 - **Favorites & likes over token** — `POST/DELETE /api/project/{project}/favorites|likes` accept a Sanctum Bearer token; these write routes are excluded from CSRF in `bootstrap/app.php` since token authentication replaces the CSRF guarantee.
 - **Optional-auth state** — `GET /api/project/{project}/interactions/{content_id}` returns counts for guests and the caller's `is_favorited` / `is_liked` when a Bearer token is supplied.
 
@@ -71,9 +72,16 @@
 
 ### Security
 - **Rate limiting** — per-user/IP throttling on the API (`60/min`), write endpoints (`30/min`), search (`60/min` logged-in, `20/min` anonymous), public form submissions/uploads, and admin auth (password reset / 2FA).
+- **Account-level login lockout** — beyond the per-{email, IP} throttle (5/min), a second counter tracks the same account across **all source IPs**: 10 failed attempts lock the account for 10 minutes (defeats distributed brute-force from rotating IPs). Successful login clears both counters; failed/2FA attempts are written to the audit log.
+- **Strong password policy** — global default `Password::min(12)->mixedCase()->numbers()->symbols()` applied to registration, password reset, profile changes and project-invited users; super-admin user management enforces a stricter `min(14)` policy.
 - **Security headers** — `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy` on every response, plus `X-Frame-Options: SAMEORIGIN` on the admin area.
+- **TrustProxies** — `bootstrap/app.php` trusts proxies listed in `TRUSTED_PROXIES` so `X-Forwarded-*` headers are honoured behind a load balancer / reverse proxy.
+- **Encrypted sessions** — `SESSION_ENCRYPT=true` encrypts session payloads at rest (env-driven, default on for HTTPS).
+- **Token abilities scoping** — every Method-2 (`/api/{uuid}/...`) route and the explicit-token Method-1 write routes enforce a Sanctum ability (`read` / `create` / `update` / `delete`) via the `abilities` / `ability` middleware; unknown abilities return `403`. New project tokens default to `['read']` (least privilege).
 - **HTML sanitization** — rich text is whitelist-sanitized before saving (admin content & public forms), stripping scripts, event handlers, `javascript:` links and dangerous CSS. `data-*` attributes are preserved (inert, used by SSML annotations and frontend renderers), as are `svg`/`path` with a restricted attribute set (`viewbox`, `d`, `fill`, `stroke`, etc.).
-- **Upload guard** — media uploads are double-checked by extension + content MIME against a deny-list (`php`, `phar`, `phtml`, `asp`, `jsp`, …) on top of the MIME whitelist.
+- **Upload guard** — media uploads are double-checked by extension + content MIME against a deny-list (`php`, `phar`, `phtml`, `asp`, `jsp`, …) on top of the MIME whitelist; the guard also sniffs the first 1 MB of content for `<?php` / `<script>` polyglots. All upload entry points (project API, admin media library, chunked upload, public form) run through it.
+- **Audit log coverage** — sensitive write actions are all recorded: user CRUD, role changes, token create/update/revoke, 2FA enable/disable/recovery-codes, media upload/delete, and failed logins (with IP + failure count).
+- **Session & device management** — third-party clients can list their active tokens (`GET /api/me/tokens`), sign out a single device (`DELETE /api/me/tokens/{id}`), or revoke every other device at once (`POST /api/me/tokens/revoke-others`).
 
 ### Multilingual
 - **Content-level locales** — every content entry has a locale; query and create content per language (`en`, `zh`, …).
@@ -433,7 +441,7 @@ Notes:
 php artisan test
 ```
 
-The suite covers content CRUD, revisions (create / update / list / diff / restore / label), import/export, media, API auth & querying, workflow audit, collection field management, users & permissions (including backend gating), comments & moderation, frontend interactions (favorites, likes, profile, avatar), and the frontend root response. Current baseline: **300 tests / 980 assertions**.
+The suite covers content CRUD, revisions (create / update / list / diff / restore / label), import/export, media, API auth & querying, workflow audit, collection field management, users & permissions (including backend gating), comments & moderation, frontend interactions (favorites, likes, profile, avatar), security policies (strong passwords, account lockout, upload guard, token abilities, device management), and the frontend root response. Current baseline: **317 tests / 1029 assertions**.
 
 ---
 

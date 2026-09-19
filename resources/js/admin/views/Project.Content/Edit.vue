@@ -18,7 +18,7 @@
                                 },
                             }"
                         >
-                            {{ collection.name }}
+                            {{ __(collection.name) }}
                         </router-link>
                         <small class="text-gray-500 font-normal"> {{ __('/ Update Content') }}</small>
                     </div>
@@ -73,7 +73,7 @@
                         <form class="space-y-6" @submit.prevent>
                             <div v-for="field in editableFields" :key="field.id" :class="`field-${field.type}`">
                                 <label v-formlabel>
-                                    {{ field.label }}
+                                    {{ __(field.label) }}
                                 </label>
                                 <div class="mt-1 relative">
                                     <div v-if="field.type == 'text'" class="field-type-text">
@@ -1202,14 +1202,11 @@ export default {
             return localesJson[locale];
         },
 
-        // When a field has no custom placeholder, fall back to a translated
-        // prompt that names the field itself, so every input still shows a
-        // helpful hint even when the admin left the placeholder blank.
         placeholderFor(field) {
             if (field.placeholder) {
                 return field.placeholder;
             }
-            return __('Enter "{label}"', { label: field.label });
+            return __('Enter') + ' ' + field.label;
         },
     },
 
@@ -1221,8 +1218,7 @@ export default {
         isReadonly() {
             return this.project && (this.project.is_readonly || !this.project.status);
         },
-        // The author field is managed by the backend (current user on
-        // create) — hide the manual input in the edit form.
+
         editableFields() {
             return (this.collection.fields || []).filter((field) => field.name !== 'author');
         },

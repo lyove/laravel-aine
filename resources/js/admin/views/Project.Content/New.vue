@@ -19,7 +19,7 @@
                                 },
                             }"
                         >
-                            {{ collection.name }}
+                            {{ __(collection.name) }}
                         </router-link>
                         <small class="text-gray-500 font-normal"> {{ __('/ Create New Content') }}</small>
                     </div>
@@ -54,7 +54,7 @@
                         <form class="space-y-6" @submit.prevent>
                             <div v-for="field in editableFields" :key="field.id" :class="`field-${field.type}`">
                                 <label v-formlabel>
-                                    {{ field.label }}
+                                    {{ __(field.label) }}
                                 </label>
                                 <div class="mt-1 relative">
                                     <div v-if="field.type == 'text'">
@@ -949,14 +949,11 @@ export default {
             return localesJson[locale];
         },
 
-        // When a field has no custom placeholder, fall back to a translated
-        // prompt that names the field itself, so every input still shows a
-        // helpful hint even when the admin left the placeholder blank.
         placeholderFor(field) {
             if (field.placeholder) {
                 return field.placeholder;
             }
-            return __('Enter "{label}"', { label: field.label });
+            return __('Enter') + ' ' + field.label;
         },
 
         canProject(roles) {

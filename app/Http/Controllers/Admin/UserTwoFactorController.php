@@ -23,7 +23,7 @@ class UserTwoFactorController extends Controller
         $user = User::findOrFail($id);
 
         if ($user->twoFactorEnabled()) {
-            return response()->json(['message' => 'Two factor authentication is already enabled.'], 422);
+            return response()->json(['message' => __('Two factor authentication is already enabled.')], 422);
         }
 
         if (! $user->two_factor_secret) {
@@ -45,11 +45,11 @@ class UserTwoFactorController extends Controller
         $user = User::findOrFail($id);
 
         if (! $user->two_factor_secret) {
-            return response()->json(['message' => 'Enable two factor authentication first.'], 422);
+            return response()->json(['message' => __('Enable two factor authentication first.')], 422);
         }
 
         if (! TwoFactor::verify($user->two_factor_secret, $request->input('code'))) {
-            return response()->json(['message' => 'The provided code was invalid.'], 422);
+            return response()->json(['message' => __('The provided code was invalid.')], 422);
         }
 
         $codes = TwoFactor::generateRecoveryCodes();
@@ -68,14 +68,14 @@ class UserTwoFactorController extends Controller
         $user = User::findOrFail($id);
 
         if (! $user->twoFactorEnabled()) {
-            return response()->json(['message' => 'Two factor authentication is not enabled.'], 422);
+            return response()->json(['message' => __('Two factor authentication is not enabled.')], 422);
         }
 
         $user->disableTwoFactor();
 
         AuditLogger::log('update', 'user', $user->id, $user->email, ['field' => '2fa', 'action' => 'disable']);
 
-        return response()->json(['message' => 'Two factor authentication has been disabled.'], 200);
+        return response()->json(['message' => __('Two factor authentication has been disabled.')], 200);
     }
 
     /** View or regenerate the recovery codes of the target user. */
@@ -84,7 +84,7 @@ class UserTwoFactorController extends Controller
         $user = User::findOrFail($id);
 
         if (! $user->twoFactorEnabled()) {
-            return response()->json(['message' => 'Two factor authentication is not enabled.'], 422);
+            return response()->json(['message' => __('Two factor authentication is not enabled.')], 422);
         }
 
         $codes = TwoFactor::generateRecoveryCodes();

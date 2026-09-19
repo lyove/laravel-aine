@@ -421,9 +421,9 @@ export default {
             const active = this.projects.filter(p => p.status).length;
             const inactive = all - active;
             return [
-                { label: 'All', value: 'all', count: all },
-                { label: 'Active', value: 'active', count: active },
-                { label: 'Inactive', value: 'inactive', count: inactive },
+                { label: __('All'), value: 'all', count: all },
+                { label: __('Active'), value: 'active', count: active },
+                { label: __('Inactive'), value: 'inactive', count: inactive },
             ];
         },
         filteredProjects() {

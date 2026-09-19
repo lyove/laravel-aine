@@ -103,15 +103,16 @@ class ContentSearchTest extends TestCase
         $this->assertNotContains('Laravel Draft', $titles);
     }
 
-    public function test_search_can_query_only_drafts(): void
+    public function test_search_never_returns_drafts_even_with_only_draft_param(): void
     {
+        // Public API must never expose drafts, no matter what params are passed.
         $response = $this->get('/api/project/demo/articles/search?query=laravel&state=only_draft');
 
         $response->assertStatus(200);
-        $this->assertSame(1, $response->json('total'));
+        $this->assertSame(2, $response->json('total'));
 
         $titles = array_column($response->json('data'), 'title');
-        $this->assertContains('Laravel Draft', $titles);
+        $this->assertNotContains('Laravel Draft', $titles);
     }
 
     public function test_search_no_results_returns_empty_list(): void
