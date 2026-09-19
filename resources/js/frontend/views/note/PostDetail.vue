@@ -131,7 +131,7 @@ export default {
             const postUrl = this.$route.params.post;
 
             try {
-                this.item = await api.getNotePostBySlug(postUrl, { timestamps: true, _skipLocale: true });
+                this.item = await api.getNotePostBySlug(postUrl, { timestamps: true });
             } catch (error) {
                 console.error("Failed to load post:", error);
                 this.item = null;

@@ -82,7 +82,7 @@ export default {
             this.loading = true;
             this.page = null;
             try {
-                const pages = await api.getNotePages({ timestamps: true, _skipLocale: true });
+                const pages = await api.getNotePages({ timestamps: true });
                 this.page = (pages || []).find((p) => p.slug === this.slug) || null;
             } catch (error) {
                 console.error("Failed to load page:", error);
