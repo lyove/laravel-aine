@@ -20,7 +20,7 @@ class ApiProxyController extends Controller
                 ->toArray();
             
             if (!in_array($refererHost, $whitelistedDomains)) {
-                return response()->json(['error' => 'Domain not in whitelist'], 403);
+                return response()->json(['error' => __('Domain not in whitelist')], 403);
             }
         }
         

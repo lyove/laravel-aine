@@ -26,7 +26,7 @@ class MediaController extends Controller {
     private function getMediaListByUuid($uuid){
         $project = Project::where('uuid', $uuid)->first();
         if(!$project){
-            return $this->notFound('Project not found');
+            return $this->notFound(__('Project not found'));
         }
         if ($response = $this->authorizeProjectRead($project)) {
             return $response;
@@ -47,7 +47,7 @@ class MediaController extends Controller {
     private function getMediaByUuid($uuid, $media_id){
         $project = Project::where('uuid', $uuid)->first();
         if(!$project){
-            return $this->notFound('Project not found');
+            return $this->notFound(__('Project not found'));
         }
         if ($response = $this->authorizeProjectRead($project)) {
             return $response;
@@ -56,7 +56,7 @@ class MediaController extends Controller {
         $file = Media::where('project_id', $project->id)->find($media_id);
 
         if(!$file) {
-            return $this->notFound('Media not found');
+            return $this->notFound(__('Media not found'));
         }
 
         return $this->success(new MediaResource($file), 'Success');
@@ -72,7 +72,7 @@ class MediaController extends Controller {
     private function getMediaByNameByUuid($uuid, $media_name){
         $project = Project::where('uuid', $uuid)->first();
         if(!$project){
-            return $this->notFound('Project not found');
+            return $this->notFound(__('Project not found'));
         }
         if ($response = $this->authorizeProjectRead($project)) {
             return $response;
@@ -81,7 +81,7 @@ class MediaController extends Controller {
         $file = Media::where('project_id', $project->id)->where('name', $media_name)->first();
 
         if(!$file) {
-            return $this->notFound('Media not found');
+            return $this->notFound(__('Media not found'));
         }
 
         return $this->success(new MediaResource($file), 'Success');
@@ -102,13 +102,13 @@ class MediaController extends Controller {
         // Resolve the project by the UUID from the URL — NOT by the user id.
         $project = Project::where('uuid', $uuid)->first();
         if(!$project) {
-            return $this->notFound('Project not found');
+            return $this->notFound(__('Project not found'));
         }
 
         $file = Media::where('project_id', $project->id)->find($media_id);
 
         if(!$file) {
-            return $this->notFound('Media not found');
+            return $this->notFound(__('Media not found'));
         }
 
         $storagePath = $file->disk === 'public' ? $project->uuid : 'public/'.$project->uuid;
@@ -126,7 +126,7 @@ class MediaController extends Controller {
         if($file->delete()){
             return $this->deleted('Media deleted');
         } else {
-            return $this->notFound('Failed to delete media');
+            return $this->notFound(__('Failed to delete media'));
         }
     }
 
@@ -145,7 +145,7 @@ class MediaController extends Controller {
         // Resolve the project by the UUID from the URL — NOT by the user id.
         $project = Project::where('uuid', $uuid)->first();
         if(!$project) {
-            return $this->notFound('Project not found');
+            return $this->notFound(__('Project not found'));
         }
 
         if($request->has('file')){
@@ -202,7 +202,7 @@ class MediaController extends Controller {
 
             return $this->created(new MediaResource($new_file), 'File uploaded successfully');
         } else {
-            return $this->validationError('File not found! Attach a file to your request.');
+            return $this->validationError(__('File not found! Attach a file to your request.'));
         }
     }
 
@@ -283,7 +283,7 @@ class MediaController extends Controller {
         $project = $request->attributes->get('resolved_project');
         
         if (!$project) {
-            return $this->notFound('Project not resolved');
+            return $this->notFound(__('Project not resolved'));
         }
         
         return $this->getMediaListByUuid($project->uuid);
@@ -302,7 +302,7 @@ class MediaController extends Controller {
         $project = $request->attributes->get('resolved_project');
         
         if (!$project) {
-            return $this->notFound('Project not resolved');
+            return $this->notFound(__('Project not resolved'));
         }
         
         return $this->getMediaByUuid($project->uuid, $media_id);
@@ -320,7 +320,7 @@ class MediaController extends Controller {
         $project = $request->attributes->get('resolved_project');
         
         if (!$project) {
-            return $this->notFound('Project not resolved');
+            return $this->notFound(__('Project not resolved'));
         }
         
         return $this->getMediaByNameByUuid($project->uuid, $media_name);
@@ -338,7 +338,7 @@ class MediaController extends Controller {
         $project = $request->attributes->get('resolved_project');
         
         if (!$project) {
-            return $this->notFound('Project not resolved');
+            return $this->notFound(__('Project not resolved'));
         }
         
         return $this->deleteMediaByUuid($project->uuid, $media_id);
@@ -355,7 +355,7 @@ class MediaController extends Controller {
         $project = $request->attributes->get('resolved_project');
         
         if (!$project) {
-            return $this->notFound('Project not resolved');
+            return $this->notFound(__('Project not resolved'));
         }
         
         return $this->uploadMediaByUuid($project->uuid, $request);

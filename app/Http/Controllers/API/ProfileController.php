@@ -63,7 +63,7 @@ class ProfileController extends Controller
         $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
         $user->save();
 
-        return $this->ok(['message' => 'Password updated.']);
+        return $this->ok(['message' => __('Password updated.')]);
     }
 
     /** Upload / replace the user's avatar. */

@@ -20,7 +20,7 @@ class TwoFactorController extends Controller
         $user = $request->user();
 
         if ($user->twoFactorEnabled()) {
-            return response()->json(['message' => 'Two factor authentication is already enabled.'], 422);
+            return response()->json(['message' => __('Two factor authentication is already enabled.')], 422);
         }
 
         if (! $user->two_factor_secret) {
@@ -45,11 +45,11 @@ class TwoFactorController extends Controller
         $user = $request->user();
 
         if (! $user->two_factor_secret) {
-            return response()->json(['message' => 'Enable two factor authentication first.'], 422);
+            return response()->json(['message' => __('Enable two factor authentication first.')], 422);
         }
 
         if (! TwoFactor::verify($user->two_factor_secret, $request->input('code'))) {
-            return response()->json(['message' => 'The provided code was invalid.'], 422);
+            return response()->json(['message' => __('The provided code was invalid.')], 422);
         }
 
         $codes = TwoFactor::generateRecoveryCodes();
@@ -81,7 +81,7 @@ class TwoFactorController extends Controller
 
         AuditLogger::log('update', 'user', $user->id, $user->email, ['field' => '2fa', 'action' => 'disable']);
 
-        return response()->json(['message' => 'Two factor authentication has been disabled.'], 200);
+        return response()->json(['message' => __('Two factor authentication has been disabled.')], 200);
     }
 
     /**
@@ -92,7 +92,7 @@ class TwoFactorController extends Controller
         $user = $request->user();
 
         if (! $user->twoFactorEnabled()) {
-            return response()->json(['message' => 'Two factor authentication is not enabled.'], 422);
+            return response()->json(['message' => __('Two factor authentication is not enabled.')], 422);
         }
 
         $codes = TwoFactor::generateRecoveryCodes();

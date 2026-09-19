@@ -41,7 +41,7 @@ class PreviewController extends Controller
             return response()->json([
                 'success' => false,
                 'code' => 404,
-                'message' => 'Preview not found or the link has been revoked.',
+                'message' => __('Preview not found or the link has been revoked.'),
                 'data' => null,
             ], 404);
         }
@@ -50,7 +50,7 @@ class PreviewController extends Controller
             return response()->json([
                 'success' => false,
                 'code' => 403,
-                'message' => 'Preview link has expired.',
+                'message' => __('Preview link has expired.'),
                 'data' => null,
             ], 403);
         }
@@ -58,7 +58,7 @@ class PreviewController extends Controller
         return response()->json([
             'success' => true,
             'code' => 200,
-            'message' => 'Success',
+            'message' => __('Success'),
             'data' => new ContentResource($content),
         ]);
     }

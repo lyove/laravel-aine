@@ -30,7 +30,7 @@ trait AuthorizesProjectApi
             return response()->json([
                 'success' => false,
                 'code' => 401,
-                'message' => 'Unauthenticated',
+                'message' => __('Unauthenticated'),
                 'data' => null,
             ], 401);
         }
@@ -41,7 +41,7 @@ trait AuthorizesProjectApi
             return response()->json([
                 'success' => false,
                 'code' => 403,
-                'message' => 'API token is not valid for this project',
+                'message' => __('API token is not valid for this project'),
                 'data' => null,
             ], 403);
         }
@@ -50,7 +50,7 @@ trait AuthorizesProjectApi
             return response()->json([
                 'success' => false,
                 'code' => 403,
-                'message' => 'API token does not have the required permissions',
+                'message' => __('API token does not have the required permissions'),
                 'data' => null,
             ], 403);
         }
@@ -69,7 +69,7 @@ trait AuthorizesProjectApi
             return response()->json([
                 'success' => false,
                 'code' => 401,
-                'message' => 'Unauthenticated',
+                'message' => __('Unauthenticated'),
                 'data' => null,
             ], 401);
         }
@@ -78,7 +78,7 @@ trait AuthorizesProjectApi
             return response()->json([
                 'success' => false,
                 'code' => 403,
-                'message' => 'API token does not have the required permissions',
+                'message' => __('API token does not have the required permissions'),
                 'data' => null,
             ], 403);
         }
@@ -87,7 +87,7 @@ trait AuthorizesProjectApi
             return response()->json([
                 'success' => false,
                 'code' => 404,
-                'message' => 'Project not found',
+                'message' => __('Project not found'),
                 'data' => null,
             ], 404);
         }

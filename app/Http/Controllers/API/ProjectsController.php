@@ -23,7 +23,7 @@ class ProjectsController extends Controller {
         $project = Project::where('uuid', $uuid)->first();
 
         if(!$project){
-            return $this->notFound('Project not found');
+            return $this->notFound(__('Project not found'));
         }
         if ($response = $this->authorizeProjectRead($project)) {
             return $response;
@@ -58,7 +58,7 @@ class ProjectsController extends Controller {
         $project = $request->attributes->get('resolved_project');
         
         if (!$project) {
-            return $this->notFound('Project not resolved');
+            return $this->notFound(__('Project not resolved'));
         }
         
         return $this->getProjectByUuid($project->uuid);

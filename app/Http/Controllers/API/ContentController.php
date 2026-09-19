@@ -60,7 +60,7 @@ class ContentController extends Controller
     private function getContentListByUuid($uuid, $slug, Request $request)
     {
         $project = Project::where('uuid', $uuid)->first();
-        if (! $project) return $this->notFound('Project not found');
+        if (! $project) return $this->notFound(__('Project not found'));
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
         $cacheKey = $this->publicCacheKey($project, 'list', $slug, $request, [$slug]);
@@ -72,7 +72,7 @@ class ContentController extends Controller
     public function getContentList($project_identifier, $slug, Request $request)
     {
         $project = $request->attributes->get('resolved_project');
-        if (! $project) return $this->notFound('Project not resolved');
+        if (! $project) return $this->notFound(__('Project not resolved'));
         return $this->getContentListByUuid($project->uuid, $slug, $request);
     }
 
@@ -83,7 +83,7 @@ class ContentController extends Controller
     private function getContentByUuid($uuid, $slug, $slug_id, Request $request)
     {
         $project = Project::where('uuid', $uuid)->first();
-        if (! $project) return response(['error' => 'Project not found!'], 404);
+        if (! $project) return response(['error' => __('Project not found!')], 404);
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
         $cacheKey = $this->publicCacheKey($project, 'single', $slug . '/' . $slug_id, $request, [$slug]);
@@ -95,18 +95,18 @@ class ContentController extends Controller
     public function getProjectContentByID($project_identifier, $slug, $slug_id, Request $request)
     {
         $project = $request->attributes->get('resolved_project');
-        if (! $project) return $this->notFound('Project not resolved');
+        if (! $project) return $this->notFound(__('Project not resolved'));
         return $this->getContentByUuid($project->uuid, $slug, $slug_id, $request);
     }
 
     private function resolveContentByUuid($uuid, $slug, $slug_id, Request $request)
     {
         $project = Project::where('uuid', $uuid)->first();
-        if (! $project) return response(['error' => 'Project not found!'], 404);
+        if (! $project) return response(['error' => __('Project not found!')], 404);
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
         $collection = Collection::with('fields')->where('project_id', $project->id)->where('slug', $slug)->first();
-        if (! $collection) return response(['error' => 'Collection not found!'], 404);
+        if (! $collection) return response(['error' => __('Collection not found!')], 404);
 
         $selectFields = ['id', 'project_id', 'collection_id', 'locale'];
         if ($request->has('timestamps')) {
@@ -118,7 +118,7 @@ class ContentController extends Controller
         $content = $this->publishedContentQuery($project, $collection, $locale, $selectFields)
             ->find($slug_id);
 
-        if (! $content) return $this->notFound('Not found');
+        if (! $content) return $this->notFound(__('Not found'));
 
         ContentSerializer::preload($content);
         return $this->success(new ContentResource($content), 'Success');
@@ -131,7 +131,7 @@ class ContentController extends Controller
     private function getContentBySlugUuid($uuid, $slug, $slug_value, Request $request)
     {
         $project = Project::where('uuid', $uuid)->first();
-        if (! $project) return response(['error' => 'Project not found!'], 404);
+        if (! $project) return response(['error' => __('Project not found!')], 404);
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
         $cacheKey = $this->publicCacheKey($project, 'single', $slug . '/slug/' . $slug_value, $request, [$slug]);
@@ -143,18 +143,18 @@ class ContentController extends Controller
     public function getProjectContentBySlug($project_identifier, $slug, $slug_value, Request $request)
     {
         $project = $request->attributes->get('resolved_project');
-        if (! $project) return $this->notFound('Project not resolved');
+        if (! $project) return $this->notFound(__('Project not resolved'));
         return $this->getContentBySlugUuid($project->uuid, $slug, $slug_value, $request);
     }
 
     private function resolveContentBySlugUuid($uuid, $slug, $slug_value, Request $request)
     {
         $project = Project::where('uuid', $uuid)->first();
-        if (! $project) return response(['error' => 'Project not found!'], 404);
+        if (! $project) return response(['error' => __('Project not found!')], 404);
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
         $collection = Collection::with('fields')->where('project_id', $project->id)->where('slug', $slug)->first();
-        if (! $collection) return response(['error' => 'Collection not found!'], 404);
+        if (! $collection) return response(['error' => __('Collection not found!')], 404);
 
         $selectFields = ['id', 'project_id', 'collection_id', 'locale'];
         if ($request->has('timestamps')) {
@@ -165,7 +165,7 @@ class ContentController extends Controller
 
         $content = $this->contentBySlug($project, $collection, $slug_value, $locale, $selectFields);
 
-        if (! $content) return $this->notFound('Not found');
+        if (! $content) return $this->notFound(__('Not found'));
 
         ContentSerializer::preload($content);
         return $this->success(new ContentResource($content), 'Success');
@@ -212,7 +212,7 @@ class ContentController extends Controller
         $project = $request->attributes->get('resolved_project')
             ?? Project::where('uuid', $uuid)->first();
 
-        if (! $project) return $this->notFound('Project not found');
+        if (! $project) return $this->notFound(__('Project not found'));
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
         $cacheKey = $this->publicCacheKey($project, 'related', $slug . '/' . $slug_id . '/' . $relatedSlug, $request, [$slug, $relatedSlug]);
@@ -224,7 +224,7 @@ class ContentController extends Controller
     public function getProjectContentByRelation($project_identifier, $slug, $slug_id, $related_slug, Request $request)
     {
         $project = $request->attributes->get('resolved_project');
-        if (! $project) return $this->notFound('Project not resolved');
+        if (! $project) return $this->notFound(__('Project not resolved'));
         return $this->getContentByRelationByUuid($project->uuid, $slug, $slug_id, $related_slug, $request);
     }
 
@@ -240,7 +240,7 @@ class ContentController extends Controller
         $project = $request->attributes->get('resolved_project')
             ?? Project::where('uuid', $uuid)->first();
 
-        if (! $project) return $this->notFound('Project not found');
+        if (! $project) return $this->notFound(__('Project not found'));
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
         $cacheKey = $this->publicCacheKey($project, 'related', $slug . '/slug/' . $slug_value . '/' . $relatedSlug, $request, [$slug, $relatedSlug]);
@@ -253,7 +253,7 @@ class ContentController extends Controller
     {
         $project = $request->attributes->get('resolved_project');
         if (! $project) {
-            return $this->notFound('Project not resolved');
+            return $this->notFound(__('Project not resolved'));
         }
         return $this->getContentBySlugRelationByUuid($project->uuid, $slug, $slug_value, $related_slug, $request);
     }
@@ -320,7 +320,7 @@ class ContentController extends Controller
         if ($request->has('sort')) {
             foreach (explode(',', $request->get('sort')) as $s) {
                 $sort = explode(':', $s);
-                if (count($sort) < 2) return $this->validationError('Incorrect sort statement');
+                if (count($sort) < 2) return $this->validationError(__('Incorrect sort statement'));
                 if (in_array($sort[0], ['id', 'locale', 'created_at', 'updated_at', 'published_at'])) {
                     $content->orderBy($sort[0], $sort[1]);
                 } else {
@@ -336,7 +336,7 @@ class ContentController extends Controller
         $content->whereNotNull('published_at');
 
         if ($request->has('offset') && ! $request->has('limit')) {
-            return $this->validationError('Incorrect offset statement.');
+            return $this->validationError(__('Incorrect offset statement.'));
         }
         if ($paginationError = $this->validatePagination($request)) return $paginationError;
 
@@ -353,7 +353,7 @@ class ContentController extends Controller
 
         if ($request->has('first')) {
             $content = $content->first();
-            if (! $content) return $this->notFound('Not found');
+            if (! $content) return $this->notFound(__('Not found'));
             ContentSerializer::preload($content);
             return $this->success(new ContentResource($content), 'Success');
         }
@@ -370,20 +370,20 @@ class ContentController extends Controller
     public function searchContent($project_identifier, $slug, Request $request)
     {
         $project = $request->attributes->get('resolved_project');
-        if (! $project) return $this->notFound('Project not resolved');
+        if (! $project) return $this->notFound(__('Project not resolved'));
         return $this->searchContentByUuid($project->uuid, $slug, $request);
     }
 
     public function searchContentByUuid($uuid, $slug, Request $request)
     {
         $project = Project::where('uuid', $uuid)->first();
-        if (! $project) return $this->notFound('Project not found');
+        if (! $project) return $this->notFound(__('Project not found'));
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
         $query = trim((string) $request->get('query', ''));
         $queryLen = mb_strlen($query);
-        if ($queryLen < 2)   return $this->validationError('Search query must be at least 2 characters.');
-        if ($queryLen > 100) return $this->validationError('Search query cannot exceed 100 characters.');
+        if ($queryLen < 2)   return $this->validationError(__('Search query must be at least 2 characters.'));
+        if ($queryLen > 100) return $this->validationError(__('Search query cannot exceed 100 characters.'));
 
         $result = $this->queryService->search(
             $project, $slug, $query,
@@ -400,7 +400,7 @@ class ContentController extends Controller
         }
 
         return response()->json([
-            'success' => true, 'code' => 200, 'message' => 'Success',
+            'success' => true, 'code' => 200, 'message' => __('Success'),
             'data' => $responseData, 'total' => $result['total'],
             'limit' => $result['limit'], 'offset' => $result['offset'],
         ], 200);
@@ -413,7 +413,7 @@ class ContentController extends Controller
     public function createContent($project_identifier, $slug, Request $request)
     {
         $project = $request->attributes->get('resolved_project');
-        if (! $project) return $this->notFound('Project not resolved');
+        if (! $project) return $this->notFound(__('Project not resolved'));
         return $this->createContentByUuid($project->uuid, $slug, $request);
     }
 
@@ -422,11 +422,11 @@ class ContentController extends Controller
         if ($response = $this->authorizeProjectAbility('create', $uuid)) return $response;
 
         $project = Project::where('uuid', $uuid)->first();
-        if (! $project) return $this->notFound('Project not found');
+        if (! $project) return $this->notFound(__('Project not found'));
 
         $collection = Collection::query()->with(['fields'])
             ->where('project_id', $project->id)->where('slug', $slug)->first();
-        if (! $collection) return $this->notFound('Collection not found');
+        if (! $collection) return $this->notFound(__('Collection not found'));
 
         $fields = $this->decodeFieldMeta($collection->fields);
 
@@ -478,7 +478,7 @@ class ContentController extends Controller
     public function updateContent($project_identifier, $slug, $slug_id, Request $request)
     {
         $project = $request->attributes->get('resolved_project');
-        if (! $project) return $this->notFound('Project not resolved');
+        if (! $project) return $this->notFound(__('Project not resolved'));
         return $this->updateContentByUuid($project->uuid, $slug, $slug_id, $request);
     }
 
@@ -487,15 +487,15 @@ class ContentController extends Controller
         if ($response = $this->authorizeProjectAbility('update', $uuid)) return $response;
 
         $project = Project::where('uuid', $uuid)->first();
-        if (! $project) return $this->notFound('Project not found');
+        if (! $project) return $this->notFound(__('Project not found'));
 
         $collection = Collection::query()->with(['fields'])
             ->where('project_id', $project->id)->where('slug', $slug)->first();
-        if (! $collection) return $this->notFound('Collection not found');
+        if (! $collection) return $this->notFound(__('Collection not found'));
 
         $content = Content::where('project_id', $project->id)
             ->where('collection_id', $collection->id)->where('id', $slug_id)->first();
-        if (! $content) return $this->notFound('Record not found');
+        if (! $content) return $this->notFound(__('Record not found'));
 
         $fields = $this->decodeFieldMeta($collection->fields);
 
@@ -550,7 +550,7 @@ class ContentController extends Controller
     public function deleteContent($project_identifier, $slug, $slug_id, Request $request)
     {
         $project = $request->attributes->get('resolved_project');
-        if (! $project) return $this->notFound('Project not resolved');
+        if (! $project) return $this->notFound(__('Project not resolved'));
         return $this->deleteContentByUuid($project->uuid, $slug, $slug_id);
     }
 
@@ -559,15 +559,15 @@ class ContentController extends Controller
         if ($response = $this->authorizeProjectAbility('delete', $uuid)) return $response;
 
         $project = Project::where('uuid', $uuid)->first();
-        if (! $project) return $this->notFound('Project not found');
+        if (! $project) return $this->notFound(__('Project not found'));
 
         $collection = Collection::query()->with(['fields'])
             ->where('project_id', $project->id)->where('slug', $slug)->first();
-        if (! $collection) return $this->notFound('Collection not found');
+        if (! $collection) return $this->notFound(__('Collection not found'));
 
         $content = Content::where('project_id', $project->id)
             ->where('collection_id', $collection->id)->find($slug_id);
-        if (! $content) return $this->notFound('Record not found');
+        if (! $content) return $this->notFound(__('Record not found'));
 
         $this->mutationService->delete($content);
         ContentTrashed::dispatch(['source' => 'API', 'content' => $content]);
@@ -581,7 +581,7 @@ class ContentController extends Controller
     public function getPortalContent($project_identifier, Request $request)
     {
         $project = $request->attributes->get('resolved_project');
-        if (! $project) return $this->notFound('Project not resolved');
+        if (! $project) return $this->notFound(__('Project not resolved'));
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
         $collectionSlug = $request->get('collection', 'articles');
@@ -624,7 +624,7 @@ class ContentController extends Controller
         $skel = fn (array $o) => ['sort' => 'published_at:desc', 'timestamps' => true] + $o;
 
         return response()->json([
-            'success' => true, 'code' => 200, 'message' => 'Success',
+            'success' => true, 'code' => 200, 'message' => __('Success'),
             'data' => [
                 'categories'  => $sections,
                 'featured'    => $listFn($project->uuid, $collectionSlug, $skel(['filters.featured' => '1', 'limit' => 8])),
@@ -677,11 +677,11 @@ class ContentController extends Controller
     private function resolveContentListByUuid($uuid, $slug, Request $request)
     {
         $project = Project::where('uuid', $uuid)->first();
-        if (! $project) return $this->notFound('Project not found');
+        if (! $project) return $this->notFound(__('Project not found'));
         if ($response = $this->authorizeProjectRead($project)) return $response;
 
         $collection = Collection::where('project_id', $project->id)->where('slug', $slug)->first();
-        if (! $collection) return $this->notFound('Collection not found');
+        if (! $collection) return $this->notFound(__('Collection not found'));
 
         $locale = $this->resolveLocale($request, $project);
 
@@ -697,7 +697,7 @@ class ContentController extends Controller
         if ($request->has('sort')) {
             foreach (explode(',', $request->get('sort')) as $s) {
                 $sort = explode(':', $s);
-                if (count($sort) < 2) return $this->validationError('Incorrect sort statement');
+                if (count($sort) < 2) return $this->validationError(__('Incorrect sort statement'));
                 if (in_array($sort[0], ['id', 'locale', 'created_at', 'updated_at', 'published_at'])) {
                     $content->orderBy($sort[0], $sort[1]);
                 } else {
@@ -712,7 +712,7 @@ class ContentController extends Controller
 
         $content->whereNotNull('published_at');
         if ($request->has('offset') && ! $request->has('limit')) {
-            return $this->validationError('Incorrect offset statement.');
+            return $this->validationError(__('Incorrect offset statement.'));
         }
         if ($paginationError = $this->validatePagination($request)) return $paginationError;
 
@@ -729,7 +729,7 @@ class ContentController extends Controller
 
         if ($request->has('first')) {
             $content = $content->first();
-            if (! $content) return $this->notFound('Not found');
+            if (! $content) return $this->notFound(__('Not found'));
             ContentSerializer::preload($content);
             return $this->success(new ContentResource($content), 'Success');
         }
@@ -899,13 +899,13 @@ class ContentController extends Controller
         if ($request->has('limit')) {
             $limit = $request->get('limit');
             if (! is_numeric($limit) || (int) $limit < 1) {
-                return $this->validationError('Invalid limit parameter.');
+                return $this->validationError(__('Invalid limit parameter.'));
             }
         }
         if ($request->has('offset')) {
             $offset = $request->get('offset');
             if (! is_numeric($offset) || (int) $offset < 0) {
-                return $this->validationError('Invalid offset parameter.');
+                return $this->validationError(__('Invalid offset parameter.'));
             }
             if ((int) $offset > self::MAX_PAGE_OFFSET) {
                 return $this->validationError('Offset cannot exceed ' . self::MAX_PAGE_OFFSET . '.');
