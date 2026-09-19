@@ -373,6 +373,7 @@ import UiSwitch from "../../components/UiSwitch.vue";
 
 import localesJson from "../../locales.json";
 import { useAdminStore } from '../store';
+import { __ } from '../translations/engine';
 
 function detectBrowserTimezone() {
     try {
