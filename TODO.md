@@ -15,7 +15,6 @@
 ## Notification Improvements
 1. Show a red badge with a count on items that have pending tasks
 
-
 ## 邮箱激活、验证功能
 1. 待测试 邮箱激活、验证功能
 
