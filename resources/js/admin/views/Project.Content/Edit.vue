@@ -1281,7 +1281,7 @@ export default {
             const cacheKey = index !== undefined ? fieldName + '_' + index : fieldName;
             const storageKey = 'favicon:' + url;
 
-            // Check sessionStorage cache
+            // Check sessionStorage cache (only success results are cached)
             const cached = sessionStorage.getItem(storageKey);
             if (cached !== null) {
                 this.favicons[cacheKey] = cached || null;
@@ -1297,11 +1297,9 @@ export default {
                     sessionStorage.setItem(storageKey, response.data.data.favicon_url);
                 } else {
                     this.favicons[cacheKey] = null;
-                    sessionStorage.setItem(storageKey, '');
                 }
             }).catch(() => {
                 this.favicons[cacheKey] = null;
-                sessionStorage.setItem(storageKey, '');
             });
         },
 
