@@ -87,6 +87,7 @@
                                         :value="(option) => option[0]"
                                         :placeholder="__('Select Locale')"
                                         v-model="addLocaleData"
+                                        append-to-body
                                     ></v-select>
                                 </div>
 
