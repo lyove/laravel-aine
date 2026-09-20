@@ -87,7 +87,6 @@
                                         :value="(option) => option[0]"
                                         :placeholder="__('Select Locale')"
                                         v-model="addLocaleData"
-                                        append-to-body
                                     ></v-select>
                                 </div>
 
@@ -305,5 +304,11 @@ export default {
 .admin__localization .v-select.vs--open .vs__actions::after,
 .admin__project-settings-locales .v-select.vs--open .vs__actions::after {
     transform: rotate(180deg);
+}
+.admin__project-settings-locales .v-select .vs__dropdown-menu {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: 5px;
 }
 </style>
