@@ -50,7 +50,7 @@
 
         <div class="flex-1 overflow-y-auto min-h-0">
             <VueDraggable
-                :list="project.collections"
+                v-model="project.collections"
                 @end="sortCollections"
                 v-bind="dragOptions"
                 class="_drag-box"

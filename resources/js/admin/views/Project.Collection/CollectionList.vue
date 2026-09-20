@@ -51,7 +51,7 @@
 
                 <div class="flex-1 overflow-y-auto min-h-0" style="scrollbar-gutter: stable">
                     <VueDraggable 
-                        :list="collection.fields" 
+                        v-model="collection.fields" 
                         @end="sortFields" 
                         v-bind="dragOptions" 
                         class="_drag-box"
