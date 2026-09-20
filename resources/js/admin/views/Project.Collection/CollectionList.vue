@@ -54,13 +54,12 @@
                         :list="collection.fields" 
                         @end="sortFields" 
                         v-bind="dragOptions" 
-                        handle=".handle"
                         class="_drag-box"
                     >
                         <transition-group type="transition" class="_trans-group" :css="false">
                             <div class="w-full mb-3" v-for="field in collection.fields" :key="field.id">
                                 <div class="flex items-center w-full bg-white rounded-md p-4 shadow-sm">
-                                    <span class="inline-block mr-3 text-gray-500 an__cursor-move">
+                                    <span class="inline-block mr-3 text-gray-500 an__cursor-move handle" v-if="!isReadonly && canProject(['owner', 'admin'])">
                                         <i class="fas fa-grip-vertical"></i>
                                     </span>
                                     <div :class="fieldDetails[field.type].bg" class="mr-4 text-gray-100 rounded-md text-xl items-center text-center flex field_icon_xl">
@@ -1288,6 +1287,7 @@ export default {
             return {
                 animation: 200,
                 disabled: this.isReadonly,
+                handle: ".handle",
             };
         },
     },

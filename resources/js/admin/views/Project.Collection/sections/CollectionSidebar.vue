@@ -53,7 +53,6 @@
                 :list="project.collections"
                 @end="sortCollections"
                 v-bind="dragOptions"
-                handle=".handle"
                 class="_drag-box"
             >
                 <transition-group type="transition" class="_trans-group" :css="false">
@@ -62,7 +61,9 @@
                         v-for="collection in filterSearch"
                         :key="collection.id"
                     >
-                        <i v-if="!isReadonly && canProject(['owner', 'admin'])" class="fas fa-grip-vertical mr-4 text-gray-500 an__cursor-move handle"></i>
+                        <span v-if="!isReadonly && canProject(['owner', 'admin'])" class="mr-4 text-gray-500 an__cursor-move handle">
+                            <i class="fas fa-grip-vertical"></i>
+                        </span>
                         <router-link
                             :to="{
                                 name: 'projects.collections.list',
@@ -252,6 +253,7 @@ export default {
             return {
                 animation: 200,
                 disabled: this.isReadonly,
+                handle: ".handle",
             };
         },
         filterSearch() {

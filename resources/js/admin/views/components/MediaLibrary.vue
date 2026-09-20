@@ -359,7 +359,9 @@ export default {
 
     data() {
         return {
-            media: {},
+            media: {
+                data: [],
+            },
             search: null,
             selectedFiles: [],
             selectedFile: null,
@@ -599,6 +601,11 @@ export default {
 
         selectAllFiles() {
             if (!this.selectAll) {
+                if (!this.media || !Array.isArray(this.media.data)) {
+                    this.selectAll = false;
+                    return;
+                }
+
                 for (let i = 0; i < this.media.data.length; i++) {
                     if (!this.selectedFiles.includes(this.media.data[i].id)) {
                         this.selectedFiles.push(this.media.data[i].id);
