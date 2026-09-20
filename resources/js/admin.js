@@ -101,13 +101,13 @@ window.axios.interceptors.response.use(
         return response;
     },
     (error) => {
-        if (error.response && error.response.status === 401) {
+        if (error.response && error.response.status === 401 && !error.config?.skipAuthRedirect) {
             window.location.reload();
         } else if (error.response && error.response.status === 403) {
             console.warn(error.response.data?.message || "Forbidden");
         } else if (error.response && error.response.status === 404) {
             console.warn("Resource not found. Please check your connection and try again.");
-        } else if (error.response && error.response.status === 419) {
+        } else if (error.response && error.response.status === 419 && !error.config?.skipAuthRedirect) {
             window.location.reload();
         } else if (error.response && error.response.status === 422) {
             // Validation errors - let components handle display

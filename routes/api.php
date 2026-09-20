@@ -23,6 +23,9 @@ use App\Http\Controllers\API\FeedController;
 |
 */
 
+// UUID pattern: only match actual UUIDs, not paths like /getFavicon
+Route::pattern('uuid', '[0-9a-fA-F-]{36}');
+
 Route::middleware(['web'])->get('/auth/me', [AuthController::class, 'me']);
 
 // Login API
@@ -107,7 +110,7 @@ Route::middleware(['validate.project.access', 'auth:sanctum'])->group(function (
 });
 
 // Favicon Fetch API
-Route::get('/getFavicon', [FaviconController::class, 'show'])->middleware('throttle:api-favicon');
+Route::get('/getFavicon', [\App\Http\Controllers\API\FaviconController::class, 'show'])->middleware('throttle:api-favicon');
 
 Route::options('{any}', function () {
     return response('', 204);

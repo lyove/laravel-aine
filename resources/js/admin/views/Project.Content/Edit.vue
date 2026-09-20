@@ -1291,7 +1291,7 @@ export default {
             // Set loading state
             this.favicons[cacheKey] = 'loading';
 
-            axios.get('/api/getFavicon', { params: { url }, baseURL: '' }).then((response) => {
+            axios.get('/api/getFavicon', { params: { url }, baseURL: '', skipAuthRedirect: true }).then((response) => {
                 if (response.data.success && response.data.data.favicon_url) {
                     this.favicons[cacheKey] = response.data.data.favicon_url;
                     sessionStorage.setItem(storageKey, response.data.data.favicon_url);
