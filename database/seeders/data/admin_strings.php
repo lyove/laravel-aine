@@ -1206,7 +1206,7 @@ return [
             'Content' => '内容',
             'Articles' => '文章',
             'Title' => '标题',
-            'Path' => '网址路径',
+            'Path' => '别名路径',
             'Excerpt' => '摘要',
             'Featured Image' => '特色图片',
             'Category' => '分类',

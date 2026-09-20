@@ -671,7 +671,7 @@ class DemoProjectsSeeder extends Seeder
         $this->seedProjectTranslations($project, [
             'Pages' => '页面', 'Articles' => '文章', 'Categories' => '分类', 'Author' => '作者',
             'Tags' => '标签', 'Comments' => '评论', 'Globals' => '全局',
-            'Title' => '标题', 'Path' => '路径', 'Content' => '内容', 'Description' => '描述',
+            'Title' => '标题', 'Path' => '别名路径', 'Content' => '内容', 'Description' => '描述',
             'Excerpt' => '摘要', 'Featured Image' => '特色图片', 'Category' => '分类', 'Author' => '作者',
             'Slider' => '幻灯片', 'Featured' => '精选', 'Recommended' => '推荐',
             'Name' => '姓名', 'Info' => '简介', 'Avatar' => '头像',
@@ -939,7 +939,7 @@ class DemoProjectsSeeder extends Seeder
         $this->seedProjectTranslations($project, [
             'Listings' => '商家', 'Categories' => '分类', 'Tags' => '标签', 'Locations' => '位置',
             'Reviews' => '评价', 'Globals' => '全局',
-            'Business Name' => '商家名称', 'Path' => '路径', 'Description' => '描述',
+            'Business Name' => '商家名称', 'Path' => '别名路径', 'Description' => '描述',
             'Category' => '分类', 'Location' => '位置', 'Logo' => '标志', 'Gallery' => '图库',
             'Phone' => '电话', 'Email' => '邮箱', 'Website' => '网站', 'Address' => '地址',
             'Opening Hours' => '营业时间', 'Price Range' => '价格区间', 'Featured' => '精选',
@@ -1092,7 +1092,7 @@ class DemoProjectsSeeder extends Seeder
         /* --- Project translations (zh, the base locale) --- */
         foreach ([
             'Pages' => '页面', 'Posts' => '日志', 'Categories' => '分类', 'Tags' => '标签', 'Globals' => '全局',
-            'Title' => '标题', 'Path' => '路径', 'Content' => '内容', 'Image' => '图片',
+            'Title' => '标题', 'Path' => '别名路径', 'Content' => '内容', 'Image' => '图片',
             'Excerpt' => '摘要', 'Featured Image' => '特色图片', 'Category' => '分类', 'Tag' => '标签',
             'Slider' => '幻灯片', 'Featured' => '精选', 'Recommended' => '推荐',
             'Label' => '标签名', 'Value' => '值', 'Description' => '描述',
