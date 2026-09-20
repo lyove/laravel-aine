@@ -1,0 +1,871 @@
+/**
+ * Semantic API client for the Aine headless CMS.
+ */
+
+import axios from "axios";
+import http from "./http";
+import { PROJECTS, COLLECTIONS } from "./config";
+
+const cms = PROJECTS.cms.identifier;
+const directory = PROJECTS.directory.identifier;
+const note = PROJECTS.note.identifier;
+const articles = PROJECTS.cms.contentCollection;
+const listings = PROJECTS.directory.contentCollection;
+const posts = PROJECTS.note.contentCollection;
+
+const endpoints = {
+  // =================================================================
+  // CMS project — articles
+  // =================================================================
+  getArticles: {
+    type: "get",
+    project: cms,
+    collection: articles,
+  },
+  getArticle: {
+    type: "get",
+    project: cms,
+    collection: articles,
+    id: true,
+  },
+  getArticleBySlug: {
+    type: "get",
+    project: cms,
+    collection: articles,
+    id: true,
+    bySlug: true,
+  },
+  searchArticles: {
+    type: "get",
+    project: cms,
+    collection: articles,
+    action: "search",
+  },
+  createArticle: {
+    type: "post",
+    project: cms,
+    collection: articles,
+  },
+  updateArticle: {
+    type: "post",
+    project: cms,
+    collection: articles,
+    id: true,
+    action: "update",
+  },
+  deleteArticle: {
+    type: "delete",
+    project: cms,
+    collection: articles,
+    id: true,
+  },
+
+  // =================================================================
+  // CMS project — categories
+  // =================================================================
+  getCategories: {
+    type: "get",
+    project: cms,
+    collection: COLLECTIONS.categories,
+  },
+  getCategory: {
+    type: "get",
+    project: cms,
+    collection: COLLECTIONS.categories,
+    id: true,
+  },
+  getCategoryArticles: {
+    type: "get",
+    project: cms,
+    source: COLLECTIONS.categories,
+    id: true,
+    related: articles,
+  },
+  getCategoryArticlesBySlug: {
+    type: "get",
+    project: cms,
+    source: COLLECTIONS.categories,
+    id: true,
+    bySlug: true,
+    related: articles,
+  },
+
+  // =================================================================
+  // CMS project — tags
+  // =================================================================
+  getTags: {
+    type: "get",
+    project: cms,
+    collection: COLLECTIONS.tags,
+  },
+  getTag: {
+    type: "get",
+    project: cms,
+    collection: COLLECTIONS.tags,
+    id: true,
+  },
+  getTagArticles: {
+    type: "get",
+    project: cms,
+    source: COLLECTIONS.tags,
+    id: true,
+    related: articles,
+  },
+
+  // =================================================================
+  // CMS project — locations
+  // =================================================================
+  getCmsLocations: {
+    type: "get",
+    project: cms,
+    collection: "locations",
+  },
+  getCmsLocationArticles: {
+    type: "get",
+    project: cms,
+    source: "locations",
+    id: true,
+    related: articles,
+  },
+
+  // =================================================================
+  // CMS project — pages
+  // =================================================================
+  getPages: {
+    type: "get",
+    project: cms,
+    collection: COLLECTIONS.pages,
+  },
+  getPage: {
+    type: "get",
+    project: cms,
+    collection: COLLECTIONS.pages,
+    id: true,
+  },
+
+  // =================================================================
+  // CMS project — portal
+  // =================================================================
+  getCmsPortal: {
+    type: "get",
+    project: cms,
+    action: "portal",
+    suppressError: true,
+  },
+
+  // =================================================================
+  // Directory project — listings
+  // =================================================================
+  getListings: {
+    type: "get",
+    project: directory,
+    collection: listings,
+  },
+  getListing: {
+    type: "get",
+    project: directory,
+    collection: listings,
+    id: true,
+  },
+  getListingBySlug: {
+    type: "get",
+    project: directory,
+    collection: listings,
+    id: true,
+    bySlug: true,
+  },
+  searchListings: {
+    type: "get",
+    project: directory,
+    collection: listings,
+    action: "search",
+  },
+  createListing: {
+    type: "post",
+    project: directory,
+    collection: listings,
+  },
+  updateListing: {
+    type: "post",
+    project: directory,
+    collection: listings,
+    id: true,
+    action: "update",
+  },
+  deleteListing: {
+    type: "delete",
+    project: directory,
+    collection: listings,
+    id: true,
+  },
+
+  // =================================================================
+  // Directory project — categories / locations
+  // =================================================================
+  getDirectoryCategories: {
+    type: "get",
+    project: directory,
+    collection: COLLECTIONS.categories,
+  },
+  getCategoryListings: {
+    type: "get",
+    project: directory,
+    source: COLLECTIONS.categories,
+    id: true,
+    related: listings,
+  },
+  getCategoryListingsBySlug: {
+    type: "get",
+    project: directory,
+    source: COLLECTIONS.categories,
+    id: true,
+    bySlug: true,
+    related: listings,
+  },
+  getDirectoryTags: {
+    type: "get",
+    project: directory,
+    collection: COLLECTIONS.tags,
+  },
+  getDirectoryTagListings: {
+    type: "get",
+    project: directory,
+    source: COLLECTIONS.tags,
+    id: true,
+    related: listings,
+  },
+  getLocations: {
+    type: "get",
+    project: directory,
+    collection: "locations",
+  },
+  getLocationListings: {
+    type: "get",
+    project: directory,
+    source: "locations",
+    id: true,
+    related: listings,
+  },
+  getListingReviews: {
+    type: "get",
+    project: directory,
+    source: listings,
+    id: true,
+    related: "reviews",
+  },
+
+  // =================================================================
+  // Directory project — portal
+  // =================================================================
+  getDirectoryPortal: {
+    type: "get",
+    project: directory,
+    action: "portal",
+    suppressError: true,
+  },
+
+  // =================================================================
+  // Note project — posts
+  // =================================================================
+  getNotePosts: {
+    type: "get",
+    project: note,
+    collection: posts,
+  },
+  searchNotePosts: {
+    type: "get",
+    project: note,
+    collection: posts,
+    action: "search",
+  },
+  getNotePost: {
+    type: "get",
+    project: note,
+    collection: posts,
+    id: true,
+  },
+  getNotePostBySlug: {
+    type: "get",
+    project: note,
+    collection: posts,
+    id: true,
+    bySlug: true,
+  },
+
+  // =================================================================
+  // Note project — categories
+  // =================================================================
+  getNoteCategories: {
+    type: "get",
+    project: note,
+    collection: COLLECTIONS.categories,
+  },
+  getNoteCategoryPosts: {
+    type: "get",
+    project: note,
+    source: COLLECTIONS.categories,
+    id: true,
+    related: posts,
+  },
+  getNoteCategoryPostsBySlug: {
+    type: "get",
+    project: note,
+    source: COLLECTIONS.categories,
+    id: true,
+    bySlug: true,
+    related: posts,
+  },
+
+  // =================================================================
+  // Note project — tags
+  // =================================================================
+  getNoteTags: {
+    type: "get",
+    project: note,
+    collection: COLLECTIONS.tags,
+  },
+  getNoteTagPosts: {
+    type: "get",
+    project: note,
+    source: COLLECTIONS.tags,
+    id: true,
+    related: posts,
+  },
+
+  // =================================================================
+  // Note project — pages
+  // =================================================================
+  getNotePages: {
+    type: "get",
+    project: note,
+    collection: COLLECTIONS.pages,
+  },
+
+  // =================================================================
+  // Note project — portal
+  // =================================================================
+  getNotePortal: {
+    type: "get",
+    project: note,
+    action: "portal",
+    suppressError: true,
+  },
+
+  // =================================================================
+  // Media (CMS project by default)
+  // =================================================================
+  getMediaList: {
+    type: "get",
+    project: cms,
+    resource: "media",
+  },
+  getMediaItem: {
+    type: "get",
+    project: cms,
+    resource: "media",
+    id: true,
+  },
+  uploadMedia: {
+    type: "post",
+    project: cms,
+    resource: "media",
+    action: "upload",
+  },
+  deleteMedia: {
+    type: "delete",
+    project: cms,
+    resource: "media",
+    id: true,
+  },
+
+  // =================================================================
+  // Project info
+  // =================================================================
+  getCmsProject: {
+    type: "get",
+    project: cms,
+  },
+  getDirectoryProject: {
+    type: "get",
+    project: directory,
+  },
+  getNoteProject: {
+    type: "get",
+    project: note,
+  },
+};
+
+/* ------------------------------------------------------------------ *
+ * Locale scoping
+ * ------------------------------------------------------------------ */
+let currentLocale = null;
+const inflight = new Map();
+
+export function setApiLocale(locale) {
+  currentLocale = locale || null;
+  inflight.clear();
+}
+
+function scoped(params = {}) {
+  const merged = { ...params };
+  const skipLocale = merged._skipLocale === true;
+  delete merged._skipLocale;
+  if (currentLocale && !skipLocale) {
+    merged.filters = { locale: currentLocale, ...(merged.filters || {}) };
+  }
+  return merged;
+}
+
+/* ------------------------------------------------------------------ *
+ * Query serialization
+ * ------------------------------------------------------------------ */
+
+const OPERATORS = [
+  "equals",
+  "notEquals",
+  "contains",
+  "notContains",
+  "greaterThan",
+  "greaterThanOrEqual",
+  "lessThan",
+  "lessThanOrEqual",
+  "in",
+  "notIn",
+  "between",
+  "notBetween",
+  "isEmpty",
+  "notEmpty",
+];
+
+const CONTROL_PARAMS = [
+  "sort",
+  "limit",
+  "offset",
+  "state",
+  "first",
+  "count",
+  "timestamps",
+  "or",
+  "query",
+  "collection",
+];
+
+function formatVal(val) {
+  if (Array.isArray(val)) {
+    return val.join(",");
+  }
+  if (typeof val === "boolean") {
+    return val ? 1 : 0;
+  }
+  if (val === null || val === undefined) {
+    return "";
+  }
+  return String(val);
+}
+
+/**
+ * Serialize a single filter field into one or more `filters.x=y` parts.
+ * Handles scalar (equals), operator-object, and nested relation objects.
+ *
+ *   locale: 'zh'                              → filters.locale=zh
+ *   title: { contains: 'laravel' }            → filters.title=contains.laravel
+ *   category: { slug: 'tech' }                → filters.category.slug=tech
+ *   category: { slug: { contains: 'tech' } }  → filters.category.slug=contains.tech
+ */
+function serializeFilterField(field, filter) {
+  // Scalar → equals:  filters.locale=zh
+  if (filter === null || typeof filter !== "object") {
+    return [`filters.${field}=${encodeURIComponent(formatVal(filter))}`];
+  }
+
+  const keys = Object.keys(filter);
+
+  // Operator object: every key is a known operator (contains, greaterThan, ...)
+  //   title: { contains: 'laravel' }  →  filters.title=contains.laravel
+  const isOperatorObj =
+    keys.length >= 1 && keys.every((k) => OPERATORS.includes(k));
+  if (isOperatorObj) {
+    return Object.entries(filter).map(([op, val]) => {
+      if (op === "equals") {
+        return `filters.${field}=${encodeURIComponent(formatVal(val))}`;
+      }
+      return `filters.${field}=${op}.${encodeURIComponent(formatVal(val))}`;
+    });
+  }
+
+  // Nested object → relation filter, recurse with dotted path:
+  //   category: { slug: 'tech' }  →  filters.category.slug=tech
+  return keys.flatMap((subField) =>
+    serializeFilterField(`${field}.${subField}`, filter[subField])
+  );
+}
+
+/**
+ * Serialize a single condition for use inside an `or=` comma list.
+ * No `filters.` prefix (the `or` param itself implies filters).
+ */
+function serializeCondition(field, filter) {
+  if (filter === null || typeof filter !== "object") {
+    return `${field}=${formatVal(filter)}`;
+  }
+  return Object.entries(filter)
+    .map(([op, val]) => `${field}=${op}.${formatVal(val)}`)
+    .join(",");
+}
+
+/**
+ * Turn a params object { filters, sort, limit, or, ... } into a query
+ * string using dot-notation.  Returns '' when there is nothing to send.
+ */
+function serializeQuery(params = {}) {
+  const parts = [];
+
+  for (const [key, value] of Object.entries(params)) {
+    // Control params pass through as-is.
+    if (CONTROL_PARAMS.includes(key)) {
+      if (key === "or" && Array.isArray(value)) {
+        const conditions = value.flatMap((group) =>
+          Object.entries(group).map(([f, filter]) =>
+            serializeCondition(f, filter)
+          )
+        );
+        parts.push(`or=${encodeURIComponent(conditions.join(","))}`);
+      } else if (value !== undefined && value !== null) {
+        const v = typeof value === "boolean" ? (value ? 1 : 0) : value;
+        parts.push(`${key}=${encodeURIComponent(v)}`);
+      }
+      continue;
+    }
+
+    // The `filters` object expands into filters.* parts.
+    if (key === "filters" && value && typeof value === "object") {
+      for (const [field, filter] of Object.entries(value)) {
+        parts.push(...serializeFilterField(field, filter));
+      }
+      continue;
+    }
+  }
+
+  return parts.join("&");
+}
+
+/* ------------------------------------------------------------------ *
+ * URL building
+ * ------------------------------------------------------------------ */
+
+function buildUrl(config) {
+  const { project, collection, id, related, source, action, resource, bySlug } = config;
+  const base = `/api/project/${project}`;
+
+  if (resource === "media") {
+    if (action === "upload") {
+      return `${base}/media/upload`;
+    }
+    if (id) {
+      return `${base}/media/${id}`;
+    }
+    return `${base}/media`;
+  }
+
+  if (action === "portal") {
+    return `${base}/portal`;
+  }
+
+  // Slug-source relation: /{source}/slug/{slug_value}/{related}
+  // Must precede the ID relation branch (both share the same shape).
+  if (source && bySlug && related) {
+    return `${base}/${source}/slug/${id}/${related}`;
+  }
+  if (source && id && related) {
+    return `${base}/${source}/${id}/${related}`;
+  }
+  if (!collection) {
+    return base;
+  }
+
+  if (action === "search") {
+    return `${base}/${collection}/search`;
+  }
+  if (action === "update" && id) {
+    return `${base}/${collection}/update/${id}`;
+  }
+  // Explicit slug lookup: /{collection}/slug/{slug_value}
+  if (bySlug && id) {
+    return `${base}/${collection}/slug/${id}`;
+  }
+  if (id) {
+    return `${base}/${collection}/${id}`;
+  }
+  return `${base}/${collection}`;
+}
+
+/* ------------------------------------------------------------------ *
+ * Generic request entry
+ * ------------------------------------------------------------------ */
+
+/**
+ * Make an API request from a full config object.
+ *
+ * @param {Object} config
+ * @param {'get'|'post'|'delete'} config.type
+ * @param {string} config.project      - project identifier
+ * @param {string} [config.collection] - collection slug
+ * @param {number} [config.id]         - record ID (single / update / delete)
+ * @param {string} [config.action]     - 'search' | 'portal' | 'update' | 'upload'
+ * @param {string} [config.source]     - source collection (relation queries)
+ * @param {string} [config.related]    - related collection (relation queries)
+ * @param {string} [config.resource]   - 'media'
+ * @param {Object} [config.params]     - GET query params (filters, sort, limit, ...)
+ * @param {Object|FormData} [config.data] - POST body
+ * @returns {Promise<Object|null>} the backend `data` payload, or null on failure
+ */
+async function request(config) {
+  const { type, params = {}, data = {} } = config;
+  const url = buildUrl(config);
+  const axiosOpts = config.suppressError ? { _suppressError: true } : {};
+
+  if (type === "get") {
+    const scopedParams = scoped(params);
+    const query = serializeQuery(scopedParams);
+    const fullUrl = query ? `${url}?${query}` : url;
+
+    if (inflight.has(fullUrl)) {
+      return inflight.get(fullUrl);
+    }
+
+    const promise = http.get(fullUrl, axiosOpts).then((response) => {
+      return response ? response.data : null;
+    });
+    inflight.set(fullUrl, promise);
+    try {
+      const result = await promise;
+      return result ? result.data : null;
+    } finally {
+      inflight.delete(fullUrl);
+    }
+  }
+
+  if (type === "post") {
+    const response = await http.post(url, data, axiosOpts);
+    return response ? (response.data ? response.data.data : null) : null;
+  }
+
+  if (type === "delete") {
+    const response = await http.delete(url, axiosOpts);
+    return response ? (response.data ? response.data.success : false) : false;
+  }
+
+  throw new Error(`[api] Unsupported request type: ${type}`);
+}
+
+/* ------------------------------------------------------------------ *
+ * Semantic shortcut factory
+ * ------------------------------------------------------------------ */
+
+/**
+ * Turn an endpoint config into a callable function.
+ *
+ * - GET without id:  fn(params)
+ * - GET with id:     fn(id, params)
+ * - POST without id: fn(data)
+ * - POST with id:    fn(id, data)
+ * - DELETE with id:  fn(id)
+ */
+function createEndpointMethod(endpointConfig) {
+  return function (...args) {
+    const config = { ...endpointConfig };
+    const needsId = endpointConfig.id === true;
+
+    if (needsId) {
+      config.id = args[0];
+      const payload = args[1] || {};
+      if (config.type === "get") {
+        config.params = payload;
+      }
+      else config.data = payload;
+    } else {
+      const payload = args[0] || {};
+      if (config.type === "get") {
+        config.params = payload;
+      }
+      else config.data = payload;
+    }
+
+    // Remove the config-only `id` marker so buildUrl sees only real values.
+    if (endpointConfig.id === true && config.id === undefined) {
+      delete config.id;
+    }
+
+    return request(config);
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * Assemble the public api object
+ * ------------------------------------------------------------------ */
+
+const api = {
+  /** Generic request entry (escape hatch for one-off calls). */
+  request,
+
+  /** Query-string serializer (exported for debugging / testing). */
+  serializeQuery,
+};
+
+// Auto-generate every semantic shortcut from endpoints.js.
+for (const [name, config] of Object.entries(endpoints)) {
+  api[name] = createEndpointMethod(config);
+}
+
+/* ------------------------------------------------------------------ *
+ * Backwards-compatible aliases (deprecated, will be removed)
+ * ------------------------------------------------------------------ */
+
+/**
+ * @deprecated Use api.getArticles() / api.getListings() instead.
+ */
+api.collection = function (projectIdentifier, slug, params = {}) {
+  return request({
+    type: "get",
+    project: projectIdentifier,
+    collection: slug,
+    params,
+  });
+};
+
+/**
+ * @deprecated Use api.getCategoryArticles() / api.getCategoryListings() instead.
+ */
+api.related = function (
+  projectIdentifier,
+  sourceSlug,
+  id,
+  relatedSlug,
+  params = {}
+) {
+  return request({
+    type: "get",
+    project: projectIdentifier,
+    source: sourceSlug,
+    id,
+    related: relatedSlug,
+    params,
+  });
+};
+
+/* ------------------------------------------------------------------ *
+ * Blog comments (CMS project)
+ * ------------------------------------------------------------------ */
+
+/**
+ * Approved comments for one article, oldest first.
+ */
+api.getComments = async function (projectIdentifier, articleId) {
+  const url = `/api/project/${projectIdentifier}/comments/${articleId}`;
+  const response = await http.get(url);
+  return response && response.data ? response.data.data : [];
+};
+
+/**
+ * Submit a comment as the logged-in user. Visibility depends on the
+ * article's comments_moderation setting; the response carries the
+ * resulting status (approved | pending).
+ */
+api.submitComment = async function (projectIdentifier, articleId, comment) {
+  const url = `/api/project/${projectIdentifier}/comments`;
+  const response = await http.post(url, { article_id: articleId, comment });
+  return response && response.data ? response.data.data : null;
+};
+
+/**
+ * Current logged-in platform user (null when not authenticated).
+ * Uses the raw axios instance so an unauthenticated guest does not
+ * trigger the global API error toast.
+ */
+api.me = async function () {
+  try {
+    const response = await axios.get("/api/auth/me", {
+      headers: { Accept: "application/json" },
+    });
+    return response && response.data ? response.data.data : null;
+  } catch {
+    return null;
+  }
+};
+
+/* ------------------------------------------------------------------ *
+ * Interactions: favorites & likes (per project, idempotent)
+ * ------------------------------------------------------------------ */
+
+/**
+ * Counts + current user's state for one content row.
+ * Returns { content_id, favorite_count, like_count, is_favorited, is_liked }.
+ */
+api.getInteractionState = async function (projectIdentifier, contentId) {
+  const response = await http.get(
+    `/api/project/${projectIdentifier}/interactions/${contentId}`
+  );
+  return response && response.data ? response.data.data : null;
+};
+
+api.addFavorite = async function (projectIdentifier, contentId) {
+  const response = await http.post(
+    `/api/project/${projectIdentifier}/favorites`,
+    { content_id: contentId }
+  );
+  return response && response.data ? response.data.data : null;
+};
+
+api.removeFavorite = async function (projectIdentifier, contentId) {
+  const response = await http.delete(
+    `/api/project/${projectIdentifier}/favorites/${contentId}`
+  );
+  return response && response.data ? response.data.data : null;
+};
+
+api.addLike = async function (projectIdentifier, contentId) {
+  const response = await http.post(
+    `/api/project/${projectIdentifier}/likes`,
+    { content_id: contentId }
+  );
+  return response && response.data ? response.data.data : null;
+};
+
+api.removeLike = async function (projectIdentifier, contentId) {
+  const response = await http.delete(
+    `/api/project/${projectIdentifier}/likes/${contentId}`
+  );
+  return response && response.data ? response.data.data : null;
+};
+
+/* ------------------------------------------------------------------ *
+ * Frontend user profile (own data only)
+ * ------------------------------------------------------------------ */
+
+api.getMyProfile = async function () {
+  const response = await http.get("/api/me/profile");
+  return response && response.data ? response.data.data : null;
+};
+
+api.updateAvatar = async function (formData) {
+  const response = await http.post("/api/me/avatar", formData);
+  return response && response.data ? response.data.data : null;
+};
+
+api.getMyFavorites = async function () {
+  const response = await http.get("/api/me/favorites");
+  return response && response.data ? response.data.data : [];
+};
+
+api.getMyLikes = async function () {
+  const response = await http.get("/api/me/likes");
+  return response && response.data ? response.data.data : [];
+};
+
+api.getMyComments = async function () {
+  const response = await http.get("/api/me/comments");
+  return response && response.data ? response.data.data : [];
+};
+
+export { api };
+export default api;

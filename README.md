@@ -1,0 +1,450 @@
+# Aine
+
+**Aine** is a self-hosted, headless **Content Management Framework (CMF)** built with **Laravel 13** and **Vue 3**. It provides a clean, modern admin panel to model content, manage multi-language data, and publish it anywhere through a powerful REST Content API — websites, mobile apps, IoT displays, or other backends.
+
+> 中文文档：[README.zh-CN.md](README.zh-CN.md)
+
+---
+
+## ✨ Features
+
+### Content Modeling
+- **Projects** — run multiple independent sites/apps from a single installation, each with its own collections, content, media, tokens, and domain whitelist.
+- **Collections & Fields** — build your schema visually: `text`, `longtext`, `richtext`, `slug`, `email`, `password`, `number`, `enumeration`, `boolean`, `color`, `date`, `time`, `media`, `relation`, `json`.
+- **Field options** — required/unique/character-count validations, repeatable fields, hidden-in-API, hide-in-list, placeholders and descriptions.
+- **Relations** — one-to-one / one-to-many between collections (e.g. category → articles). **Author** is a plain text field on articles/pages, auto-filled with the name of the currently logged-in user when content is created.
+- **Preset templates** — create a project from the **CMS Template** (articles, pages, categories, tags, comments, globals), the **Business Directory Template** (listings, categories, tags, locations, reviews) or the **Note Template** (cloud notes / posts, pages, categories, tags, globals) and extend it freely.
+
+### Content Revisions & Version History
+- **Automatic snapshots** — every create, update, publish, unpublish, draft-edit, restore and import creates a full-field snapshot in `content_revisions`, with a version chain (`parent_id`) linking each revision to its predecessor.
+- **Field-level change summary** — each revision records which fields changed vs. the previous version (added / removed / modified), shown inline in the history panel.
+- **Version comparison** — select any two revisions and view a side-by-side, field-level diff with before/after values and color-coded change types.
+- **Version labels** — tag any revision with a custom label (e.g. "v1.0 release", "Editor approved") for easy reference.
+- **Safe restore** — restoring a version first shows a preview of all changes that will be applied; confirming creates a new "restored" revision on top, so the history is never destructive.
+- **Draft-branch history merged** — edits saved as a draft of published content appear in the main content's history (attached via `overrideContentId`), so the full edit trail is visible in one place.
+- **History badge** — the editor's **History** button shows the live revision count; the list marks the current version and shows author, timestamp, action type and changed fields.
+
+### Draft Branch & Publishing Workflow
+- **Draft branch** — editing a published piece without unpublishing it clones a draft child (`draft_parent_id`); changes are saved there until you choose to publish, merge or discard.
+- **Scheduled publishing** — set `scheduled_at`; the `aine:publish_scheduled` artisan command (run via cron) publishes content automatically at the right time.
+- **Workflow approval** — per-project workflow gate: publishing requires an admin's approve/reject action with a reviewer comment; all transitions are audited.
+- **Preview tokens** — draft content can be shared via a time-limited `preview_token` URL without exposing it to the public API.
+
+### SSML Speech Annotation (Rich Text)
+- The TinyMCE rich-text editor integrates an **SSML editor** for adding speech-synthesis annotations (pinyin, phoneme, prosody, break) to text.
+- Annotations render as inline `data-*` attributes on `<span>` elements; the HTML sanitizer whitelists `data-*`, `svg` and `path` so annotations survive save/load and render correctly on the frontend.
+- Read-only mode hides the "Click to edit" hint and shows a static preview.
+
+### Users, Roles & Permissions
+- **Three global roles** — `super_admin` (full platform access; intentionally holds no permission rows, `Gate::before` grants everything), `editor` (content lifecycle & moderation: create/update/delete/publish content, moderate comments, manage media, run workflow transitions) and `user` (frontend persona: comment, favorite, like, edit own profile).
+- **Backend gate** — the admin SPA and its `admin-api` endpoints are served only to backend roles (`super_admin`, `editor`) via the `EnsureBackendUser` middleware; a frontend `user` session gets a `403` JSON on admin APIs and is redirected to `/` when opening admin pages.
+- **Auth redirects** — backend roles are sent to `/admin` after login; newly registered accounts are assigned the `user` role and land on `/` (the frontend site).
+- **Project-level roles** — each project carries an owner (`projects.owner_id`) plus a `project_user` membership pivot with four weighted roles: `owner`, `admin`, `editor`, `viewer`.
+- **Policy-based authorization** — Laravel policies (`ProjectPolicy` etc.) gate every admin action per project: managing settings, publishing, moderating comments, editing collections/content.
+- **User management UI** — **Settings → Users** in the admin sidebar lists all accounts with their global role (editable inline) and project memberships; the edit dialog mirrors the admin profile page.
+- **Profile & 2FA** — every user can manage their own profile; two-factor authentication (TOTP) can be enabled per account and is enforced at login.
+
+### Comments (blog-style)
+- **Signed-in commenting** — logged-in users can post comments on content; the comment carries the author's name automatically.
+- **Moderation workflow** — each article can require approval before comments become visible. Comments use the industry-standard states `pending` / `approved` / `spam` / `trash`, with bulk state actions in the admin.
+- **Comment Approval** — a dedicated **Comment Approval** menu (per project, under Content) lets admins/owners review, approve, mark as spam or trash comments; the menu label is translatable.
+
+### Frontend Interactions & User Profile
+- **Favorites & likes** — every content detail page shows favorite/like buttons with live counters; a user can favorite or like a given content row only once (unique constraint keeps both idempotent).
+- **User Profile** (`/profile`) — logged-in users get their own profile page with user info, avatar upload/display, and three lists: favorites, likes and comments (each entry enriched with the content title, collection, project and publish state).
+- **Avatar storage** — avatars are uploaded to the public disk and served under `/storage/avatars/...`; the navbar user menu (avatar/initial + name) links to **My Profile** and **Log out**.
+- **Signed-out guidance** — clicking favorite/like while logged out redirects to `/login?redirect=...` and returns you to the content after signing in.
+
+#### Third-party clients (mini program) API
+- **Token login** — `POST /api/login` with `{ account: email|name, password }` returns `{ access_token, expired_in, user }` (Sanctum token, 30 days) for third-party clients such as the WeChat mini program.
+- **User profile over token** — `/api/me/profile`, `/api/me/favorites`, `/api/me/likes`, `/api/me/comments` accept either a web session or a Sanctum Bearer token (`auth:web,sanctum`).
+- **Device / token management over token** — `GET /api/me/tokens` lists the caller's active devices (with last-used time), `DELETE /api/me/tokens/{id}` signs out one device, and `POST /api/me/tokens/revoke-others` signs out every other device in one call — reducing blast radius if a token leaks.
+- **Favorites & likes over token** — `POST/DELETE /api/project/{project}/favorites|likes` accept a Sanctum Bearer token; these write routes are excluded from CSRF in `bootstrap/app.php` since token authentication replaces the CSRF guarantee.
+- **Optional-auth state** — `GET /api/project/{project}/interactions/{content_id}` returns counts for guests and the caller's `is_favorited` / `is_liked` when a Bearer token is supplied.
+
+### Publishing & API
+- **Two API modes**:
+  - `/api/project/{uuid|slug}/...` — for frontend apps; validated by **domain whitelist**, with an optional **Public API** switch for token-free reads.
+  - `/api/{uuid}/...` — for server-to-server calls; every request requires a **Sanctum token** bound to the project.
+- **Rich querying** — `filters` (dot-notation: `filters.locale=zh`, `filters.title=contains.laravel`, `filters.price=greaterThan.100`, `filters.category.slug=tech` for relation filtering; 16 semantic operators: equals/notEquals/contains/notContains/greaterThan/greaterThanOrEqual/lessThan/lessThanOrEqual/in/notIn/between/notBetween/isEmpty/notEmpty), `or` (comma-separated OR conditions), multi-field `sort`, `offset`/`limit`, `count`, `first`, `state` (published/draft), `timestamps`, and **locale filtering** (`filters.locale=zh`).
+- **Media library** — upload, list, fetch and delete media per project (local or cloud disks).
+- **Webhooks** — per-project webhook endpoints with collection targeting and request logs.
+
+### Security
+- **Rate limiting** — per-user/IP throttling on the API (`60/min`), write endpoints (`30/min`), search (`60/min` logged-in, `20/min` anonymous), public form submissions/uploads, and admin auth (password reset / 2FA).
+- **Account-level login lockout** — beyond the per-{email, IP} throttle (5/min), a second counter tracks the same account across **all source IPs**: 10 failed attempts lock the account for 10 minutes (defeats distributed brute-force from rotating IPs). Successful login clears both counters; failed/2FA attempts are written to the audit log.
+- **Strong password policy** — global default `Password::min(12)->mixedCase()->numbers()->symbols()` applied to registration, password reset, profile changes and project-invited users; super-admin user management enforces a stricter `min(14)` policy.
+- **Security headers** — `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy` on every response, plus `X-Frame-Options: SAMEORIGIN` on the admin area.
+- **TrustProxies** — `bootstrap/app.php` trusts proxies listed in `TRUSTED_PROXIES` so `X-Forwarded-*` headers are honoured behind a load balancer / reverse proxy.
+- **Encrypted sessions** — `SESSION_ENCRYPT=true` encrypts session payloads at rest (env-driven, default on for HTTPS).
+- **Token abilities scoping** — every Method-2 (`/api/{uuid}/...`) route and the explicit-token Method-1 write routes enforce a Sanctum ability (`read` / `create` / `update` / `delete`) via the `abilities` / `ability` middleware; unknown abilities return `403`. New project tokens default to `['read']` (least privilege).
+- **HTML sanitization** — rich text is whitelist-sanitized before saving (admin content & public forms), stripping scripts, event handlers, `javascript:` links and dangerous CSS. `data-*` attributes are preserved (inert, used by SSML annotations and frontend renderers), as are `svg`/`path` with a restricted attribute set (`viewbox`, `d`, `fill`, `stroke`, etc.).
+- **Upload guard** — media uploads are double-checked by extension + content MIME against a deny-list (`php`, `phar`, `phtml`, `asp`, `jsp`, …) on top of the MIME whitelist; the guard also sniffs the first 1 MB of content for `<?php` / `<script>` polyglots. All upload entry points (project API, admin media library, chunked upload, public form) run through it.
+- **Audit log coverage** — sensitive write actions are all recorded: user CRUD, role changes, token create/update/revoke, 2FA enable/disable/recovery-codes, media upload/delete, and failed logins (with IP + failure count).
+- **Session & device management** — third-party clients can list their active tokens (`GET /api/me/tokens`), sign out a single device (`DELETE /api/me/tokens/{id}`), or revoke every other device at once (`POST /api/me/tokens/revoke-others`).
+
+### Multilingual
+- **Content-level locales** — every content entry has a locale; query and create content per language (`en`, `zh`, …).
+- **Admin UI languages** — switch the whole admin interface between English and Chinese from the topbar.
+- **Project names & descriptions follow the UI language** — project cards and headers display the name/description translated into the admin UI's current base language (English ↔ 中文); translations are managed on the project's **Translations** page, falling back to the source text when absent.
+- **Translation manager** — global UI string translations plus per-project translations (collection names, field labels, project name/description, custom strings), driven by an explicit `__()` helper and a `{{ ... }}` pattern-matching dictionary engine.
+
+### Admin Experience
+- Single-page Vue 3 admin (`/admin`): projects, collections, content tables, rich text editor (TinyMCE with SSML speech annotation), drag-and-drop field ordering, forms, media, settings.
+- **Content History panel** — every content editor has a **History** button (with a live revision-count badge) opening a dual-pane modal: revision list on the left (action badge, label, author, timestamp, changed-field chips, current-version marker), detail/preview or two-version diff on the right, plus label editing and restore-with-preview confirmation.
+- **Audit log** — all admin actions (create, update, publish, unpublish, restore, import, workflow approve/reject, revision label) are recorded with actor, entity, timestamp and metadata.
+- **Web installer** — visiting `/install` on a fresh deployment starts a wizard: language selection, server requirements, folder permissions, environment configuration (app + database + admin account), confirmation, migrations, done.
+- Supports **SQLite, MySQL, PostgreSQL and SQL Server**.
+
+### Frontend
+- A frontend SPA (Vue 3) served at `/` for content sites, with ready-made pages for the CMS template (Home, Content archives, categories, tags, article details), the Directory template (listings, categories, tags, locations, reviews) and the Note template (posts, pages, categories, tags) — all data loaded through the Content API.
+- **Global search** — a search box in the navbar (right side, next to the language switcher) runs a **global search across all projects**; results are grouped by project on `/search?q=…` with title, excerpt and direct links to each entry.
+- **Authenticated interactions** — logged-in users can favorite, like and comment on content from the detail pages, and manage their own **User Profile** (`/profile`) with avatar upload and favorite/like/comment lists.
+
+---
+
+## 🧰 Tech Stack
+
+| Layer | Technology |
+| --- | --- |
+| Backend | Laravel 13 (PHP 8.3+), Laravel Sanctum, Spatie Permission, Spatie Webhook Server, Intervention Image |
+| Frontend | Vue 3, Vite 6, Tailwind CSS 3, Pinia, Vue Router, TinyMCE |
+| Database | SQLite / MySQL / PostgreSQL / SQL Server |
+| Auth | Session auth for admin & frontend users (global roles: `super_admin` / `editor` / `user` + project-level roles, 2FA), Sanctum personal access tokens for the Content API |
+
+---
+
+## 📋 Requirements
+
+- **PHP >= 8.3** with extensions: `openssl`, `pdo`, `mbstring`, `tokenizer`, `ctype`, `xml`, `fileinfo`, `gd`, `curl`
+- A database: SQLite (default) / MySQL / PostgreSQL / SQL Server
+- Composer 2, Node.js 18+ (only needed for building frontend assets)
+- Writable folders: `storage/`, `bootstrap/cache/`, `database/` (SQLite)
+
+---
+
+## 🚀 Installation
+
+### Option A — Web Installer (recommended)
+
+Upload the project to your server, then open:
+
+```
+https://your-domain.com/install
+```
+
+The wizard will guide you through:
+
+1. **Language selection** (English / 中文)
+2. **Server requirements** check (PHP version & extensions)
+3. **Folder permissions** check
+4. **Environment configuration** — app name/URL, database (SQLite/MySQL/PgSQL/SQL Server), and the **admin account** (email + password, becomes `super_admin`)
+5. **Confirmation page** — review your settings, go back to change them, or start the installation
+6. **Installation** — `.env` is written, `APP_KEY` generated, migrations run, admin account created, demo content seeded, and `public/storage` symlinked to `storage/app/public` (auto `php artisan storage:link`)
+7. **Done** — sign in at `/admin` with the account you created
+
+> The installer works on a fresh deployment with no `.env` file: it creates one automatically.
+> No manual `php artisan storage:link` is needed afterwards — the wizard runs it as its final step, so seeded media is immediately servable.
+
+### Option B — Manual installation
+
+```bash
+# 1. Install dependencies
+composer install
+npm install
+
+# 2. Environment
+cp .env.example .env
+php artisan key:generate
+# edit .env: APP_URL, DB_CONNECTION, DB_DATABASE, ...
+
+# 3. Migrate & seed (creates the super_admin role + default admin + three demo projects: CMS, Business Directory, Note)
+php artisan migrate --force
+php artisan db:seed --force
+
+# Persistent storage
+php artisan storage:link
+
+# 5. Build frontend assets
+npm run build
+
+# 6. Serve
+php artisan serve
+```
+
+Default admin (seeded): `admin@admin.com` / `admin` — **change it after the first login**.
+
+### Option C — Docker (production)
+
+A production image and compose file are included:
+
+```bash
+# 1. Environment
+cp .env.example .env
+# edit .env: APP_URL, DB_DATABASE, DB_USERNAME, DB_PASSWORD, APP_PORT
+
+# 2. Build & start
+docker compose -f docker-compose.production.yml up -d --build
+
+# 3. First-run setup: open http://localhost/install (or your APP_URL)
+#    and complete the web installer — it writes .env and storage/installed.
+```
+
+What it provides:
+
+- **Multi-stage `Dockerfile`** — `node:22` builds the Vite assets, `composer` installs production vendors, `php:8.3-fpm-alpine` runs the app (no dev dependencies, no source mount at runtime).
+- **nginx** — serves static assets (immutable cache for hashed `public/build` files) and proxies PHP to `app:9000`; SPA history-mode routing included.
+- **MySQL 8.4** — with a health check that gates the `app` service until the database is ready, plus a named volume for persistence.
+- **Persistent storage** — uploads / logs / cache live in the `aine-storage` volume; media is servable through the `storage:link` created on container start.
+- **First run** — the web installer creates `.env` and the `storage/installed` marker; once present, the container auto-caches config & routes on restart.
+
+To deploy new code: `docker compose -f docker-compose.production.yml build app` and `up -d`. For HTTPS, terminate TLS at a reverse proxy (Caddy / nginx / cloud load balancer) in front of the exposed port.
+
+---
+
+## ⚙️ Production deployment
+
+A single dev machine is fine with `sqlite + file cache + sync queue` out of the box. For **production** follow the points below — otherwise scheduled publishing, webhooks, and multi-instance caches will bite you.
+
+### Queue (critical)
+
+Creating / updating / publishing content fires webhooks that are sent **asynchronously** through the Laravel queue (Spatie Webhook Server, on the connection named by `QUEUE_CONNECTION`). The default `sync` runs that outbound HTTP call **inside the write request** and blocks until the remote endpoint responds — a slow or timing-out endpoint stalls the create/update/publish API itself. Production must use `database` or `redis` and run a persistent worker:
+
+```bash
+# .env
+QUEUE_CONNECTION=database     # redis recommended for multi-instance
+
+# Persistent queue worker (run under supervisor / systemd)
+php artisan queue:work --tries=3 --backoff=10 --max-time=3600
+```
+
+supervisor example (`/etc/supervisor/conf.d/aine-worker.conf`):
+
+```ini
+[program:aine-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /path/to/aine/artisan queue:work --tries=3 --backoff=10
+autostart=true
+autorestart=true
+numprocs=2
+redirect_stderr=true
+stdout_logfile=/path/to/aine/storage/logs/worker.log
+stopwaitsecs=3600
+```
+
+### Task scheduler (critical)
+
+`aine:publish_scheduled` (scheduled publishing) relies on Laravel's task scheduler — add a per-minute cron entry on the server:
+
+```bash
+* * * * * cd /path/to/aine && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Without this cron, content whose `scheduled_at` has passed **will never be published**. After code or config changes, gracefully restart workers so they reload:
+
+```bash
+php artisan queue:restart
+```
+
+> For high throughput or observability, optionally use [Laravel Horizon](https://laravel.com/docs/horizon) (`redis` queue + dashboard).
+
+### Cache & session
+
+- A single server can keep `file`.
+- Multi-instance (load-balanced) deployments **must** switch to `redis`: the content API keeps a per-project cache version that is bumped on every write; with `file` cache the invalidation only hits the local instance, so other instances keep returning stale content.
+
+```
+CACHE_DRIVER=redis
+SESSION_DRIVER=redis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+REDIS_CLIENT=predis
+```
+
+---
+
+## 🏁 Quick Start
+
+1. **Sign in** to `/admin`.
+2. **Create a project** (or use a preset template: CMS / Business Directory / Note).
+3. In the project, create **Collections** (e.g. `articles`) and add **Fields** (e.g. `title`, `url`, `content`).
+4. Add **Content** entries under Content → your collection.
+   - In any content editor, click **History** (top-right, with a revision-count badge) to view the full version history: preview any version, compare two versions field-by-field, tag a version with a custom label, or restore a previous version (with a change preview before confirming).
+5. Open **Settings → API**:
+   - add your frontend domain to the **Domain Whitelist**,
+   - create an **Access Token** (choose `read` / `write` abilities),
+   - optionally enable **Public API** for token-free reads.
+6. Consume the API:
+
+```bash
+# Public reads (domain whitelist, Public API on)
+curl -H "Origin: https://your-frontend.com" \
+     "https://your-domain.com/api/project/my-blog/articles?limit=10&sort=published_at:desc"
+
+# Protected reads (token)
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+     -H "Origin: https://your-frontend.com" \
+     "https://your-domain.com/api/project/my-blog/articles"
+
+# Server-to-server (UUID + token, no whitelist needed)
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+     "https://your-domain.com/api/6ae5aa2e-6b1b-4711-a258-a0d8d47611c4/articles?where%5Blocale%5D=zh"
+```
+
+---
+
+## 📖 API Documentation
+
+The complete API reference (authentication, endpoints, query parameters, filter clauses, responses, examples, FAQ) lives in **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)**.
+
+Quick overview:
+
+| Mode | Route prefix | Read auth | Write auth |
+| --- | --- | --- | --- |
+| Method 1 — whitelist | `/api/project/{identifier}/...` | domain whitelist (+ token if Public API is off) | whitelist + token (`write`) |
+| Method 2 — UUID | `/api/{uuid}/...` | UUID + token (`read`) | UUID + token (`write`) |
+
+---
+
+## 🌐 Localization
+
+- **Admin UI language**: use the language selector in the topbar (English / 中文). The choice is remembered per browser.
+- **Manage languages**: `Localization` page in the sidebar — add locales, set the default display language. Dictionary keys are always the English source strings (the authoring language).
+- **Translate the UI**: `Translations` page — translate any admin interface string.
+- **Per-project translations**: Project → Settings → Translations — translate collection names, field labels and custom strings used in the admin for that project.
+- **Content locales**: create content with `locale` (`en`, `zh`, …); filter API reads with `filters.locale=...`.
+
+---
+
+## 🧑‍💻 Development (Customization)
+
+### Project layout
+
+```
+app/
+  Aine/                     # Core helpers & project templates
+  Http/Controllers/Admin/   # Admin panel controllers
+  Http/Controllers/API/     # Content API controllers
+  Http/Resources/           # API resources (ContentResource, ProjectResource, MediaResource)
+  Models/                   # Content, ContentMeta, Project, Collection, CollectionField, Media, ...
+bootstrap/app.php           # App bootstrap, middleware, exception handling
+config/installer.php        # Web installer configuration
+database/                   # Migrations & seeders
+resources/js/admin/         # Admin SPA (Vue 3)
+resources/js/frontend/      # Frontend SPA (Vue 3)
+resources/views/            # Blade views (installer, auth, SPA shells)
+routes/                     # web, api, admin, frontend, auth routes
+installer/                  # In-tree web installer package (Aine\Installer)
+```
+
+### Common tasks
+
+```bash
+# Watch & rebuild frontend/admin assets during development
+npm run dev
+
+# Production build
+npm run build
+
+# Persistent storage
+php artisan storage:link
+
+# Run tests
+php artisan test
+
+# Clear caches after config/route changes
+php artisan optimize:clear
+```
+
+### Adding a new frontend page
+
+1. Create a view component under `resources/js/frontend/views/`.
+2. Register the route in `resources/js/frontend/routes.js`.
+3. Fetch data through the Content API (`resources/js/frontend/api.js`) using the project identifier configured in `resources/js/frontend/config.js` (`PROJECTS` map).
+
+### Extending the API
+
+- API endpoints live in `app/Http/Controllers/API/`; response helpers are in `API/Concerns/ApiResponse.php`.
+- Serialization is controlled by `app/Http/Resources/ContentResource.php` (type casting, `hiddenInAPI`, repeatables).
+- New field types: extend the field registry in the admin (`resources/js/admin/views/Project.Collection/CollectionList.vue` → `fieldDetails`) and the corresponding validation/serialization logic.
+
+### Project templates
+
+Project templates (CMS, Business Directory, Note) are defined in `app/Aine/ProjectTemplates.php` — they ship the collections, fields and demo data used by the seeded demo projects (`database/seeders/DemoProjectsSeeder.php`). Demo projects are created in a fixed order (`created_at` ascending): **CMS → Business Directory → Note**, so the project list order is deterministic across fresh installs.
+
+### Content Revisions architecture
+
+| Piece | Location |
+| --- | --- |
+| Migration (enhanced schema) | `database/migrations/2026_01_01_000040_enhance_content_revisions_table.php` — adds `parent_id`, `action`, `label`, `meta` (JSON), composite index |
+| Model | `app/Models/ContentRevision.php` — `parent`/`children` relations, `is_current`, `change_summary`, `action_label` accessors, static `diffFields()` |
+| Snapshot helper | `ContentController::createRevision($content, $action, $note, $overrideContentId)` — reads all `ContentMeta`, finds the previous revision as `parent_id`, computes field-level diff into `meta.change_summary` |
+| Admin API | `routes/admin.php` — list / show / diff / label / restore under `admin-api/content/revisions/...` |
+| Frontend panel | `resources/js/admin/views/components/RevisionsModal.vue` — dual-pane list + preview + two-version diff + label editing + restore-with-preview |
+| Editor integration | `resources/js/admin/views/Project.Content/Edit.vue` — History button with revision-count badge, auto-refresh on load/save, `@restored="getEdit()"` |
+
+**Action types**: `created`, `updated`, `published`, `unpublished`, `draft_updated`, `restored`, `imported`, `deleted`.
+
+**Draft-branch merge**: when a draft of published content is saved, the revision is attached to the **main** content id via `overrideContentId`, so draft edits appear in the main content's history rather than being isolated on the draft row.
+
+### Admin UI translation (development guide)
+
+The admin UI is authored in English. Translations are stored in the **database** and served to the browser as **dictionaries** (`GET /admin-api/translations/dict?locale=…`). Every user-visible string must go through the explicit, reactive `__()` helper — there is **no automatic DOM-scanning fallback**: a string left unwrapped simply stays in English.
+
+**Architecture**
+
+| Piece | What it is |
+| --- | --- |
+| `admin_string_sources` | Registry of translatable strings, seeded from `database/seeders/data/admin_strings.php` |
+| `admin_translation_defaults` | Factory default translations per locale (e.g. `zh`) shipped with the project |
+| `translations` | Runtime translations — editable in the admin panel (Localization → Translations) |
+| `ui_locales` | The list of admin UI languages |
+| `resources/js/admin/translations/engine.js` | Dictionary layer: reactive `__()` helper for templates and script code, localStorage caching (the saved language applies on boot without a flash), and `{{ ... }}` placeholder pattern matching for strings with runtime values |
+| `scripts/extract-admin-strings.js` | Scans `resources/js/admin` (`.vue`/`.js`), normalizes JS/Vue interpolation into `{{ ... }}` placeholders, and regenerates the registry seed file |
+
+**Rules for developers**
+
+1. Wrap every user-visible string with the explicit helper:
+   - Templates: `{{ __('Save and close') }}`
+   - Scripts & bound attributes: `toast.success(__('Content updated!'))`, `:placeholder="__('Search...')"`
+2. For strings with runtime values, keep a `{{ ... }}` placeholder in the source instead of concatenating translated fragments, e.g. `__('Language "{{ ... }}" added.', [code])` — the positional args fill the placeholders in order.
+3. **Every string must be wrapped** — there is no DOM-scanning pass anymore; an unwrapped string stays in the base language and never gets translated.
+
+**Translator rules (Localization → Translations)**
+
+- Dictionary keys are always the English source strings; translate only the text around the `{{ ... }}` placeholders.
+- `{{ ... }}` placeholders must be preserved **as-is**, with the **same count and order** as in the source string — the engine fills them with the runtime values in that order. Dropping, adding or reordering them breaks the string at runtime.
+
+**Shipping a new string**
+
+```bash
+# 1. Regenerate the registry from the source files
+node scripts/extract-admin-strings.js
+
+# 2. Sync registry + default translations into the database
+php artisan db:seed --class=AdminTranslationsSeeder
+
+# 3. Fill in the translation in the admin: Localization → Translations
+```
+
+Notes:
+- The seeder only writes into **new or empty** `translations` rows — translations edited in the admin panel are never overwritten.
+- The registry only ever grows: strings removed from the code stay registered so their translations are never orphaned.
+- Writing translations (`POST /admin-api/translations/save`, `/add`) and managing UI languages (`/admin-api/localization/*`) is restricted to the `super_admin` role.
+
+---
+
+## 🧪 Testing
+
+```bash
+php artisan test
+```
+
+The suite covers content CRUD, revisions (create / update / list / diff / restore / label), import/export, media, API auth & querying, workflow audit, collection field management, users & permissions (including backend gating), comments & moderation, frontend interactions (favorites, likes, profile, avatar), security policies (strong passwords, account lockout, upload guard, token abilities, device management), and the frontend root response. Current baseline: **317 tests / 1029 assertions**.
+
+---
+
+## 📄 License
+
+**Aine** is open-sourced under the [MIT license](LICENSE).
