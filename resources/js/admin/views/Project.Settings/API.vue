@@ -182,7 +182,7 @@
                                                     {{ __('Last Used at') }} {{ $filters.date(token.last_used_at, "D MMM YYYY, H:mm") }}
                                                 </span>
                                             </td>
-                                            <td v-if="!isReadonly" class="px-6 py-3 text-sm">
+                                            <td v-if="!isReadonly" class="px-6 py-3 text-sm whitespace-nowrap">
                                                 <div
                                                     class="cursor-pointer text-indigo-500"
                                                     @click="editToken(token)"
@@ -190,7 +190,7 @@
                                                     {{ __('Edit') }}
                                                 </div>
                                             </td>
-                                            <td v-if="!isReadonly" class="px-6 py-3 text-sm">
+                                            <td v-if="!isReadonly" class="px-6 py-3 text-sm whitespace-nowrap">
                                                 <div
                                                     class="cursor-pointer text-red-700"
                                                     @click="deleteToken(token)"
@@ -258,10 +258,13 @@
                                             v-for="(domain, index) in domain_whitelist"
                                             :key="index"
                                         >
-                                            <td class="px-6 py-3 text-sm whitespace-nowrap">
+                                            <td
+                                                class="px-6 py-3 text-sm max-w-xs truncate"
+                                                :title="domain"
+                                            >
                                                 {{ domain }}
                                             </td>
-                                            <td v-if="!isReadonly" class="px-6 py-3 text-sm">
+                                            <td v-if="!isReadonly" class="px-6 py-3 text-sm whitespace-nowrap">
                                                 <div
                                                     class="cursor-pointer text-indigo-500"
                                                     @click="openDomainModal(index)"
@@ -269,7 +272,7 @@
                                                     {{ __('Edit') }}
                                                 </div>
                                             </td>
-                                            <td v-if="!isReadonly" class="px-6 py-3 text-sm">
+                                            <td v-if="!isReadonly" class="px-6 py-3 text-sm whitespace-nowrap">
                                                 <div
                                                     class="cursor-pointer text-red-700"
                                                     @click="removeDomain(index)"
