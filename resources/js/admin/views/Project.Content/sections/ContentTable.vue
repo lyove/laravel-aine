@@ -1399,7 +1399,7 @@ export default {
             return p && (p.is_readonly || !p.status);
         },
         isComments() {
-            return this.collection && this.collection.slug === "comments";
+            return this.collection && this.collection.kind === "comment";
         },
         localeOptions() {
             const options = this.projectLocales.map((l) => {

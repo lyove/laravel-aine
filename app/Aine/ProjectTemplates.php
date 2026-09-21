@@ -30,7 +30,7 @@ class ProjectTemplates
                             ['order' => 2, 'type' => 'slug', 'label' => 'Path', 'name' => 'slug', 'options' => '{"slug": {"field": "title"},"media": [],"relation": [],"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": true,"message": null},"required": {"status": true,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
                             ['order' => 3, 'type' => 'richtext', 'label' => 'Content', 'name' => 'content', 'options' => '{"slug": [],"media": [], "relation": [],"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": false,"message": null},"required": {"status": false,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
                             ['order' => 4, 'type' => 'media', 'label' => 'Image', 'name' => 'image', 'options' => '{"slug": [],"media": {"type": 1},"relation": [],"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": false,"message": null},"required": {"status": false,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
-                            ['order' => 5, 'type' => 'text', 'label' => 'Author', 'name' => 'author', 'options' => '{"slug": [],"media": [],"relation": [],"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": false,"message": null},"required": {"status": false,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
+                            ['order' => 5, 'type' => 'text', 'label' => 'Author', 'name' => 'author', 'options' => '{"auto_fill":"user","slug": [],"media": [],"relation": [],"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": false,"message": null},"required": {"status": false,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
                         ],
                     ],
                     [
@@ -42,7 +42,7 @@ class ProjectTemplates
                             ['order' => 4, 'type' => 'richtext', 'label' => 'Content', 'name' => 'content', 'options' => '{"slug": [],"media": [],"relation": [],"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": false,"message": null},"required": {"status": false,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
                             ['order' => 5, 'type' => 'media', 'label' => 'Featured Image', 'name' => 'featured-image', 'options' => '{"slug": [],"media": {"type": 1},"relation": [],"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": false,"message": null},"required": {"status": false,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
                             ['order' => 6, 'type' => 'relation', 'label' => 'Category', 'name' => 'category', 'options' => '{"slug": [],"media": [],"relation": {"type": "1","collection": "{{categories}}"},"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": false,"message": null},"required": {"status": true,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
-                            ['order' => 7, 'type' => 'text', 'label' => 'Author', 'name' => 'author', 'options' => '{"slug": [],"media": [],"relation": [],"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": false,"message": null},"required": {"status": false,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
+                            ['order' => 7, 'type' => 'text', 'label' => 'Author', 'name' => 'author', 'options' => '{"auto_fill":"user","slug": [],"media": [],"relation": [],"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": false,"message": null},"required": {"status": false,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
                             ['order' => 8, 'type' => 'relation', 'label' => 'Tags', 'name' => 'tags', 'options' => '{"slug": [],"media": [],"relation": {"type": "2","collection": "{{tags}}"},"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": false,"message": null},"required": {"status": false,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
                             ['order' => 9, 'type' => 'boolean', 'label' => 'Slider', 'name' => 'slider', 'options' => '{"slug": [],"media": [],"relation": [],"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": false,"message": null},"required": {"status": false,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
                             ['order' => 10, 'type' => 'boolean', 'label' => 'Featured', 'name' => 'featured', 'options' => '{"slug": [],"media": [],"relation": [],"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": false,"message": null},"required": {"status": false,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
@@ -66,7 +66,7 @@ class ProjectTemplates
                         ],
                     ],
                     [
-                        'name' => 'Comments', 'slug' => 'comments', 'order' => 6,
+                        'name' => 'Comments', 'slug' => 'comments', 'kind' => 'comment', 'order' => 6,
                         'fields' => [
                             ['order' => 1, 'type' => 'text', 'label' => 'Name', 'name' => 'name', 'options' => '{"slug": [],"media": [],"relation": [],"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": false,"message": null},"required": {"status": false,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
                             ['order' => 1, 'type' => 'email', 'label' => 'E-mail', 'name' => 'e-mail', 'options' => '{"slug": [],"media": [],"relation": [],"enumeration": [],"hideInContentList": false}', 'validations' => '{"unique": {"status": false,"message": null},"required": {"status": false,"message": null},"charcount": {"max": null,"min": null,"type": "Between","status": false,"message": null}}'],
@@ -226,6 +226,7 @@ class ProjectTemplates
             $collections[$collectionDef['slug']] = Collection::create([
                 'name' => $collectionDef['name'],
                 'slug' => $collectionDef['slug'],
+                'kind' => $collectionDef['kind'] ?? 'content',
                 'project_id' => $project->id,
                 'order' => $collectionDef['order'],
             ]);
@@ -242,7 +243,8 @@ class ProjectTemplates
                 );
 
                 CollectionField::create([
-                    'project_id' => $project->id,
+                    'kind' => $collectionDef['kind'] ?? 'content',
+                'project_id' => $project->id,
                     'collection_id' => $collection->id,
                     'order' => $fieldDef['order'],
                     'type' => $fieldDef['type'],

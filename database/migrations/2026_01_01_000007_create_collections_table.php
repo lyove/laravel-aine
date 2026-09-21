@@ -17,6 +17,7 @@ class CreateCollectionsTable extends Migration
             $table->id();
             $table->string('name', 60);
             $table->string('slug', 60);
+            $table->string('kind', 20)->default('content');
             $table->integer('project_id');
             $table->integer('order')->nullable();
             $table->timestamps();

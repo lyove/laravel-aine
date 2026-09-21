@@ -87,7 +87,7 @@ export default {
             }
             const collections = this.project.collections || [];
             return collections.some(
-                (collection) => String(collection.slug || "").toLowerCase() === "comments"
+                (collection) => collection.kind === "comment"
             );
         },
 

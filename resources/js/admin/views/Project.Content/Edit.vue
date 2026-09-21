@@ -1406,7 +1406,7 @@ export default {
         },
 
         editableFields() {
-            return (this.collection.fields || []).filter((field) => field.name !== 'author');
+            return (this.collection.fields || []).filter((field) => field.options && field.options.auto_fill !== 'user');
         },
 
         isSavingEnable() {

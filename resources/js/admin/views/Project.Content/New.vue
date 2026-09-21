@@ -1143,7 +1143,7 @@ export default {
             return this.project && (this.project.is_readonly || !this.project.status);
         },
         editableFields() {
-            return (this.collection.fields || []).filter((field) => field.name !== 'author');
+            return (this.collection.fields || []).filter((field) => field.options && field.options.auto_fill !== 'user');
         },
     },
 };

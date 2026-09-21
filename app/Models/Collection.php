@@ -12,7 +12,7 @@ class Collection extends Model
 
     protected $table = "collections";
 
-    protected $fillable = ['name', 'slug', 'project_id', 'order'];
+    protected $fillable = ['name', 'slug', 'kind', 'project_id', 'order'];
 
     protected $casts = [
         'project_id' => 'integer',
