@@ -203,11 +203,12 @@ class ProjectTemplates
     }
 
     /**
-     * Get one template definition by type.
+     * Get one template definition by id (from project_templates table).
      */
-    public static function get(int $type): ?array
+    public static function get(int $id): ?array
     {
-        return self::all()[$type] ?? null;
+        $t = \App\Models\ProjectTemplate::find($id);
+        return $t ? ['name' => $t->name, 'collections' => $t->collections] : null;
     }
 
     /**
@@ -226,7 +227,6 @@ class ProjectTemplates
             $collections[$collectionDef['slug']] = Collection::create([
                 'name' => $collectionDef['name'],
                 'slug' => $collectionDef['slug'],
-                'kind' => $collectionDef['kind'] ?? 'content',
                 'project_id' => $project->id,
                 'order' => $collectionDef['order'],
             ]);
@@ -243,7 +243,6 @@ class ProjectTemplates
                 );
 
                 CollectionField::create([
-                    'kind' => $collectionDef['kind'] ?? 'content',
                 'project_id' => $project->id,
                     'collection_id' => $collection->id,
                     'order' => $fieldDef['order'],

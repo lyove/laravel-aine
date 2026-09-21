@@ -32,6 +32,16 @@ class ProjectsController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \App\Models\Project
      */
+    /**
+     * List active project templates for the create-project form.
+     */
+    public function templates()
+    {
+        return \App\Models\ProjectTemplate::where('is_active', true)
+            ->orderBy('order')
+            ->get(['id', 'name', 'slug', 'description', 'icon']);
+    }
+
     public function index(Request $request){
         /** @var User $user */
         $user = Auth::user();
@@ -122,9 +132,9 @@ class ProjectsController extends Controller
             'role' => ProjectUser::ROLE_OWNER,
         ]);
 
-        // Apply a preset template (CMS / Business Directory) when selected.
-        $templateType = (int) $request->get('type');
-        if ($templateType && $template = ProjectTemplates::get($templateType)) {
+        // Apply a preset template when selected.
+        $templateId = (int) $request->get('template_id');
+        if ($templateId && $template = ProjectTemplates::get($templateId)) {
             ProjectTemplates::apply($project, $template);
         }
 

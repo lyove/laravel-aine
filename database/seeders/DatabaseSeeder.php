@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
         Role::firstOrCreate(['name' => 'user']);
 
         $this->call(RolePermissionSeeder::class);
+        $this->call(ProjectTemplatesSeeder::class);
 
         Setting::firstOrCreate(
             ['id' => 1],

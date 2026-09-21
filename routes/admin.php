@@ -35,6 +35,9 @@ Route::middleware(['auth:web', 'backend.user'])->prefix(\App\Support\AdminPath::
         return new UserResource($user);
     });
 
+    // Project templates (for the create-project form)
+    Route::get('/project-templates', [ProjectsController::class, 'templates']);
+
     // Dashboard routes
     Route::prefix('dashboard')->group(function () {
         Route::get('/stats', [DashboardController::class, 'stats']);

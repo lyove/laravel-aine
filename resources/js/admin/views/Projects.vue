@@ -271,8 +271,8 @@
                                             <input
                                                 type="radio"
                                                 id="blank_project"
-                                                v-model="new_project.type"
-                                                value="1"
+                                                v-model="new_project.template_id"
+                                                :value="null"
                                             />
                                             <div class="ml-2">{{ __('Blank') }}</div>
                                         </div>
@@ -281,60 +281,20 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-span-1">
+                                <div class="col-span-1" v-for="tpl in templates" :key="tpl.id">
                                     <div class="p-5 border border-gray-300 rounded-md text-sm space-x-2 h-32 relative">
-                                        <label for="cms_template" class="absolute inset-0 w-full h-full cursor-pointer"></label>
+                                        <label :for="'tpl_'+tpl.id" class="absolute inset-0 w-full h-full cursor-pointer"></label>
                                         <div class="flex mb-2">
                                             <input
                                                 type="radio"
-                                                id="cms_template"
-                                                v-model="new_project.type"
-                                                value="2"
+                                                :id="'tpl_'+tpl.id"
+                                                v-model="new_project.template_id"
+                                                :value="tpl.id"
                                             />
-                                            <div class="ml-2">
-                                                {{ __('CMS Template') }}
-                                            </div>
+                                            <div class="ml-2">{{ tpl.name }}</div>
                                         </div>
-                                        <div class="block">
-                                            {{ __('Content Management System (Pages, Articles, Categories, Authors, Tags, Comments, Globals)') }}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-span-1">
-                                    <div class="p-5 border border-gray-300 rounded-md text-sm space-x-2 h-32 relative">
-                                        <label for="directory_template" class="absolute inset-0 w-full h-full cursor-pointer"></label>
-                                        <div class="flex mb-2">
-                                            <input
-                                                type="radio"
-                                                id="directory_template"
-                                                v-model="new_project.type"
-                                                value="3"
-                                            />
-                                            <div class="ml-2">
-                                                {{ __('Business Directory Template') }}
-                                            </div>
-                                        </div>
-                                        <div class="block">
-                                            {{ __('Business Directory (Listings, Categories, Tags, Locations, Reviews, Globals)') }}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-span-1">
-                                    <div class="p-5 border border-gray-300 rounded-md text-sm space-x-2 h-32 relative">
-                                        <label for="note_template" class="absolute inset-0 w-full h-full cursor-pointer"></label>
-                                        <div class="flex mb-2">
-                                            <input
-                                                type="radio"
-                                                id="note_template"
-                                                v-model="new_project.type"
-                                                value="4"
-                                            />
-                                            <div class="ml-2">
-                                                {{ __('Note Template') }}
-                                            </div>
-                                        </div>
-                                        <div class="block">
-                                            {{ __('Note (Pages, Posts, Categories, Tags, Globals)') }}
+                                        <div class="block text-xs text-gray-500">
+                                            {{ tpl.description }}
                                         </div>
                                     </div>
                                 </div>
@@ -395,7 +355,7 @@ export default {
             openNewProjectModal: false,
             new_project: {
                 default_locale: "en",
-                type: 1,
+                template_id: null,
                 timezone: detectBrowserTimezone(),
                 errors: {
                     name: [],
@@ -405,6 +365,7 @@ export default {
                 slugManuallyEdited: false,
             },
             projects: [],
+            templates: [],
             processing: false,
             search: "",
             locales: [],
@@ -523,7 +484,7 @@ export default {
             this.openNewProjectModal = false;
             this.new_project = {
                 default_locale: "en",
-                type: 1,
+                template_id: null,
                 timezone: detectBrowserTimezone(),
                 errors: {
                     name: [],
@@ -539,6 +500,7 @@ export default {
             clearTimeout(this.searchDebounce);
             this.searchDebounce = setTimeout(() => {
                 this.getProjects();
+        axios.get("project-templates").then((res) => { this.templates = res.data; });
             }, 300);
         },
 
@@ -616,6 +578,7 @@ export default {
                             this.__("Failed to update project status.");
                         this.$toast.error(message);
                         this.getProjects();
+        axios.get("project-templates").then((res) => { this.templates = res.data; });
                     });
             };
 
@@ -661,6 +624,7 @@ export default {
 
     mounted() {
         this.getProjects();
+        axios.get("project-templates").then((res) => { this.templates = res.data; });
 
         Object.entries(localesJson).forEach((item, key) => {
             this.locales.push({ id: item[0], name: item[1] });
