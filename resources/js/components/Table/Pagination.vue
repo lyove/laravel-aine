@@ -7,7 +7,7 @@
         :id="id"
         autocomplete="off"
         name="perPageSelect"
-        class="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500"
+        class="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500 focus:border-indigo-500 min-w-[70px]"
         v-model="currentPerPage"
         @change="perPageChanged"
       >

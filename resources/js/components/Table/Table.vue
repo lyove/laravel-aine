@@ -506,7 +506,6 @@ export default {
 		pageText: "page",
 
 		selectable: false,
-		selectOnCheckboxOnly: false,
 		selectAllByPage: true,
 		disableSelectInfo: false,
 		selectionInfoClass: "",
@@ -1342,9 +1341,6 @@ export default {
 			if (this.enableRowExpand) {
 				this.toggleRowExpand(row, index);
 			}
-			if (this.selectable && !this.selectOnCheckboxOnly) {
-				row["isSelected"] = !row.isSelected;
-			}
 			this.$emit("row-click", {
 				row,
 				pageIndex: index,
@@ -1611,7 +1607,6 @@ export default {
 				selectionInfoClass,
 				selectionText,
 				clearSelectionText,
-				selectOnCheckboxOnly,
 				selectAllByPage,
 				disableSelectInfo,
 				selectAllByGroup,
@@ -1619,7 +1614,6 @@ export default {
 			} = this.selectOptions;
 
 			if (typeof enabled === "boolean") this.selectable = enabled;
-			if (typeof selectOnCheckboxOnly === "boolean") this.selectOnCheckboxOnly = selectOnCheckboxOnly;
 			if (typeof selectAllByPage === "boolean") this.selectAllByPage = selectAllByPage;
 			if (typeof selectAllByGroup === "boolean") this.selectAllByGroup = selectAllByGroup;
 			if (typeof disableSelectInfo === "boolean") this.disableSelectInfo = disableSelectInfo;

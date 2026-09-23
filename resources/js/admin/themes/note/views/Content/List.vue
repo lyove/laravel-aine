@@ -219,7 +219,7 @@
                     <ui-table
                         :columns="tableColumns"
                         :rows="content.data || []"
-                        :selectable="!isReadonly"
+                        :select-options="{ enabled: !isReadonly }"
                         :select-all="selectAll"
                         :show-select-all="true"
                         :order-by="listOptions.orderBy"
