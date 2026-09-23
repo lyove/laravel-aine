@@ -6,11 +6,6 @@ import Swal from 'sweetalert2';
 
 /**
  * Create a theme-aware route component.
- * 
- * At render time, it reads the current project's admin_theme from the store,
- * looks up the view in the theme registry, and falls back to the default view.
- * This allows different projects to display completely different UI for the
- * same route without any if/else in the view files.
  */
 function themedView(routeName) {
     return defineComponent({
@@ -18,16 +13,31 @@ function themedView(routeName) {
         setup() {
             const store = useAdminStore();
             const Comp = ref(null);
+            const error = ref(null);
             let loadSeq = 0;
 
             const load = async () => {
                 const seq = ++loadSeq;
-                const theme = store.currentProject?.admin_theme || null;
-                const loader = resolveView(routeName, theme);
-                if (loader) {
+                error.value = null;
+                try {
+                    const theme = store.currentProject?.admin_theme || null;
+                    const loader = resolveView(routeName, theme);
+                    if (!loader) {
+                        if (seq === loadSeq) {
+                            Comp.value = null;
+                            error.value = `No view registered for route "${routeName}" (theme: ${theme || 'default'})`;
+                        }
+                        return;
+                    }
                     const mod = await loader();
                     if (seq === loadSeq) {
                         Comp.value = mod.default || mod;
+                    }
+                } catch (e) {
+                    console.error(`[themedView] failed to load view for "${routeName}":`, e);
+                    if (seq === loadSeq) {
+                        Comp.value = null;
+                        error.value = (e && (e.message || String(e))) || 'Failed to load view';
                     }
                 }
             };
@@ -37,11 +47,21 @@ function themedView(routeName) {
             // Re-load when the project theme changes (e.g. user changes theme in settings)
             watch(() => store.currentProject?.admin_theme, load);
 
-            return () => Comp.value
-                ? h(Comp.value)
-                : h('div', {
-                    class: 'flex items-center justify-center h-full text-gray-400 text-sm',
-                }, [h('i', { class: 'fas fa-spinner fa-spin mr-2' }), 'Loading...']);
+            return () => {
+                if (error.value) {
+                    return h('div', {
+                        class: 'flex flex-col items-center justify-center h-full text-red-500 text-sm p-6 text-center',
+                    }, [
+                        h('i', { class: 'fas fa-exclamation-triangle text-2xl mb-3' }),
+                        h('div', {}, error.value),
+                    ]);
+                }
+                return Comp.value
+                    ? h(Comp.value)
+                    : h('div', {
+                        class: 'flex items-center justify-center h-full text-gray-400 text-sm',
+                    }, [h('i', { class: 'fas fa-spinner fa-spin mr-2' }), 'Loading...']);
+            };
         },
     });
 }

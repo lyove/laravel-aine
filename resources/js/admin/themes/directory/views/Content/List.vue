@@ -479,7 +479,7 @@ import { useAdminStore } from '@/admin/store';
 import { localeDisplayName } from '@/admin/utils/locales';
 import { __ } from '@/admin/translations/engine';
 
-import UiTable from '@/components/Table.vue';
+import UiTable from '@/components/Table';
 import UiModal from '@/components/Modal.vue';
 import UiButton from '@/components/Button.vue';
 import UiDropdown from '@/components/Dropdown.vue';
@@ -489,8 +489,7 @@ import ContentSidebar from '@/admin/components/ContentSidebar.vue';
 import projectBreadcrumb from '@/admin/mixins/projectBreadcrumb';
 
 /**
- * Normalize a project's `locales` attribute (comma-separated string or
- * array) into a clean array of locale codes.
+ * Normalize a project's `locales` attribute into a clean array of locale codes.
  */
 function parseLocales(value) {
     if (Array.isArray(value)) return value.filter((l) => typeof l === 'string' && l !== '');

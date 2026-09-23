@@ -11,7 +11,7 @@
 
       <div class="p-4 overflow-x-auto" :class="embedded ? 'w-full' : 'w-9/12'">
         <div
-          v-if="collection_id !== undefined"
+          v-if="$route.params.col_id !== undefined"
           class="admin__project-content-table"
         >
           <h4 class="h-10 flex justify-end items-center font-bold text-lg mb-2">
@@ -44,7 +44,7 @@
             <router-link
               v-if="
                 !relationSelect &&
-                collection_id !== undefined &&
+                $route.params.col_id !== undefined &&
                 !isReadonly &&
                 canProject(['owner', 'admin', 'editor'])
               "
@@ -52,7 +52,7 @@
                 name: 'projects.content.new',
                 params: {
                   project_id: $route.params.project_id,
-                  col_id: collection_id,
+                  col_id: $route.params.col_id,
                 },
               }"
               class="bg-indigo-500 items-center px-4 py-2 border border-transparent rounded-md text-sm text-white focus:outline-none transition ease-in-out duration-150"
@@ -61,7 +61,7 @@
             </router-link>
 
             <button
-              v-if="!relationSelect && collection_id !== undefined"
+              v-if="!relationSelect && $route.params.col_id !== undefined"
               type="button"
               class="bg-white items-center px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150 ml-2"
               @click="exportContent()"
@@ -81,7 +81,7 @@
             <button
               v-if="
                 !relationSelect &&
-                collection_id !== undefined &&
+                $route.params.col_id !== undefined &&
                 !isReadonly &&
                 canProject(['owner', 'admin'])
               "
@@ -533,7 +533,7 @@
                       name: 'projects.content.edit',
                       params: {
                         project_id: $route.params.project_id,
-                        col_id: collection_id,
+                        col_id: $route.params.col_id,
                         content_id: props.row.id,
                       },
                     }"
@@ -549,7 +549,7 @@
                       name: 'projects.content.edit',
                       params: {
                         project_id: $route.params.project_id,
-                        col_id: collection_id,
+                        col_id: $route.params.col_id,
                         content_id: props.row.id,
                       },
                     }"

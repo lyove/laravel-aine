@@ -480,7 +480,7 @@ import { useAdminStore } from '@/admin/store';
 import { localeDisplayName } from '@/admin/utils/locales';
 import { __ } from '@/admin/translations/engine';
 
-import UiTable from '@/components/Table.vue';
+import UiTable from '@/components/Table';
 import UiModal from '@/components/Modal.vue';
 import UiButton from '@/components/Button.vue';
 import UiDropdown from '@/components/Dropdown.vue';
