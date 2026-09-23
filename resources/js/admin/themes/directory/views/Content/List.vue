@@ -218,7 +218,7 @@
 
                     <ui-table
                         :columns="tableColumns"
-                        :data="content"
+                        :rows="content.data || []"
                         :selectable="!isReadonly"
                         :select-all="selectAll"
                         :show-select-all="true"
@@ -233,143 +233,252 @@
                         @each-change="onEachChange"
                         @column-toggle="onColumnToggle"
                     >
-                        <template #row="{ row }">
-                            <td v-if="!isReadonly" class="pl-2 py-4 text-sm text-center w-px">
-                                <input type="checkbox" :checked="checkIfSelected(row.id)" @click="selectRecord(row.id)" v-formcheckbox class="cursor-pointer" />
-                            </td>
+            <template #table-row="props">
+              <span v-if="props.column.field === 'id'">{{ props.row.id }}</span>
 
-                            <template v-for="col in tableColumns" :key="col.key">
-                                <td v-if="col.visible" :class="tdClass(col)">
-                                    <template v-if="col.key === 'id'">{{ row.id }}</template>
+              <span v-else-if="props.column.field === 'status'">
+                <div v-if="props.row.form_id === null">
+                  <template v-if="isComments">
+                    <span
+                      v-if="props.row.status === 'approved'"
+                      class="text-white rounded-md bg-green-500 px-3 py-1 whitespace-nowrap"
+                      >{{ __("approved") }}</span
+                    >
+                    <span
+                      v-else-if="props.row.status === 'pending'"
+                      class="text-white rounded-md bg-amber-500 px-3 py-1 whitespace-nowrap"
+                      >{{ __("pending") }}</span
+                    >
+                    <span
+                      v-else-if="props.row.status === 'spam'"
+                      class="text-white rounded-md bg-gray-400 px-3 py-1 whitespace-nowrap"
+                      >{{ __("spam") }}</span
+                    >
+                    <span
+                      v-else
+                      class="text-white rounded-md bg-red-500 px-3 py-1 whitespace-nowrap"
+                      >{{ __("trash") }}</span
+                    >
+                  </template>
+                  <template v-else>
+                    <span
+                      v-if="props.row.published_at !== null"
+                      class="text-gray-500 rounded-md bg-green-200 px-3 py-1 whitespace-nowrap"
+                      >{{ __("published") }}</span
+                    >
+                    <span
+                      v-else
+                      class="text-gray-500 rounded-md bg-gray-200 px-3 py-1 whitespace-nowrap"
+                      >{{ __("draft") }}</span
+                    >
+                  </template>
+                </div>
+                <div v-else>
+                  <span
+                    v-if="props.row.published_at !== null"
+                    class="text-gray-200 rounded-md bg-blue-400 px-3 py-1 whitespace-nowrap"
+                    v-tooltip="
+                      __('Submitted at {date}. Form name: {name}', {
+                        date: dateFormat(props.row.form.created_at),
+                        name: props.row.form.name,
+                      })
+                    "
+                    >{{ __("published") }}</span
+                  >
+                  <span
+                    v-else
+                    class="text-gray-500 rounded-md bg-blue-200 px-3 py-1 whitespace-nowrap"
+                    v-tooltip="
+                      __('Submitted at {date}. Form name: {name}', {
+                        date: dateFormat(props.row.form.created_at),
+                        name: props.row.form.name,
+                      })
+                    "
+                    >{{ __("draft") }}</span
+                  >
+                </div>
+              </span>
 
-                                    <template v-else-if="col.key === 'status'">
-                                        <div v-if="row.form_id === null">
-                                            <template v-if="isComments">
-                                                <span v-if="row.status === 'approved'" class="text-white rounded-md bg-green-500 px-3 py-1 whitespace-nowrap">{{ __('approved') }}</span>
-                                                <span v-else-if="row.status === 'pending'" class="text-white rounded-md bg-amber-500 px-3 py-1 whitespace-nowrap">{{ __('pending') }}</span>
-                                                <span v-else-if="row.status === 'spam'" class="text-white rounded-md bg-gray-400 px-3 py-1 whitespace-nowrap">{{ __('spam') }}</span>
-                                                <span v-else class="text-white rounded-md bg-red-500 px-3 py-1 whitespace-nowrap">{{ __('trash') }}</span>
-                                            </template>
-                                            <template v-else>
-                                                <span v-if="row.published_at !== null" class="text-gray-500 rounded-md bg-green-200 px-3 py-1 whitespace-nowrap">{{ __('published') }}</span>
-                                                <span v-else class="text-gray-500 rounded-md bg-gray-200 px-3 py-1 whitespace-nowrap">{{ __('draft') }}</span>
-                                            </template>
-                                        </div>
-                                        <div v-else>
-                                            <span
-                                                v-if="row.published_at !== null"
-                                                class="text-gray-200 rounded-md bg-blue-400 px-3 py-1 whitespace-nowrap"
-                                                v-tooltip="__('Submitted at {date}. Form name: {name}', { date: dateFormat(row.form.created_at), name: row.form.name })"
-                                                >{{ __('published') }}</span
-                                            >
-                                            <span
-                                                v-else
-                                                class="text-gray-500 rounded-md bg-blue-200 px-3 py-1 whitespace-nowrap"
-                                                v-tooltip="__('Submitted at {date}. Form name: {name}', { date: dateFormat(row.form.created_at), name: row.form.name })"
-                                                >{{ __('draft') }}</span
-                                            >
-                                        </div>
-                                    </template>
+              <span v-else-if="props.column.field === 'created_at'">{{
+                $filters.date(props.row.created_at, "D MMM YYYY, H:mm")
+              }}</span>
 
-                                    <template v-else-if="col.key === 'created_at'">{{ $filters.date(row.created_at, 'D MMM YYYY, H:mm') }}</template>
+              <span v-else-if="props.column.field === 'created_by'">
+                <div
+                  class="bg-green-500 text-white p-2 text-md rounded-full text-center mr-2 w-9"
+                  v-tooltip="props.row.created_by.name"
+                >
+                  <div class="w-full text-center">
+                    {{ getUserNameInitials(props.row.created_by.name) }}
+                  </div>
+                </div>
+              </span>
 
-                                    <template v-else-if="col.key === 'created_by'">
-                                        <div class="bg-green-500 text-white p-2 text-md rounded-full text-center mr-2 w-9" v-tooltip="row.created_by.name">
-                                            <div class="w-full text-center">{{ getUserNameInitials(row.created_by.name) }}</div>
-                                        </div>
-                                    </template>
+              <span v-else-if="props.column.field === 'updated_at'">{{
+                $filters.date(props.row.updated_at, "D MMM YYYY, H:mm")
+              }}</span>
 
-                                    <template v-else-if="col.key === 'updated_at'">{{ $filters.date(row.updated_at, 'D MMM YYYY, H:mm') }}</template>
+              <span v-else-if="props.column.field === 'updated_by'">
+                <div
+                  v-if="props.row.updated_by !== null"
+                  class="bg-green-500 text-white p-2 text-md rounded-full text-center mr-2 w-9"
+                  v-tooltip="props.row.updated_by.name"
+                >
+                  <div class="w-full text-center">
+                    {{ getUserNameInitials(props.row.updated_by.name) }}
+                  </div>
+                </div>
+              </span>
 
-                                    <template v-else-if="col.key === 'updated_by'">
-                                        <div v-if="row.updated_by !== null" class="bg-green-500 text-white p-2 text-md rounded-full text-center mr-2 w-9" v-tooltip="row.updated_by.name">
-                                            <div class="w-full text-center">{{ getUserNameInitials(row.updated_by.name) }}</div>
-                                        </div>
-                                    </template>
+              <span v-else-if="props.column.field === 'published_at'">{{
+                $filters.date(props.row.published_at, "D MMM YYYY, H:mm")
+              }}</span>
 
-                                    <template v-else-if="col.key === 'published_at'">{{ $filters.date(row.published_at, 'D MMM YYYY, H:mm') }}</template>
+              <span v-else-if="props.column.field === 'published_by'">
+                <div
+                  v-if="props.row.published_by !== null"
+                  class="bg-green-500 text-white p-2 text-md rounded-full text-center mr-2 w-9"
+                  v-tooltip="props.row.published_by.name"
+                >
+                  <div class="w-full text-center">
+                    {{ getUserNameInitials(props.row.published_by.name) }}
+                  </div>
+                </div>
+              </span>
 
-                                    <template v-else-if="col.key === 'published_by'">
-                                        <div v-if="row.published_by !== null" class="bg-green-500 text-white p-2 text-md rounded-full text-center mr-2 w-9" v-tooltip="row.published_by.name">
-                                            <div class="w-full text-center">{{ getUserNameInitials(row.published_by.name) }}</div>
-                                        </div>
-                                    </template>
+              <span v-else-if="props.column.field !== 'action'">
+                <span v-for="field in collection.fields" :key="field.id">
+                  <span v-if="field.name == props.column.field">
+                    <span v-for="meta in props.row.meta" :key="meta.id">
+                      <span v-if="meta.field_name == props.column.field">
+                        <span
+                          v-if="field.type == 'date'"
+                          :class="{
+                            'rounded-md bg-gray-100 p-1 mr-1':
+                              field.options.repeatable && meta.value !== null,
+                          }"
+                        >
+                          <span v-if="field.options.timepicker">{{
+                            $filters.date(meta.value, "YYYY-MM-DD hh:mm A")
+                          }}</span>
+                          <span v-else>{{ $filters.date(meta.value) }}</span>
+                        </span>
+                        <span
+                          v-else-if="
+                            field.type == 'longtext' && meta.value !== null
+                          "
+                          :title="meta.value"
+                          :class="{
+                            'rounded-md bg-gray-100 p-1 mr-1':
+                              field.options.repeatable && meta.value !== null,
+                          }"
+                        >
+                          {{ meta.value.substring(0, 20) }}
+                          <span v-if="meta.value.length > 20">...</span>
+                        </span>
+                        <span v-else-if="field.type == 'richtext'">
+                          <span
+                            v-if="meta.value !== ''"
+                            class="text-indigo-500 cursor-pointer hover:bg-gray-100 rounded-md p-2"
+                            @click="showText(field, meta.value)"
+                            ><i class="fas fa-align-center"></i
+                          ></span>
+                        </span>
+                        <span v-else-if="field.type == 'media'">
+                          <span
+                            v-if="meta.value !== ''"
+                            class="text-indigo-500 cursor-pointer hover:bg-gray-100 rounded-md p-2"
+                            @click="showMedia(field, meta.value)"
+                            ><i class="fa fa-photo-video"></i
+                          ></span>
+                        </span>
+                        <span v-else-if="field.type == 'relation'">
+                          <span
+                            v-if="meta.value !== ''"
+                            class="text-indigo-500 cursor-pointer hover:bg-gray-100 rounded-md p-2"
+                            @click="showRelationlist(field, meta.value)"
+                            ><i class="fa fa-link"></i
+                          ></span>
+                        </span>
+                        <span v-else>
+                          <span
+                            :class="{
+                              'rounded-md bg-gray-100 p-1 mr-1':
+                                field.options.repeatable && meta.value !== null,
+                            }"
+                            >{{ meta.value }}</span
+                          >
+                        </span>
+                      </span>
+                    </span>
+                  </span>
+                </span>
+              </span>
 
-                                    <template v-else-if="col.key !== 'action'">
-                                        <span v-for="field in collection.fields" :key="field.id">
-                                            <span v-if="field.name == col.key">
-                                                <span v-for="meta in row.meta" :key="meta.id">
-                                                    <span v-if="meta.field_name == col.key">
-                                                        <span
-                                                        v-if="field.type == 'date'"
-                                                        :class="{ 'rounded-md bg-gray-100 p-1 mr-1': field.options.repeatable && meta.value !== null }"
-                                                        >
-                                                        <span v-if="field.options.timepicker">{{ $filters.date(meta.value, 'YYYY-MM-DD hh:mm A') }}</span>
-                                                        <span v-else>{{ $filters.date(meta.value) }}</span>
-                                                        </span>
-                                                        <span
-                                                        v-else-if="field.type == 'longtext' && meta.value !== null"
-                                                        :title="meta.value"
-                                                        :class="{ 'rounded-md bg-gray-100 p-1 mr-1': field.options.repeatable && meta.value !== null }"
-                                                        >
-                                                        {{ meta.value.substring(0, 20) }}
-                                                        <span v-if="meta.value.length > 20">...</span>
-                                                        </span>
-                                                        <span v-else-if="field.type == 'richtext'">
-                                                        <span v-if="meta.value !== ''" class="text-indigo-500 cursor-pointer hover:bg-gray-100 rounded-md p-2" @click="showText(field, meta.value)"
-                                                        ><i class="fas fa-align-center"></i
-                                                        ></span>
-                                                        </span>
-                                                        <span v-else-if="field.type == 'media'">
-                                                        <span v-if="meta.value !== ''" class="text-indigo-500 cursor-pointer hover:bg-gray-100 rounded-md p-2" @click="showMedia(field, meta.value)"
-                                                        ><i class="fa fa-photo-video"></i
-                                                        ></span>
-                                                        </span>
-                                                        <span v-else-if="field.type == 'relation'">
-                                                        <span v-if="meta.value !== ''" class="text-indigo-500 cursor-pointer hover:bg-gray-100 rounded-md p-2" @click="showRelationlist(field, meta.value)"
-                                                        ><i class="fa fa-link"></i
-                                                        ></span>
-                                                        </span>
-                                                        <span v-else>
-                                                        <span
-                                                        :class="{ 'rounded-md bg-gray-100 p-1 mr-1': field.options.repeatable && meta.value !== null }"
-                                                        >{{ meta.value }}</span
-                                                        >
-                                                        </span>
-                                                        </span>
-                                                        </span>
-                                                    </span>
-                                                </span>
-                                    </template>
+              <span v-else-if="props.column.field === 'action'">
+                <div class="flex items-center justify-center gap-1 py-2">
+                  <router-link
+                    v-if="
+                      !isReadonly && canProject(['owner', 'admin', 'editor'])
+                    "
+                    :to="{
+                      name: 'projects.content.edit',
+                      params: {
+                        project_id: $route.params.project_id,
+                        col_id: $route.params.col_id,
+                        content_id: props.row.id,
+                      },
+                    }"
+                    class="text-indigo-500 p-2 px-3 rounded-md hover:bg-gray-100 cursor-pointer bg-gray-50"
+                  >
+                    <i class="fa fa-pencil-alt"></i>
+                  </router-link>
+                  <router-link
+                    v-if="
+                      isReadonly || !canProject(['owner', 'admin', 'editor'])
+                    "
+                    :to="{
+                      name: 'projects.content.edit',
+                      params: {
+                        project_id: $route.params.project_id,
+                        col_id: $route.params.col_id,
+                        content_id: props.row.id,
+                      },
+                    }"
+                    class="text-gray-400 p-2 px-3 rounded-md cursor-default bg-gray-50"
+                    v-tooltip="isReadonly ? __('Read-only') : __('View only')"
+                  >
+                    <i class="fa fa-eye"></i>
+                  </router-link>
+                  <a
+                    v-if="
+                      !isReadonly &&
+                      !isComments &&
+                      canProject(['owner', 'admin'])
+                    "
+                    class="text-orange-500 p-2 px-3 rounded-md hover:bg-gray-100 cursor-pointer bg-gray-50"
+                    @click="moveToTrashContent(props.row)"
+                  >
+                    <i class="fa fa-trash-restore"></i>
+                  </a>
+                  <a
+                    v-if="
+                      !isReadonly &&
+                      isComments &&
+                      canProject(['owner', 'admin', 'editor'])
+                    "
+                    class="text-orange-500 p-2 px-3 rounded-md hover:bg-gray-100 cursor-pointer bg-gray-50"
+                    @click="commentTrash(props.row)"
+                  >
+                    <i class="fa fa-trash-restore"></i>
+                  </a>
+                </div>
+              </span>
+            </template>
 
-                                    <template v-else>
-                                        <div class="flex items-center justify-center gap-1 py-2">
-                                            <router-link
-                                                v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])"
-                                                :to="{ name: 'projects.content.edit', params: { project_id: $route.params.project_id, col_id: collection_id, content_id: row.id } }"
-                                                class="text-indigo-500 p-2 px-3 rounded-md hover:bg-gray-100 cursor-pointer bg-gray-50"
-                                            >
-                                                <i class="fa fa-pencil-alt"></i>
-                                            </router-link>
-                                            <router-link
-                                                v-if="isReadonly || !canProject(['owner', 'admin', 'editor'])"
-                                                :to="{ name: 'projects.content.edit', params: { project_id: $route.params.project_id, col_id: collection_id, content_id: row.id } }"
-                                                class="text-gray-400 p-2 px-3 rounded-md cursor-default bg-gray-50"
-                                                v-tooltip="isReadonly ? __('Read-only') : __('View only')"
-                                            >
-                                                <i class="fa fa-eye"></i>
-                                            </router-link>
-                                            <a v-if="!isReadonly && !isComments && canProject(['owner', 'admin'])" class="text-orange-500 p-2 px-3 rounded-md hover:bg-gray-100 cursor-pointer bg-gray-50" @click="moveToTrashContent(row)">
-                                                <i class="fa fa-trash-restore"></i>
-                                            </a>
-                                            <a v-if="!isReadonly && isComments && canProject(['owner', 'admin', 'editor'])" class="text-orange-500 p-2 px-3 rounded-md hover:bg-gray-100 cursor-pointer bg-gray-50" @click="commentTrash(row)">
-                                                <i class="fa fa-trash-restore"></i>
-                                            </a>
-                                        </div>
-                                    </template>
-                                </td>
-                            </template>
-                        </template>
+            <template #emptystate>
+              {{ __("No data found") }}
+            </template>
                     </ui-table>
 
                     <ui-modal maxWidth="5xl" :show="openTextModal" @close="closeTextModal">
@@ -1280,56 +1389,56 @@ export default {
         // Column definitions driving the shared UiTable (presentation layer only)
         const tableColumns = computed(() => {
             const cols = [];
-            cols.push({ key: 'id', label: __('ID'), sortable: false, visible: true, toggleable: false });
+            cols.push({ field: 'id', label: __('ID'), sortable: false,  toggleable: false });
 
             (cl.collection.value.fields || []).forEach((field) => {
                 if (field.type === 'password' || field.type === 'json' || field.type === 'block') {
                     return;
                 }
                 cols.push({
-                    key: field.name,
+                    field: field.name,
                     label: __(field.label),
                     sortable: true,
                     sortMeta: 1,
-                    visible: !!cl.columns.value[field.name],
+                    hidden: !cl.columns.value[field.name],
                     toggleable: true,
                 });
             });
 
-            cols.push({ key: 'status', label: __('Status'), sortable: false, visible: true, toggleable: false });
+            cols.push({ field: 'status', label: __('Status'), sortable: false,  toggleable: false });
 
             const timeCols = [
-                { key: 'created_at', label: __('Created At') },
-                { key: 'created_by', label: __('Created By') },
-                { key: 'updated_at', label: __('Updated At') },
-                { key: 'updated_by', label: __('Updated By') },
-                { key: 'published_at', label: __('Published At') },
-                { key: 'published_by', label: __('Published By') },
+                { field: "created_at", label: __(('Created At')) },
+                { field: "created_by", label: __(('Created By')) },
+                { field: "updated_at", label: __(('Updated At')) },
+                { field: "updated_by", label: __(('Updated By')) },
+                { field: "published_at", label: __(('Published At')) },
+                { field: "published_by", label: __(('Published By')) },
             ];
             timeCols.forEach((timeCol) => {
                 cols.push({
-                    key: timeCol.key,
+                    field: timeCol.field,
                     label: timeCol.label,
                     sortable: true,
                     sortMeta: 0,
-                    visible: !!cl.columns.value[timeCol.key],
+                    hidden: !cl.columns.value[timeCol.field],
                     toggleable: true,
                 });
             });
 
             if (cl.listOptions.value.getItems !== 'trashed') {
-                cols.push({ key: 'action', label: __('Action'), sortable: false, visible: true, toggleable: false, sticky: true });
+                cols.push({ field: "action", label: __("Action"), sortable: false, toggleable: false, sticky: true });
             }
             return cols;
         });
 
         const tdClass = (col) => {
             if (col.sticky) return 'an__sticky right-0 px-2 py-4 text-sm w-28 whitespace-nowrap text-center shadow-sm bg-white';
-            if (col.key === 'status') return 'pl-2 py-4 text-sm text-center w-24';
-            if (col.key === 'created_by' || col.key === 'updated_by' || col.key === 'published_by') {
+            if (col.field === 'status') return 'pl-2 py-4 text-sm text-center w-24';
+            if (col.field === 'created_by' || col.field === 'updated_by' || col.field === 'published_by') {
                 return 'px-6 py-3 text-sm w-px whitespace-nowrap text-gray-600 text-center';
             }
-            if (col.key === 'id' || col.key === 'created_at' || col.key === 'updated_at' || col.key === 'published_at') {
+            if (col.field === 'id' || col.field === 'created_at' || col.field === 'updated_at' || col.field === 'published_at') {
                 return 'px-6 py-3 text-sm w-px whitespace-nowrap text-gray-600';
             }
             return 'px-6 py-3 text-sm min-w-full whitespace-nowrap';
