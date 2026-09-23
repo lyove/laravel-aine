@@ -1,0 +1,437 @@
+# Aine
+
+**Aine** 是一个基于 **Laravel 13** 和 **Vue 3** 构建的、可自托管的 **Headless 内容管理框架（CMF）**。它提供简洁现代的管理后台，用于建模内容、管理多语言数据，并通过强大的 REST 内容 API 将内容发布到任意终端——网站、移动应用、IoT 屏幕或其他后端系统。
+
+> English documentation: [README.md](README.md)
+
+---
+
+## ✨ 功能特性
+
+### 内容建模
+- **多项目（Projects）**：单套系统可运行多个独立站点/应用，各自拥有独立的集合（Collections）、内容、媒体、Token 与域名白名单。
+- **集合与字段（Collections & Fields）**：可视化构建数据结构，支持 `文本`、`长文本`、`富文本`、`别名(slug)`、`邮箱`、`密码`、`数字`、`枚举`、`布尔`、`颜色`、`日期`、`时间`、`媒体`、`关联(relation)`、`JSON` 等字段类型。
+- **字段选项**：必填/唯一/字符数校验、可重复字段、隐藏于 API、列表隐藏、占位符与说明。
+- **关联关系**：集合间一对一 / 一对多（如分类 → 文章）。**作者（Author）** 是文章/页面上的普通文本字段，新建内容时自动填入当前登录用户的姓名。
+- **预置模板**：可基于 **CMS 模板**（文章、页面、分类、标签、评论、全局）、**企业黄页模板**（商家、分类、标签、位置、点评）或 **笔记模板**（云笔记文章/帖子、页面、分类、标签、全局）一键创建项目，并可自由扩展。
+
+### 内容版本历史
+- **自动快照**：每次创建、更新、发布、取消发布、草稿编辑、恢复、导入都会在 `content_revisions` 表生成全字段快照，并通过版本链（`parent_id`）指向上一个版本。
+- **字段级变更摘要**：每个版本自动记录与上一版本相比哪些字段发生了变化（新增 / 删除 / 修改），在历史面板中内联展示。
+- **版本对比**：任意选中两个版本，查看字段级并排差异，含修改前/修改后的值和颜色标记的变更类型。
+- **版本标签**：可为任意版本添加自定义标签（如"v1.0 发布版"、"编辑审核通过"），方便快速定位。
+- **安全恢复**：恢复版本前先预览所有即将应用的变更；确认后在顶部生成一条新的"已恢复"版本，历史永远不会被破坏性覆盖。
+- **草稿分支历史合并**：已发布内容的草稿编辑通过 `overrideContentId` 关联到主内容，草稿修改记录出现在主内容的历史中，完整编辑轨迹一处可见。
+- **历史徽标**：编辑器的 **History** 按钮实时显示版本数量；列表标记当前版本，展示作者、时间、操作类型和变更字段。
+
+### 草稿分支与发布工作流
+- **草稿分支**：编辑已发布内容而不取消发布时，会克隆一个草稿子项（`draft_parent_id`）；修改保存在草稿中，直到选择发布、合并或丢弃。
+- **定时发布**：设置 `scheduled_at`；`aine:publish_scheduled` 命令（通过 cron 运行）在指定时间自动发布内容。
+- **工作流审批**：按项目启用工作流门控：发布需要管理员审批/驳回并填写审核意见；所有状态流转均记录审计日志。
+- **预览令牌**：草稿内容可通过限时 `preview_token` URL 分享，无需暴露到公开 API。
+
+### SSML 语音标注（富文本）
+- TinyMCE 富文本编辑器集成 **SSML 编辑器**，可为文本添加语音合成标注（拼音、音素、韵律、停顿）。
+- 标注以 `data-*` 属性渲染在 `<span>` 元素上；HTML 消毒器白名单放行 `data-*`、`svg` 和 `path`，标注在保存/加载后完整保留并在前台正确渲染。
+- 只读模式隐藏"点击编辑"提示，显示静态预览。
+
+### 用户、角色与权限
+- **三种全局角色**：`super_admin`（平台全部权限，刻意不挂任何权限点，由 `Gate::before` 全量放行）、`editor`（内容生命周期与审核：创建/更新/删除/发布内容、评论审核、媒体管理、工作流流转）与 `user`（前台用户：评论、收藏、点赞、编辑自己的资料）。
+- **后台闸门**：后台 SPA 与其 `admin-api` 仅对后台角色（`super_admin`、`editor`）开放（`EnsureBackendUser` 中间件）；前台 `user` 会话访问后台接口返回 `403` JSON，访问后台页面则重定向到 `/`。
+- **登录/注册跳转**：后台角色登录后进入 `/admin`；新注册账号自动分配 `user` 角色并落地到 `/`（前台站点）。
+- **项目级角色**：每个项目带属主（`projects.owner_id`），并通过 `project_user` 成员表授予四种加权角色：`owner`、`admin`、`editor`、`viewer`。
+- **基于策略的授权**：Laravel 策略（`ProjectPolicy` 等）按项目控制后台各项操作——管理设置、发布、评论审核、编辑集合/内容等。
+- **用户管理界面**：后台侧边栏 **设置 → 用户** 列出全部账号，可内联编辑全局角色并查看项目成员关系；编辑弹窗与个人资料页一致。
+- **个人资料与两步验证（2FA）**：每个用户可管理自己的资料；可为单位账号开启 TOTP 两步验证，登录时强制校验。
+
+### 评论（博客式）
+- **登录后评论**：登录用户可对内容发表评论，评论自动带上作者姓名。
+- **审核流**：每篇文章可设置"评论需审核后才显示"。评论状态对齐业界主流：`pending`（待审）/ `approved`（已通过）/ `spam`（垃圾）/ `trash`（已删除），后台支持批量状态操作。
+- **评论审批**：项目内 Content 下提供**评论审批**菜单（标签可翻译），管理员/属主可审核、通过、标记垃圾或删除评论。
+
+### 前台互动与用户主页
+- **收藏与点赞**：每条内容详情页都有收藏/点赞按钮与实时计数；同一用户对同一内容只能收藏/点赞一次（唯一约束保证幂等）。
+- **用户主页（`/profile`）**：登录用户拥有专属个人主页，展示用户信息、头像上传/展示，以及三个列表——收藏、点赞、评论（每条均富化内容标题、集合、项目与发布状态）。
+- **设备与 Token 管理**：登录用户可查看已登录的活跃设备列表（`GET /api/me/tokens`）、登出单个设备或一键登出其他全部设备（`POST /api/me/tokens/revoke-others`），Token 泄露后可快速止损。
+- **头像存储**：头像上传至公开磁盘，经 `/storage/avatars/...` 访问；导航栏用户菜单（头像/首字母 + 姓名）直达 **My Profile** 与 **Log out**。
+- **未登录引导**：未登录点击收藏/点赞会跳转 `/login?redirect=...`，登录后自动回到原内容页。
+
+### 发布与 API
+- **两种 API 模式**：
+  - `/api/project/{uuid|slug}/...` —— 面向前端应用，通过**域名白名单**校验，可开启 **Public API** 实现免 Token 读取；
+  - `/api/{uuid}/...` —— 面向服务端调用，所有请求都需要绑定项目的 **Sanctum Token**。
+- **丰富的查询能力**：`filters` 点号表示法（`filters.locale=zh`、`filters.title=contains.laravel`、`filters.price=greaterThan.100`、关联过滤 `filters.category.slug=tech`；16 种语义化操作符：equals/notEquals/contains/notContains/greaterThan/greaterThanOrEqual/lessThan/lessThanOrEqual/in/notIn/between/notBetween/isEmpty/notEmpty）、`or` 逗号分隔 OR 条件、多字段 `sort` 排序、`offset`/`limit` 分页、`count` 计数、`first` 取单条、`state` 发布状态（已发布/草稿）、`timestamps` 时间戳，以及**语言过滤**（`filters.locale=zh`）。
+- **媒体库**：按项目上传、列表、获取、删除媒体（支持本地或云存储磁盘）。
+- **Webhooks**：按项目配置 Webhook 端点，可指定集合并查看请求日志。
+
+### 安全
+- **速率限制**：按用户 / IP 对 API（60 次/分钟）、写入接口（30 次/分钟）、搜索（登录 60 / 匿名 20 次/分钟）、公开表单提交/上传，以及后台认证（密码重置 / 2FA）分别限流。
+- **账号级登录锁定**：在 {邮箱, IP} 5 次/分钟限流之外，额外按**同一账号跨 IP** 累计失败次数——10 次失败后锁定账号 10 分钟（防御分布式换 IP 撞库）。登录成功自动清零；失败与 2FA 失败均写入审计日志。
+- **强密码策略**：全局默认 `Password::min(12)->mixedCase()->numbers()->symbols()`，覆盖注册、密码重置、个人改密、项目邀请用户；超管在用户管理中创建/改密时加严到 `min(14)`。
+- **安全响应头**：所有响应默认携带 `X-Content-Type-Options: nosniff`、`Referrer-Policy`、`Permissions-Policy`；后台区域额外启用 `X-Frame-Options: SAMEORIGIN` 防点击劫持。
+- **可信代理**：`bootstrap/app.php` 根据 `TRUSTED_PROXIES` 信任反向代理/负载均衡器，正确识别 `X-Forwarded-*` 头。
+- **会话加密**：`SESSION_ENCRYPT=true` 时加密会话载荷（env 驱动，HTTPS 默认开启）。
+- **Token 权限范围**：Method 2（`/api/{uuid}/...`）全部路由及 Method 1 的显式 Token 写入路由，均通过 `abilities` / `ability` 中间件校验 Sanctum ability（`read` / `create` / `update` / `delete`）；未授权返回 `403`。新建项目 Token 默认只授 `['read']`（最小权限）。
+- **富文本消毒**：富文本保存前经白名单消毒（后台内容与公开表单），移除脚本、事件属性、`javascript:` 链接与危险 CSS。`data-*` 属性予以保留（惰性属性，不执行脚本，供 SSML 标注与前台渲染器使用），同时放行受限属性集的 `svg`/`path`（`viewbox`、`d`、`fill`、`stroke` 等）。
+- **上传守卫**：媒体上传在 MIME 白名单之外叠加扩展名 + 内容 MIME 双重黑名单校验（拒绝 `php`、`phar`、`phtml`、`asp`、`jsp` 等）；并扫描文件头前 1 MB 检测 `<?php` / `<script>` 多态文件。所有上传入口（项目 API、后台媒体库、分块上传、公开表单）均经过该守卫。
+- **审计日志覆盖**：敏感写操作全部留痕——用户增删改、角色变更、Token 创建/更新/撤销、2FA 开启/关闭/恢复码、媒体上传/删除、登录失败（含 IP 与失败次数）。
+- **会话与设备管理**：第三方客户端可列出当前活跃 Token 设备（`GET /api/me/tokens`）、登出单个设备（`DELETE /api/me/tokens/{id}`）、一键登出其他全部设备（`POST /api/me/tokens/revoke-others`），降低 Token 泄露后的损失面。
+
+### 多语言
+- **内容级语言**：每条内容都带语言标识，可按语言查询与创建内容（`en`、`zh`…）。
+- **后台界面语言**：顶栏一键切换后台界面为英文或中文。
+- **项目名与描述跟随界面语言**：项目卡片与标题按后台当前界面语言显示名称/描述翻译（英文 ↔ 中文）；翻译在项目 **翻译** 页管理，缺失时回退原文。
+- **翻译管理**：全局界面文案翻译 + 项目级翻译（集合名、字段标签、项目名/描述、自定义文案），由显式 `__()` helper 与 `{{ ... }}` 模式匹配字典引擎驱动。
+
+### 后台体验
+- Vue 3 单页后台（`/admin`）：项目、集合、内容表格、富文本编辑器（TinyMCE，集成 SSML 语音标注）、字段拖拽排序、表单、媒体、设置。
+- **内容历史面板**：每个内容编辑器都有 **History** 按钮（带实时版本数徽标），打开双栏弹窗：左侧版本列表（操作类型徽章、标签、作者、时间、变更字段标签、当前版本标记），右侧详情/预览或两版本对比，支持标签编辑和带预览确认的恢复操作。
+- **审计日志**：所有后台操作（创建、更新、发布、取消发布、恢复、导入、工作流审批/驳回、版本标签）均记录操作人、实体、时间戳与元数据。
+- **网页安装向导**：全新部署访问 `/install` 即可启动向导——语言选择、环境检查、目录权限、环境配置（应用 + 数据库 + 管理员账号）、确认页、自动迁移、安装完成。
+- 支持 **SQLite、MySQL、PostgreSQL、SQL Server**。
+
+### 前端
+- 前台 SPA（Vue 3）挂载在 `/`，为内容站点提供现成页面：CMS 模板（首页、内容归档、分类、标签、文章详情）、黄页模板（商家、分类、标签、位置、点评）与笔记模板（帖子、页面、分类、标签）——全部数据通过内容 API 加载。
+- **全局搜索**：导航栏右侧（语言切换旁）的搜索框可**跨全部项目全局搜索**；结果在 `/search?q=…` 按项目分组展示，含标题、摘要与直达详情链接。
+- **登录互动**：登录用户可在详情页收藏、点赞、评论，并在自己的**用户主页**（`/profile`）管理头像与收藏/点赞/评论列表。
+
+---
+
+## 🧰 技术栈
+
+| 层级 | 技术 |
+| --- | --- |
+| 后端 | Laravel 13（PHP 8.3+）、Laravel Sanctum、Spatie Permission、Spatie Webhook Server、Intervention Image |
+| 前端 | Vue 3、Vite 6、Tailwind CSS 3、Pinia、Vue Router、TinyMCE |
+| 数据库 | SQLite / MySQL / PostgreSQL / SQL Server |
+| 认证 | 后台与前台用户会话认证（全局角色：`super_admin` / `editor` / `user` + 项目级角色、两步验证）；内容 API 使用 Sanctum 个人访问令牌 |
+
+---
+
+## 📋 环境要求
+
+- **PHP >= 8.3**，需启用扩展：`openssl`、`pdo`、`mbstring`、`tokenizer`、`ctype`、`xml`、`fileinfo`、`gd`、`curl`
+- 数据库：SQLite（默认）/ MySQL / PostgreSQL / SQL Server
+- Composer 2、Node.js 18+（仅构建前端资源时需要）
+- 可写目录：`storage/`、`bootstrap/cache/`、`database/`（SQLite）
+
+---
+
+## 🚀 安装部署
+
+### 方式 A：网页安装向导（推荐）
+
+将项目上传到服务器后，浏览器访问：
+
+```
+https://your-domain.com/install
+```
+
+向导将引导你完成：
+
+1. **语言选择**（English / 中文）
+2. **服务器环境检查**（PHP 版本与扩展）
+3. **目录权限检查**
+4. **环境配置**——应用名称/地址、数据库（SQLite/MySQL/PgSQL/SQL Server）、**管理员账号**（邮箱 + 密码，自动成为 `super_admin`）
+5. **确认页**——核对配置，可返回修改，或开始安装
+6. **执行安装**——写入 `.env`、生成 `APP_KEY`、自动迁移数据库、创建管理员
+7. **完成**——用刚才创建的账号登录 `/admin`
+
+> 安装向导支持全新部署（无 `.env` 文件）：会自动创建 `.env` 并生成密钥。
+
+### 方式 B：手动安装
+
+```bash
+# 1. 安装依赖
+composer install
+npm install
+
+# 2. 环境配置
+cp .env.example .env
+php artisan key:generate
+# 编辑 .env：APP_URL、DB_CONNECTION、DB_DATABASE 等
+
+# 3. 迁移与种子数据（创建 super_admin 角色 + 默认管理员 + 三个演示项目：CMS、企业黄页、笔记）
+php artisan migrate --force
+php artisan db:seed --force
+
+# 4. 构建前端资源
+npm run build
+
+# 5. 启动
+php artisan serve
+```
+
+默认管理员（种子数据）：`admin@admin.com` / `admin` —— **首次登录后请立即修改**。
+
+### 方式 C：Docker 部署（生产）
+
+项目内置生产镜像与编排文件：
+
+```bash
+# 1. 配置环境变量
+cp .env.example .env
+# 修改 .env：APP_URL、DB_DATABASE、DB_USERNAME、DB_PASSWORD、APP_PORT
+
+# 2. 构建并启动
+docker compose -f docker-compose.production.yml up -d --build
+
+# 3. 首次安装：浏览器打开 http://localhost/install（或你的 APP_URL）
+#    按 Web 安装向导完成安装（会生成 .env 与 storage/installed 标记）
+```
+
+特点：
+
+- **多阶段构建 `Dockerfile`**：`node:22` 构建 Vite 资源、`composer` 安装生产依赖、`php:8.3-fpm-alpine` 运行应用（无开发依赖、运行时不挂载源码）
+- **nginx**：托管静态资源（带 hash 的 `public/build` 资源长缓存），并将 PHP 请求转发至 `app:9000`；内置 SPA history 路由
+- **MySQL 8.4**：带健康检查（`app` 等待 `mysql` 就绪后才启动）与持久化数据卷
+- **数据持久化**：上传文件 / 日志 / 缓存位于 `aine-storage` 卷；容器启动时自动创建 `storage:link`，媒体文件可直接访问
+- **首次运行**：Web 安装向导生成 `.env` 与 `storage/installed` 标记；标记存在后，容器重启时自动缓存 config 与路由
+
+发布新代码：`docker compose -f docker-compose.production.yml build app` 后 `up -d`。HTTPS 请在暴露端口前的反向代理（Caddy / nginx / 云负载均衡）上终结 TLS。
+
+---
+
+## ⚙️ 生产部署配置
+
+单机开发用 `sqlite + file 缓存 + sync 队列` 即可开箱即跑。**生产环境**请按下文调整，否则定时发布、Webhook、多实例缓存会出现隐患。
+
+### 队列（关键）
+
+内容的创建/更新/发布会触发 Webhook，经 Laravel 队列**异步**发送（Spatie Webhook Server，默认使用 `QUEUE_CONNECTION` 指定的连接）。默认值 `sync` 会在**写入请求内**同步发起 HTTP 调用并等待远端响应——远端慢或超时会让“创建/更新/发布内容”的接口卡住。生产必须改为 `database` 或 `redis`，并跑常驻 worker：
+
+```bash
+# .env
+QUEUE_CONNECTION=database     # 多实例推荐 redis
+
+# 常驻队列 worker（务必用 supervisor / systemd 守护）
+php artisan queue:work --tries=3 --backoff=10 --max-time=3600
+```
+
+supervisor 示例（`/etc/supervisor/conf.d/aine-worker.conf`）：
+
+```ini
+[program:aine-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /path/to/aine/artisan queue:work --tries=3 --backoff=10
+autostart=true
+autorestart=true
+numprocs=2
+redirect_stderr=true
+stdout_logfile=/path/to/aine/storage/logs/worker.log
+stopwaitsecs=3600
+```
+
+### 任务调度（关键）
+
+`aine:publish_scheduled`（定时发布）依赖 Laravel 的任务调度，需在服务器 crontab 配置每分钟执行：
+
+```bash
+* * * * * cd /path/to/aine && php artisan schedule:run >> /dev/null 2>&1
+```
+
+未配置以上 cron 会导致"`scheduled_at` 已到时但内容始终不发布"的隐患。代码或配置更新后，平滑重启 worker 让其重新加载：
+
+```bash
+php artisan queue:restart
+```
+
+> 高吞吐或需要观测时可选 [Laravel Horizon](https://laravel.com/docs/horizon)（`redis` 队列 + 看板）。
+
+### 缓存与会话
+
+- 单机可继续用 `file`。
+- 多实例部署**必须**改 `redis`：内容 API 带有"按项目缓存版本号"，每次写入即失效；`file` 缓存的失效只在当前实例生效，其他实例会继续返回旧数据。
+
+```
+CACHE_DRIVER=redis
+SESSION_DRIVER=redis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+REDIS_CLIENT=predis
+```
+
+---
+
+## 🏁 快速开始
+
+1. 登录 `/admin`。
+2. **创建项目**（或使用预置模板：CMS / 企业黄页 / 笔记）。
+3. 在项目中创建**集合**（如 `articles`）并添加**字段**（如 `title`、`url`、`content`）。
+4. 在 内容 → 集合 下添加**内容**。
+   - 在任意内容编辑器中，点击右上角 **History** 按钮（带版本数徽标）查看完整版本历史：预览任意版本、两版本字段级对比、为版本添加自定义标签、或恢复历史版本（恢复前先预览变更）。
+5. 打开 **设置 → API**：
+   - 将前端域名加入**域名白名单**；
+   - 创建**访问令牌**（勾选 `read` / `write` 权限）；
+   - 可选：开启 **Public API** 实现免 Token 读取。
+6. 调用 API：
+
+```bash
+# 公开读取（域名白名单 + Public API 开启）
+curl -H "Origin: https://your-frontend.com" \
+     "https://your-domain.com/api/project/my-blog/articles?limit=10&sort=published_at:desc"
+
+# 受保护读取（需 Token）
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+     -H "Origin: https://your-frontend.com" \
+     "https://your-domain.com/api/project/my-blog/articles"
+
+# 服务端调用（UUID + Token，无需白名单）
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+     "https://your-domain.com/api/6ae5aa2e-6b1b-4711-a258-a0d8d47611c4/articles?where%5Blocale%5D=zh"
+```
+
+---
+
+## 📖 API 文档
+
+完整的 API 参考（认证、接口列表、查询参数、过滤条件、响应格式、示例、常见问题）请参阅 **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)**。
+
+快速总览：
+
+| 模式 | 路由前缀 | 读取认证 | 写入认证 |
+| --- | --- | --- | --- |
+| 方式 1 — 白名单 | `/api/project/{identifier}/...` | 域名白名单（未开 Public API 时需 Token） | 白名单 + Token（`write`） |
+| 方式 2 — UUID | `/api/{uuid}/...` | UUID + Token（`read`） | UUID + Token（`write`） |
+
+---
+
+## 🌐 多语言
+
+- **后台界面语言**：顶栏语言选择器切换（English / 中文），按浏览器记忆选择。
+- **语言管理**：侧边栏 `Localization` 页面——添加语言、设置默认显示语言。字典 key 始终为英文源字符串（基准语言）。
+- **界面翻译**：`Translations` 页面——翻译后台任意界面文案。
+- **项目级翻译**：项目 → 设置 → Translations——翻译该项目后台使用的集合名、字段标签与自定义文案。
+- **内容语言**：创建内容时指定 `locale`（`en`、`zh`…）；API 查询用 `filters.locale=...` 过滤。
+
+---
+
+## 🧑‍💻 二次开发
+
+### 目录结构
+
+```
+app/
+  Aine/                     # 核心辅助类与项目模板
+  Http/Controllers/Admin/   # 后台控制器
+  Http/Controllers/API/     # 内容 API 控制器
+  Http/Resources/           # API 资源（ContentResource、ProjectResource、MediaResource）
+  Models/                   # Content、ContentMeta、Project、Collection、CollectionField、Media 等
+bootstrap/app.php           # 应用引导、中间件、异常处理
+config/installer.php        # 网页安装向导配置
+database/                   # 迁移与种子数据
+resources/js/admin/         # 后台 SPA（Vue 3）
+resources/js/frontend/      # 前台 SPA（Vue 3）
+resources/views/            # Blade 视图（安装向导、认证、SPA 外壳）
+routes/                     # web、api、admin、frontend、auth 路由
+installer/                  # 项目内置网页安装向导包（Aine\Installer）
+```
+
+### 常用命令
+
+```bash
+# 开发时监听并重建前端/后台资源
+npm run dev
+
+# 生产构建
+npm run build
+
+# 运行测试
+php artisan test
+
+# 清理各类缓存（修改配置/路由后）
+php artisan optimize:clear
+```
+
+### 新增前台页面
+
+1. 在 `resources/js/frontend/views/` 创建视图组件。
+2. 在 `resources/js/frontend/routes.js` 注册路由。
+3. 通过内容 API（`resources/js/frontend/api.js`）获取数据，项目标识符在 `resources/js/frontend/config.js`（`PROJECTS` 映射）中配置。
+
+### 扩展 API
+
+- API 接口位于 `app/Http/Controllers/API/`；响应辅助方法在 `API/Concerns/ApiResponse.php`。
+- 序列化由 `app/Http/Resources/ContentResource.php` 控制（类型转换、`hiddenInAPI`、可重复字段）。
+- 新增字段类型：扩展后台字段注册表（`resources/js/admin/views/Project.Collection/CollectionList.vue` 中的 `fieldDetails`）以及对应的校验/序列化逻辑。
+
+### 项目模板
+
+项目模板（CMS、企业黄页、笔记）定义在 `app/Aine/ProjectTemplates.php`——演示项目（`database/seeders/DemoProjectsSeeder.php`）的集合、字段与演示数据均来自模板。演示项目按固定顺序创建（`created_at` 升序）：**CMS → 企业黄页 → 笔记**，保证全新安装后项目列表顺序确定。
+
+### 内容版本历史架构
+
+| 组成部分 | 位置 |
+| --- | --- |
+| 迁移（增强表结构） | `database/migrations/2026_01_01_000040_enhance_content_revisions_table.php` —— 新增 `parent_id`、`action`、`label`、`meta`（JSON）、复合索引 |
+| 模型 | `app/Models/ContentRevision.php` —— `parent`/`children` 关联、`is_current`、`change_summary`、`action_label` 访问器、静态 `diffFields()` 方法 |
+| 快照助手 | `ContentController::createRevision($content, $action, $note, $overrideContentId)` —— 读取全部 `ContentMeta`，查找上一版本作为 `parent_id`，计算字段级 diff 存入 `meta.change_summary` |
+| 后台 API | `routes/admin.php` —— 列表 / 详情 / 对比 / 标签 / 恢复，路由前缀 `admin-api/content/revisions/...` |
+| 前端面板 | `resources/js/admin/components/RevisionsModal.vue` —— 双栏布局：版本列表 + 预览 + 两版本对比 + 标签编辑 + 带预览确认的恢复 |
+| 编辑器集成 | `resources/js/admin/views/Project.Content/Edit.vue` —— History 按钮带版本数徽标，加载/保存后自动刷新，`@restored="getEdit()"` |
+
+**操作类型**：`created`（创建）、`updated`（更新）、`published`（发布）、`unpublished`（取消发布）、`draft_updated`（草稿更新）、`restored`（恢复）、`imported`（导入）、`deleted`（删除）。
+
+**草稿分支合并机制**：保存已发布内容的草稿时，版本通过 `overrideContentId` 关联到**主内容** id，草稿编辑记录出现在主内容的历史中，而非孤立在草稿行上。
+
+### 后台界面翻译（开发规范）
+
+后台界面以英文为基准语言编写。翻译存储在**数据库**中，并通过**字典接口**下发到浏览器（`GET /admin-api/translations/dict?locale=…`）。所有用户可见文案都必须通过显式、响应式的 `__()` helper 输出——系统**已不再有 DOM 扫描兜底**：未包裹的文案只会一直保持英文原文。
+
+**架构说明**
+
+| 组成部分 | 作用 |
+| --- | --- |
+| `admin_string_sources` | 可翻译字符串注册表，数据来自 `database/seeders/data/admin_strings.php` |
+| `admin_translation_defaults` | 随项目分发的各语言出厂默认翻译（如 `zh`） |
+| `translations` | 运行时翻译——可在后台编辑（多语言 → Translations） |
+| `ui_locales` | 后台界面语言列表 |
+| `resources/js/admin/translations/engine.js` | 字典层：供模板与脚本使用的响应式 `__()` helper、localStorage 缓存（启动时同步应用已保存语言、无闪屏）、以及 `{{ ... }}` 占位符模式匹配（处理含运行时值的文案） |
+| `scripts/extract-admin-strings.js` | 扫描 `resources/js/admin`（`.vue`/`.js`），把 JS/Vue 插值归一化为 `{{ ... }}` 占位符，并重新生成注册表种子文件 |
+
+**开发者必须遵守的规范**
+
+1. 所有用户可见文案都要用显式 helper 包裹：
+   - 模板：`{{ __('Save and close') }}`
+   - 脚本与绑定属性：`toast.success(__('Content updated!'))`、`:placeholder="__('Search...')"`
+2. 含运行时值的文案，源字符串里保留 `{{ ... }}` 占位符，不要拼接翻译后的碎片，例如 `__('Language "{{ ... }}" added.', [code])`——位置参数按顺序填充占位符。
+3. **所有文案都必须包裹 `__()`**——已不存在 DOM 扫描兜底，未包裹的文案会一直停留在基准语言。
+
+**翻译者规则（多语言 → Translations）**
+
+- 字典的 key 永远是英文源字符串；只翻译 `{{ ... }}` 占位符周围的文字。
+- `{{ ... }}` 占位符必须**原样保留**，且**数量与顺序必须与源字符串一致**——引擎按顺序把运行时值填入这些占位符。删减、新增或调换占位符都会导致运行时文案出错。
+
+**新增一个可翻译文案的流程**
+
+```bash
+# 1. 从源码重新生成注册表
+node scripts/extract-admin-strings.js
+
+# 2. 把注册表与默认翻译同步进数据库
+php artisan db:seed --class=AdminTranslationsSeeder
+
+# 3. 到后台填写翻译：多语言 → Translations
+```
+
+注意事项：
+- seeder 只写入**新建或空值**的 `translations` 行——后台已编辑过的翻译永远不会被覆盖。
+- 注册表只增不减：从代码中删除的字符串仍会保留在注册表中，其翻译不会丢失。
+- 写入翻译（`POST /admin-api/translations/save`、`/add`）与界面语言管理（`/admin-api/localization/*`）仅限 `super_admin` 角色。
+
+---
+
+## 🧪 测试
+
+```bash
+php artisan test
+```
+
+测试套件覆盖内容增删改查、版本历史（创建 / 更新 / 列表 / 对比 / 恢复 / 标签）、导入导出、媒体、API 认证与查询、工作流审计、集合字段管理、用户与权限（含后台闸门）、评论与审核、前台互动（收藏、点赞、用户主页、头像）、安全策略（强密码、账号锁定、上传守卫、Token 权限范围、设备管理）以及前台首页响应。当前基线：**317 个测试 / 1029 个断言**。
+
+---
+
+## 📄 开源协议
+
+**Aine** 以 [MIT 协议](LICENSE) 开源。
