@@ -45,38 +45,6 @@
 				</div>
 			</div>
 
-			<!-- Column toggle button -->
-			<div v-if="showColumnToggle && toggleableColumns.length > 0" class="absolute top-2 right-2 z-[100]">
-				<ui-dropdown align="right" :closeable="false">
-					<template #trigger>
-						<ui-button color="white" class="border border-gray-200">
-							<i class="fa fa-cog text-gray-700"></i>
-						</ui-button>
-					</template>
-
-					<template #content>
-						<div class="border border-gray-200 p-3">
-							<div v-for="col in toggleableColumns" :key="col.field" class="flex items-start m-2">
-								<div class="flex items-center h-5">
-									<input
-										:id="'col-' + col.field"
-										:checked="columnVisibility[col.field] !== false"
-										type="checkbox"
-										class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-										@click="onColumnToggle(col.field)"
-									/>
-								</div>
-								<div class="ml-3 text-sm">
-									<label :for="'col-' + col.field" class="font-medium text-gray-700 cursor-pointer">
-										{{ col.label }}
-									</label>
-								</div>
-							</div>
-						</div>
-					</template>
-				</ui-dropdown>
-			</div>
-
 			<!-- Fixed header table -->
 			<div v-if="fixedHeader" class="absolute z-10 overflow-x-auto">
 				<table v-if="fixedHeader" :class="tableStyleClasses">
@@ -125,8 +93,41 @@
 			</div>
 
 			<!-- Main table -->
-			<div :class="{ 'w-full overflow-x-auto relative': responsive }" :style="wrapperStyles">
-				<table ref="table" :class="tableStyles">
+			<div class="relative">
+				<!-- Column toggle button -->
+				<div v-if="showColumnToggle && toggleableColumns.length > 0" class="absolute top-2 right-2 z-20">
+					<ui-dropdown align="right" :closeable="false">
+						<template #trigger>
+							<ui-button color="white" class="border border-gray-200">
+								<i class="fa fa-cog text-gray-700"></i>
+							</ui-button>
+						</template>
+
+						<template #content>
+							<div class="border border-gray-200 p-3">
+								<div v-for="col in toggleableColumns" :key="col.field" class="flex items-start m-2">
+									<div class="flex items-center h-5">
+										<input
+											:id="'col-' + col.field"
+											:checked="columnVisibility[col.field] !== false"
+											type="checkbox"
+											class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+											@click="onColumnToggle(col.field)"
+										/>
+									</div>
+									<div class="ml-3 text-sm">
+										<label :for="'col-' + col.field" class="font-medium text-gray-700 cursor-pointer">
+											{{ col.label }}
+										</label>
+									</div>
+								</div>
+							</div>
+						</template>
+					</ui-dropdown>
+				</div>
+
+				<div :class="{ 'w-full overflow-x-auto': responsive }" :style="wrapperStyles">
+					<table ref="table" :class="tableStyles">
 					<colgroup>
 						<col
 							v-for="(column, index) in visibleColumns"
@@ -310,6 +311,7 @@
 						</tr>
 					</tbody>
 				</table>
+			</div>
 			</div>
 
 			<!-- Footer actions -->

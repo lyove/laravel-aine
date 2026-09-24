@@ -4,10 +4,10 @@
     :columns="columns"
     :rows="content.data || []"
     :total-rows="content.total || 0"
-    :select-options="{ enabled: !isReadonly, disableSelectInfo: true }"
+    :select-options="{ enabled: !isReadonly }"
     :search-options="{
       enabled: true,
-      trigger: 'input',
+      trigger: 'enter',
       placeholder: 'Search...',
     }"
     @search="onTableSearch"
