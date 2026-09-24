@@ -20,8 +20,8 @@
  * - #table-row: Custom cell rendering
  * - #table-column: Custom column header
  * - #table-toolbar: Content above the search bar (title, action buttons, etc.)
- * - #table-filters: Content between search and table (status tabs, etc.)
- * - #table-actions: Actions inside the search bar area
+ * - #table-filters: Content between toolbar and search (status tabs, etc.)
+ * - #table-actions: Content next to the search bar (action buttons, etc.)
  * - #selected-row-actions: Batch actions shown when rows are selected
  * - #row-details: Expanded row content
  * - #emptystate: Empty state content

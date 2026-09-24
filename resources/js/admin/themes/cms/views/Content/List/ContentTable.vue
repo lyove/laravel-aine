@@ -39,111 +39,184 @@
       />
     </template>
 
-    <!-- Filters: status tabs -->
-    <template #table-filters>
-      <ContentBatchBar
-        :is-readonly="isReadonly"
-        :selected="selected"
-        :list-options="listOptions"
-        :is-comments="isComments"
-        :total-count="totalCount"
-        :published-count="publishedCount"
-        :draft-count="draftCount"
-        :trashed-count="trashedCount"
-        :approved-count="approvedCount"
-        :pending-count="pendingCount"
-        :spam-count="spamCount"
-        :trash-count="trashCount"
-        :can-project="canProject"
-        @comment-bulk="$emit('comment-bulk', $event)"
-        @delete-selected="$emit('delete-selected')"
-        @publish-selected="$emit('publish-selected')"
-        @unpublish-selected="$emit('unpublish-selected')"
-        @move-to-trash-selected="$emit('move-to-trash-selected')"
-        @restore-selected="$emit('restore-selected')"
-        @change-get-items="$emit('change-get-items', $event)"
-      />
+    <!-- Batch actions on the right side of search bar -->
+    <template #table-actions>
+      <div class="flex items-center gap-2">
+        <ui-dropdown>
+          <template #trigger>
+            <button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 shadow-sm">
+              <i class="fa fa-bolt text-gray-400"></i>
+              {{ __("Actions") }}
+              <i class="fa fa-caret-down text-gray-400 ml-0.5"></i>
+            </button>
+          </template>
+          <template #content>
+            <div class="py-1 min-w-[160px]">
+              <template v-if="selected.length === 0">
+                <div class="px-3 py-2 text-sm text-gray-400 italic">
+                  {{ __("No rows selected") }}
+                </div>
+              </template>
+              <template v-else-if="isComments">
+                <a
+                  v-if="listOptions.getItems !== 'trash'"
+                  class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 cursor-pointer"
+                  @click="$emit('comment-bulk', 'approve')"
+                >
+                  <i class="fa fa-check text-green-500 w-4 text-center"></i>
+                  {{ __("Approve") }}
+                </a>
+                <a
+                  v-if="listOptions.getItems !== 'trash'"
+                  class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 cursor-pointer"
+                  @click="$emit('comment-bulk', 'spam')"
+                >
+                  <i class="fa fa-bug text-amber-500 w-4 text-center"></i>
+                  {{ __("Mark as spam") }}
+                </a>
+                <a
+                  v-if="listOptions.getItems !== 'trash'"
+                  class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 cursor-pointer"
+                  @click="$emit('comment-bulk', 'trash')"
+                >
+                  <i class="fa fa-trash-restore text-orange-500 w-4 text-center"></i>
+                  {{ __("Move to trash") }}
+                </a>
+                <a
+                  v-if="listOptions.getItems === 'trash'"
+                  class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer"
+                  @click="$emit('comment-bulk', 'restore')"
+                >
+                  <i class="fa fa-recycle text-blue-500 w-4 text-center"></i>
+                  {{ __("Restore") }}
+                </a>
+                <div v-if="listOptions.getItems !== 'trash' && canProject(['owner', 'admin'])" class="border-t border-gray-100 my-1"></div>
+                <a
+                  v-if="canProject(['owner', 'admin'])"
+                  class="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 cursor-pointer"
+                  @click="$emit('delete-selected')"
+                >
+                  <i class="fa fa-trash-alt w-4 text-center"></i>
+                  {{ __("Delete permanently") }}
+                </a>
+              </template>
+              <template v-else>
+                <a
+                  v-if="listOptions.getItems !== 'trashed' && canProject(['owner', 'admin'])"
+                  class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 cursor-pointer"
+                  @click="$emit('publish-selected')"
+                >
+                  <i class="fa fa-cloud-upload-alt text-green-500 w-4 text-center"></i>
+                  {{ __("Publish") }}
+                </a>
+                <a
+                  v-if="listOptions.getItems !== 'trashed'"
+                  class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                  @click="$emit('unpublish-selected')"
+                >
+                  <i class="fa fa-cloud-download-alt text-gray-400 w-4 text-center"></i>
+                  {{ __("Unpublish") }}
+                </a>
+                <a
+                  v-if="listOptions.getItems !== 'trashed'"
+                  class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 cursor-pointer"
+                  @click="$emit('move-to-trash-selected')"
+                >
+                  <i class="fa fa-trash-restore text-orange-500 w-4 text-center"></i>
+                  {{ __("Move to trash") }}
+                </a>
+                <a
+                  v-if="listOptions.getItems === 'trashed'"
+                  class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer"
+                  @click="$emit('restore-selected')"
+                >
+                  <i class="fa fa-recycle text-blue-500 w-4 text-center"></i>
+                  {{ __("Restore") }}
+                </a>
+                <div v-if="listOptions.getItems !== 'trashed' && canProject(['owner', 'admin'])" class="border-t border-gray-100 my-1"></div>
+                <a
+                  v-if="canProject(['owner', 'admin'])"
+                  class="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 cursor-pointer"
+                  @click="$emit('delete-selected')"
+                >
+                  <i class="fa fa-trash-alt w-4 text-center"></i>
+                  {{ __("Delete permanently") }}
+                </a>
+              </template>
+            </div>
+          </template>
+        </ui-dropdown>
+      </div>
     </template>
 
-    <!-- Batch actions (shown in selection info bar) -->
+    <!-- Status tabs in selection info bar -->
     <template #selected-row-actions>
-      <div class="flex gap-1">
+      <div class="flex items-center gap-1">
         <template v-if="isComments">
           <button
-            v-if="selected.length !== 0 && listOptions.getItems !== 'trash'"
-            class="cursor-pointer text-green-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
-            @click="$emit('comment-bulk', 'approve')"
+            class="px-2 py-1 text-sm rounded-md hover:bg-blue-100"
+            :class="listOptions.getItems == 'all' ? 'bg-blue-200 font-medium' : 'text-blue-700'"
+            @click="$emit('change-get-items', 'all')"
           >
-            <i class="fa fa-check"></i> {{ __("approve") }}
+            {{ __("All") }} ({{ totalCount }})
           </button>
           <button
-            v-if="selected.length !== 0 && listOptions.getItems !== 'trash'"
-            class="cursor-pointer text-gray-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
-            @click="$emit('comment-bulk', 'spam')"
+            class="px-2 py-1 text-sm rounded-md hover:bg-blue-100"
+            :class="listOptions.getItems == 'approved' ? 'bg-blue-200 font-medium' : 'text-blue-700'"
+            @click="$emit('change-get-items', 'approved')"
           >
-            <i class="fa fa-bug"></i> {{ __("mark as spam") }}
+            {{ __("Approved") }} ({{ approvedCount }})
           </button>
           <button
-            v-if="selected.length !== 0 && listOptions.getItems !== 'trash'"
-            class="cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
-            @click="$emit('comment-bulk', 'trash')"
+            class="px-2 py-1 text-sm rounded-md hover:bg-blue-100"
+            :class="listOptions.getItems == 'pending' ? 'bg-blue-200 font-medium' : 'text-blue-700'"
+            @click="$emit('change-get-items', 'pending')"
           >
-            <i class="fa fa-trash-restore"></i> {{ __("move to trash") }}
+            {{ __("Pending") }} ({{ pendingCount }})
           </button>
           <button
-            v-if="selected.length !== 0 && listOptions.getItems === 'trash'"
-            class="cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
-            @click="$emit('comment-bulk', 'restore')"
+            class="px-2 py-1 text-sm rounded-md hover:bg-blue-100"
+            :class="listOptions.getItems == 'spam' ? 'bg-blue-200 font-medium' : 'text-blue-700'"
+            @click="$emit('change-get-items', 'spam')"
           >
-            <i class="fa fa-recycle"></i> {{ __("restore") }}
+            {{ __("Spam") }} ({{ spamCount }})
           </button>
           <button
-            v-if="selected.length !== 0 && canProject(['owner', 'admin'])"
-            class="cursor-pointer text-red-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
-            @click="$emit('delete-selected')"
+            class="px-2 py-1 text-sm rounded-md hover:bg-blue-100"
+            :class="listOptions.getItems == 'trash' ? 'bg-blue-200 font-medium' : 'text-blue-700'"
+            @click="$emit('change-get-items', 'trash')"
           >
-            <i class="fa fa-trash-alt"></i> {{ __("delete") }}
+            {{ __("Trash") }} ({{ trashCount }})
           </button>
         </template>
         <template v-else>
           <button
-            v-if="
-              selected.length !== 0 &&
-              listOptions.getItems !== 'trashed' &&
-              canProject(['owner', 'admin'])
-            "
-            class="cursor-pointer text-green-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
-            @click="$emit('publish-selected')"
+            class="px-2 py-1 text-sm rounded-md hover:bg-blue-100"
+            :class="listOptions.getItems == 'all' ? 'bg-blue-200 font-medium' : 'text-blue-700'"
+            @click="$emit('change-get-items', 'all')"
           >
-            <i class="fa fa-cloud-upload-alt"></i> {{ __("publish") }}
+            {{ __("All") }} ({{ totalCount }})
           </button>
           <button
-            v-if="selected.length !== 0 && listOptions.getItems !== 'trashed'"
-            class="cursor-pointer text-gray-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
-            @click="$emit('unpublish-selected')"
+            class="px-2 py-1 text-sm rounded-md hover:bg-blue-100"
+            :class="listOptions.getItems == 'published' ? 'bg-blue-200 font-medium' : 'text-blue-700'"
+            @click="$emit('change-get-items', 'published')"
           >
-            <i class="fa fa-cloud-download-alt"></i> {{ __("unpublish") }}
+            {{ __("Published") }} ({{ publishedCount }})
           </button>
           <button
-            v-if="selected.length !== 0 && listOptions.getItems !== 'trashed'"
-            class="cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
-            @click="$emit('move-to-trash-selected')"
+            class="px-2 py-1 text-sm rounded-md hover:bg-blue-100"
+            :class="listOptions.getItems == 'draft' ? 'bg-blue-200 font-medium' : 'text-blue-700'"
+            @click="$emit('change-get-items', 'draft')"
           >
-            <i class="fa fa-trash-restore"></i> {{ __("move to trash") }}
+            {{ __("Draft") }} ({{ draftCount }})
           </button>
           <button
-            v-if="selected.length !== 0 && listOptions.getItems === 'trashed'"
-            class="cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
-            @click="$emit('restore-selected')"
+            class="px-2 py-1 text-sm rounded-md hover:bg-blue-100"
+            :class="listOptions.getItems == 'trashed' ? 'bg-blue-200 font-medium' : 'text-blue-700'"
+            @click="$emit('change-get-items', 'trashed')"
           >
-            <i class="fa fa-recycle"></i> {{ __("restore") }}
-          </button>
-          <button
-            v-if="selected.length !== 0 && canProject(['owner', 'admin'])"
-            class="cursor-pointer text-red-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
-            @click="$emit('delete-selected')"
-          >
-            <i class="fa fa-trash-alt"></i> {{ __("delete") }}
+            {{ __("Trashed") }} ({{ trashedCount }})
           </button>
         </template>
       </div>
@@ -385,7 +458,7 @@
 import { formatDate } from "@/utils/filters";
 import UiTable from "@/components/Table/index.js";
 import ContentToolbar from "./ContentToolbar.vue";
-import ContentBatchBar from "./ContentBatchBar.vue";
+import UiDropdown from "@/components/Dropdown.vue";
 import { __ } from "@/admin/translations/engine";
 
 export default {
@@ -394,7 +467,7 @@ export default {
   components: {
     UiTable,
     ContentToolbar,
-    ContentBatchBar,
+    UiDropdown,
   },
 
   props: {
@@ -406,11 +479,9 @@ export default {
     isComments: { type: Boolean, default: false },
     each: { type: Number, default: 15 },
     canProject: { type: Function, required: true },
-    // ContentToolbar props
     form_count: { type: Number, default: 0 },
     localeFilter: { type: String, default: "" },
     localeOptions: { type: Array, default: () => [] },
-    // ContentBatchBar props
     selected: { type: Array, default: () => [] },
     listOptions: { type: Object, required: true },
     totalCount: { type: Number, default: 0 },
@@ -439,7 +510,7 @@ export default {
     "import",
     "table-search",
     "locale-change",
-    // ContentBatchBar events
+    // Status tabs & batch actions events
     "comment-bulk",
     "delete-selected",
     "publish-selected",

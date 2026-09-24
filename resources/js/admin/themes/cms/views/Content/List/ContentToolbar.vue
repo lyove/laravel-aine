@@ -1,11 +1,13 @@
 <template>
-  <div>
-    <h4 class="h-10 flex justify-end items-center font-bold text-lg mb-2">
-      <div class="flex-1">
+  <div class="flex justify-between items-center mb-3">
+    <div>
+      <h4 class="text-lg font-bold">
         {{ __(collection.name) }}
-        <small class="text-gray-400 ml-1">#{{ collection.slug }}</small>
-      </div>
+        <small class="text-gray-400 ml-1 text-sm font-normal">#{{ collection.slug }}</small>
+      </h4>
+    </div>
 
+    <div class="flex items-center gap-2">
       <router-link
         v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])"
         :to="{
@@ -15,12 +17,13 @@
             col_id: collection_id,
           },
         }"
-        class="bg-green-500 items-center px-4 py-2 border border-transparent rounded-md text-sm text-white focus:outline-none transition ease-in-out duration-150 mr-2"
+        class="bg-green-500 items-center px-4 py-2 border border-transparent rounded-md text-sm text-white focus:outline-none transition ease-in-out duration-150"
       >
-        <i class="fab fa-wpforms"></i> {{ __("Forms") }} ({{ form_count }})
+        <i class="fab fa-wpforms mr-1"></i> {{ __("Forms") }} ({{ form_count }})
       </router-link>
 
       <router-link
+        v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])"
         :to="{
           name: 'projects.content.new',
           params: {
@@ -29,17 +32,16 @@
           },
         }"
         class="bg-indigo-500 items-center px-4 py-2 border border-transparent rounded-md text-sm text-white focus:outline-none transition ease-in-out duration-150"
-        v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])"
       >
-        {{ __("+ Create New") }}
+        <i class="fa fa-plus mr-1"></i> {{ __("Create New") }}
       </router-link>
 
       <button
         type="button"
-        class="bg-white items-center px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150 ml-2"
+        class="bg-white items-center px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150"
         @click="$emit('export')"
       >
-        <i class="fa fa-download"></i> {{ __("Export") }}
+        <i class="fa fa-download mr-1"></i> {{ __("Export") }}
       </button>
 
       <input
@@ -54,15 +56,13 @@
       <button
         v-if="!isReadonly && canProject(['owner', 'admin'])"
         type="button"
-        class="bg-white items-center px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150 ml-2"
+        class="bg-white items-center px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150"
         @click="$refs.importFile.click()"
       >
-        <i class="fa fa-upload"></i> {{ __("Import") }}
+        <i class="fa fa-upload mr-1"></i> {{ __("Import") }}
       </button>
-    </h4>
 
-    <div class="flex justify-end mb-2">
-      <div class="w-auto h-auto">
+      <div class="ml-2">
         <select
           :value="localeFilter"
           @change="$emit('locale-change', $event.target.value)"

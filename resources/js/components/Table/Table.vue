@@ -11,6 +11,9 @@
 			<!-- Toolbar slot: for title, action buttons, etc. -->
 			<slot name="table-toolbar"></slot>
 
+			<!-- Filters slot: for status tabs, additional filters, etc. -->
+			<slot name="table-filters"></slot>
+
 			<!-- Global search -->
 			<ui-global-search
 				v-on:keyup="searchTableOnKeyUp"
@@ -19,15 +22,12 @@
 				@input="globalSearchTerm = $event"
 				:search-enabled="searchEnabled && externalSearchQuery == null"
 				:global-search-placeholder="searchPlaceholder"
-			>
-				<template #internal-table-actions v-if="$slots['table-actions']">
-					<slot name="table-actions"></slot>
-				</template>
-			</ui-global-search>
+			></ui-global-search>
 
-			<!-- Filters slot: for status tabs, additional filters, etc. -->
-			<slot name="table-filters"></slot>
+			<!-- Actions slot: for action buttons, status tabs, etc. -->
+			<slot name="table-actions"></slot>
 
+			<!-- Selection info bar -->
 			<div
 				v-if="selectable"
 				class="bg-blue-50 text-blue-700 px-4 py-2 text-sm flex items-center justify-between"
@@ -40,9 +40,7 @@
 					</a>
 				</span>
 				<span v-else>&nbsp;</span>
-				<div>
-					<slot name="selected-row-actions"></slot>
-				</div>
+				<slot name="selected-row-actions"></slot>
 			</div>
 
 			<!-- Fixed header table -->
