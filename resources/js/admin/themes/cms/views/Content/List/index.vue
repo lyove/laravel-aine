@@ -9,46 +9,6 @@
 
       <div class="w-9/12 p-4 overflow-x-auto">
         <div v-if="$route.params.col_id !== undefined" class="admin__project-content-table">
-          <ContentToolbar
-            :collection="collection"
-            :collection_id="collection_id"
-            :is-readonly="isReadonly"
-            :form_count="form_count"
-            :search="search"
-            :locale-filter="localeFilter"
-            :locale-options="localeOptions"
-            :can-project="canProject"
-            @export="exportContent"
-            @import="importContent"
-            @search="getContent"
-            @update:search="search = $event"
-            @clear-search="clearSearch"
-            @locale-change="onLocaleChange"
-          />
-
-          <ContentBatchBar
-            :is-readonly="isReadonly"
-            :selected="selected"
-            :list-options="listOptions"
-            :is-comments="isComments"
-            :total-count="totalCount"
-            :published-count="publishedCount"
-            :draft-count="draftCount"
-            :trashed-count="trashedCount"
-            :approved-count="approvedCount"
-            :pending-count="pendingCount"
-            :spam-count="spamCount"
-            :trash-count="trashCount"
-            :can-project="canProject"
-            @comment-bulk="commentBulk"
-            @delete-selected="deleteSelected"
-            @publish-selected="publishSelected"
-            @unpublish-selected="unPublishSelected"
-            @move-to-trash-selected="moveToTrashSelected"
-            @restore-selected="restoreSelected"
-            @change-get-items="changeGetItems"
-          />
-
           <ContentTable
             :columns="tableColumns"
             :content="content"
@@ -58,6 +18,19 @@
             :is-comments="isComments"
             :each="each"
             :can-project="canProject"
+            :form_count="form_count"
+            :locale-filter="localeFilter"
+            :locale-options="localeOptions"
+            :selected="selected"
+            :list-options="listOptions"
+            :total-count="totalCount"
+            :published-count="publishedCount"
+            :draft-count="draftCount"
+            :trashed-count="trashedCount"
+            :approved-count="approvedCount"
+            :pending-count="pendingCount"
+            :spam-count="spamCount"
+            :trash-count="trashCount"
             @sort-change="onSortChange"
             @selected-rows-change="onSelectedRowsChange"
             @page-change="onPageChange"
@@ -68,6 +41,17 @@
             @show-relationlist="showRelationlist"
             @move-to-trash-content="moveToTrashContent"
             @comment-trash="commentTrash"
+            @export="exportContent"
+            @import="importContent"
+            @table-search="onTableSearch"
+            @locale-change="onLocaleChange"
+            @comment-bulk="commentBulk"
+            @delete-selected="deleteSelected"
+            @publish-selected="publishSelected"
+            @unpublish-selected="unPublishSelected"
+            @move-to-trash-selected="moveToTrashSelected"
+            @restore-selected="restoreSelected"
+            @change-get-items="changeGetItems"
           />
 
           <TextModal
@@ -115,8 +99,6 @@ import ProjectHeader from "@/admin/components/ProjectHeader.vue";
 import ContentSidebar from "@/admin/components/ContentSidebar.vue";
 import projectBreadcrumb from "@/admin/mixins/projectBreadcrumb";
 
-import ContentToolbar from "./ContentToolbar.vue";
-import ContentBatchBar from "./ContentBatchBar.vue";
 import ContentTable from "./ContentTable.vue";
 import TextModal from "./TextModal.vue";
 import MediaModal from "./MediaModal.vue";
@@ -890,8 +872,6 @@ export default {
     UiModal,
     UiButton,
     UiDropdown,
-    ContentToolbar,
-    ContentBatchBar,
     ContentTable,
     TextModal,
     MediaModal,
@@ -1018,9 +998,9 @@ export default {
       cl.changeColumnSettings();
     };
 
-    const clearSearch = () => {
-      cl.search.value = "";
-      cl.getContent();
+    const onTableSearch = (searchTerm) => {
+      cl.search.value = searchTerm;
+      cl.getContent(1);
     };
 
     const onLocaleChange = (value) => {
@@ -1036,7 +1016,7 @@ export default {
       onPageChange,
       onPerPageChange,
       onColumnToggle,
-      clearSearch,
+      onTableSearch,
       onLocaleChange,
     };
   },

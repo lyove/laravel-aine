@@ -4,11 +4,16 @@
     :columns="columns"
     :rows="content.data || []"
     :total-rows="content.total || 0"
-    :select-options="{ enabled: !isReadonly }"
+    :select-options="{ enabled: !isReadonly, disableSelectInfo: true }"
+    :search-options="{
+      enabled: true,
+      trigger: 'input',
+      placeholder: 'Search...',
+    }"
+    @search="onTableSearch"
     :pagination-options="{
       enabled: true,
       perPage: each,
-      position: 'bottom',
     }"
     :sort-options="{ enabled: true }"
     :show-column-toggle="true"
@@ -18,6 +23,133 @@
     @per-page-change="$emit('per-page-change', $event)"
     @column-toggle="$emit('column-toggle', $event)"
   >
+    <!-- Toolbar: title, action buttons, language filter -->
+    <template #table-toolbar>
+      <ContentToolbar
+        :collection="collection"
+        :collection_id="collection_id"
+        :is-readonly="isReadonly"
+        :form_count="form_count"
+        :locale-filter="localeFilter"
+        :locale-options="localeOptions"
+        :can-project="canProject"
+        @export="$emit('export')"
+        @import="$emit('import', $event)"
+        @locale-change="$emit('locale-change', $event)"
+      />
+    </template>
+
+    <!-- Filters: status tabs -->
+    <template #table-filters>
+      <ContentBatchBar
+        :is-readonly="isReadonly"
+        :selected="selected"
+        :list-options="listOptions"
+        :is-comments="isComments"
+        :total-count="totalCount"
+        :published-count="publishedCount"
+        :draft-count="draftCount"
+        :trashed-count="trashedCount"
+        :approved-count="approvedCount"
+        :pending-count="pendingCount"
+        :spam-count="spamCount"
+        :trash-count="trashCount"
+        :can-project="canProject"
+        @comment-bulk="$emit('comment-bulk', $event)"
+        @delete-selected="$emit('delete-selected')"
+        @publish-selected="$emit('publish-selected')"
+        @unpublish-selected="$emit('unpublish-selected')"
+        @move-to-trash-selected="$emit('move-to-trash-selected')"
+        @restore-selected="$emit('restore-selected')"
+        @change-get-items="$emit('change-get-items', $event)"
+      />
+    </template>
+
+    <!-- Batch actions (shown in selection info bar) -->
+    <template #selected-row-actions>
+      <div class="flex gap-1">
+        <template v-if="isComments">
+          <button
+            v-if="selected.length !== 0 && listOptions.getItems !== 'trash'"
+            class="cursor-pointer text-green-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
+            @click="$emit('comment-bulk', 'approve')"
+          >
+            <i class="fa fa-check"></i> {{ __("approve") }}
+          </button>
+          <button
+            v-if="selected.length !== 0 && listOptions.getItems !== 'trash'"
+            class="cursor-pointer text-gray-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
+            @click="$emit('comment-bulk', 'spam')"
+          >
+            <i class="fa fa-bug"></i> {{ __("mark as spam") }}
+          </button>
+          <button
+            v-if="selected.length !== 0 && listOptions.getItems !== 'trash'"
+            class="cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
+            @click="$emit('comment-bulk', 'trash')"
+          >
+            <i class="fa fa-trash-restore"></i> {{ __("move to trash") }}
+          </button>
+          <button
+            v-if="selected.length !== 0 && listOptions.getItems === 'trash'"
+            class="cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
+            @click="$emit('comment-bulk', 'restore')"
+          >
+            <i class="fa fa-recycle"></i> {{ __("restore") }}
+          </button>
+          <button
+            v-if="selected.length !== 0 && canProject(['owner', 'admin'])"
+            class="cursor-pointer text-red-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
+            @click="$emit('delete-selected')"
+          >
+            <i class="fa fa-trash-alt"></i> {{ __("delete") }}
+          </button>
+        </template>
+        <template v-else>
+          <button
+            v-if="
+              selected.length !== 0 &&
+              listOptions.getItems !== 'trashed' &&
+              canProject(['owner', 'admin'])
+            "
+            class="cursor-pointer text-green-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
+            @click="$emit('publish-selected')"
+          >
+            <i class="fa fa-cloud-upload-alt"></i> {{ __("publish") }}
+          </button>
+          <button
+            v-if="selected.length !== 0 && listOptions.getItems !== 'trashed'"
+            class="cursor-pointer text-gray-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
+            @click="$emit('unpublish-selected')"
+          >
+            <i class="fa fa-cloud-download-alt"></i> {{ __("unpublish") }}
+          </button>
+          <button
+            v-if="selected.length !== 0 && listOptions.getItems !== 'trashed'"
+            class="cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
+            @click="$emit('move-to-trash-selected')"
+          >
+            <i class="fa fa-trash-restore"></i> {{ __("move to trash") }}
+          </button>
+          <button
+            v-if="selected.length !== 0 && listOptions.getItems === 'trashed'"
+            class="cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
+            @click="$emit('restore-selected')"
+          >
+            <i class="fa fa-recycle"></i> {{ __("restore") }}
+          </button>
+          <button
+            v-if="selected.length !== 0 && canProject(['owner', 'admin'])"
+            class="cursor-pointer text-red-500 font-bold py-1 px-3 rounded-md hover:bg-blue-100"
+            @click="$emit('delete-selected')"
+          >
+            <i class="fa fa-trash-alt"></i> {{ __("delete") }}
+          </button>
+        </template>
+      </div>
+    </template>
+
+    <!-- Cell rendering -->
     <template #table-row="props">
       <span v-if="props.column.field === 'id'">{{ props.row.id }}</span>
 
@@ -252,6 +384,8 @@
 <script>
 import { formatDate } from "@/utils/filters";
 import UiTable from "@/components/Table/index.js";
+import ContentToolbar from "./ContentToolbar.vue";
+import ContentBatchBar from "./ContentBatchBar.vue";
 import { __ } from "@/admin/translations/engine";
 
 export default {
@@ -259,6 +393,8 @@ export default {
 
   components: {
     UiTable,
+    ContentToolbar,
+    ContentBatchBar,
   },
 
   props: {
@@ -270,6 +406,21 @@ export default {
     isComments: { type: Boolean, default: false },
     each: { type: Number, default: 15 },
     canProject: { type: Function, required: true },
+    // ContentToolbar props
+    form_count: { type: Number, default: 0 },
+    localeFilter: { type: String, default: "" },
+    localeOptions: { type: Array, default: () => [] },
+    // ContentBatchBar props
+    selected: { type: Array, default: () => [] },
+    listOptions: { type: Object, required: true },
+    totalCount: { type: Number, default: 0 },
+    publishedCount: { type: Number, default: 0 },
+    draftCount: { type: Number, default: 0 },
+    trashedCount: { type: Number, default: 0 },
+    approvedCount: { type: Number, default: 0 },
+    pendingCount: { type: Number, default: 0 },
+    spamCount: { type: Number, default: 0 },
+    trashCount: { type: Number, default: 0 },
   },
 
   emits: [
@@ -283,10 +434,26 @@ export default {
     "show-relationlist",
     "move-to-trash-content",
     "comment-trash",
+    // ContentToolbar events
+    "export",
+    "import",
+    "table-search",
+    "locale-change",
+    // ContentBatchBar events
+    "comment-bulk",
+    "delete-selected",
+    "publish-selected",
+    "unpublish-selected",
+    "move-to-trash-selected",
+    "restore-selected",
+    "change-get-items",
   ],
 
   methods: {
     __,
+    onTableSearch({ searchTerm }) {
+      this.$emit("table-search", searchTerm);
+    },
     getUserNameInitials(name) {
       let initials = name.split(" ");
       if (initials.length > 1) {

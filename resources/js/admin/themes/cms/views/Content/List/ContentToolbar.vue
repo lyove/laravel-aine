@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- 标题栏 -->
     <h4 class="h-10 flex justify-end items-center font-bold text-lg mb-2">
       <div class="flex-1">
         {{ __(collection.name) }}
@@ -62,33 +61,8 @@
       </button>
     </h4>
 
-    <!-- 搜索和语言过滤 -->
-    <div class="flex space-between mb-2">
-      <div class="relative flex w-full flex-wrap items-stretch">
-        <span
-          class="h-full leading-snug font-normal absolute text-center text-gray-400 absolute bg-transparent rounded-md text-base items-center justify-center w-8 pl-3 py-2"
-        >
-          <i class="fas fa-search"></i>
-        </span>
-        <form class="w-full" @submit.prevent="$emit('search')">
-          <input
-            type="text"
-            :value="search"
-            @input="$emit('update:search', $event.target.value)"
-            :placeholder="__('Type something and press enter')"
-            class="px-3 py-2 placeholder-gray-400 text-gray-700 bg-white rounded-md text-sm w-full pl-10 border-gray-200 focus:border-gray-300"
-          />
-        </form>
-        <span
-          v-show="search != ''"
-          class="h-full leading-snug font-normal absolute text-center text-gray-400 absolute bg-transparent rounded-md text-base items-center justify-center w-8 py-2 right-0 pr-3 cursor-pointer"
-          @click="$emit('clear-search')"
-        >
-          <i class="fas fa-times-circle"></i>
-        </span>
-      </div>
-
-      <div class="w-auto h-auto ml-2">
+    <div class="flex justify-end mb-2">
+      <div class="w-auto h-auto">
         <select
           :value="localeFilter"
           @change="$emit('locale-change', $event.target.value)"
@@ -116,13 +90,12 @@ export default {
     collection_id: { type: [Number, String], required: true },
     isReadonly: { type: Boolean, default: false },
     form_count: { type: Number, default: 0 },
-    search: { type: String, default: "" },
     localeFilter: { type: String, default: "" },
     localeOptions: { type: Array, default: () => [] },
     canProject: { type: Function, required: true },
   },
 
-  emits: ["export", "import", "search", "update:search", "clear-search", "locale-change"],
+  emits: ["export", "import", "locale-change"],
 
   methods: {
     __,

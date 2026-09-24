@@ -8,34 +8,8 @@
 		</div>
 
 		<div class="relative" :class="{ 'opacity-50 pointer-events-none': isLoading }">
-			<!-- Top pagination -->
-			<slot
-				v-if="paginate && paginateOnTop"
-				name="pagination-top"
-				:pageChanged="pageChanged"
-				:perPageChanged="perPageChanged"
-				:total="totalRows || totalRowCount"
-			>
-				<ui-pagination
-					ref="paginationTop"
-					@page-changed="pageChanged"
-					@per-page-changed="perPageChanged"
-					:perPage="perPage"
-					:rtl="rtl"
-					:total="totalRows || totalRowCount"
-					:mode="paginationMode"
-					:nextText="nextText"
-					:prevText="prevText"
-					:rowsPerPageText="rowsPerPageText"
-					:perPageDropdownEnabled="paginationOptions.perPageDropdownEnabled"
-					:customRowsPerPageDropdown="customRowsPerPageDropdown"
-					:paginateDropdownAllowAll="paginateDropdownAllowAll"
-					:ofText="ofText"
-					:pageText="pageText"
-					:allText="allText"
-					:info-fn="paginationInfoFn"
-				></ui-pagination>
-			</slot>
+			<!-- Toolbar slot: for title, action buttons, etc. -->
+			<slot name="table-toolbar"></slot>
 
 			<!-- Global search -->
 			<ui-global-search
@@ -50,6 +24,9 @@
 					<slot name="table-actions"></slot>
 				</template>
 			</ui-global-search>
+
+			<!-- Filters slot: for status tabs, additional filters, etc. -->
+			<slot name="table-filters"></slot>
 
 			<div
 				v-if="selectable"
@@ -469,7 +446,6 @@ export default {
 			default() {
 				return {
 					enabled: false,
-					position: "bottom",
 					perPage: 10,
 					perPageDropdown: null,
 					perPageDropdownEnabled: true,
@@ -484,7 +460,7 @@ export default {
 			default() {
 				return {
 					enabled: false,
-					trigger: null,
+					trigger: "enter",
 					externalQuery: null,
 					searchFn: null,
 					placeholder: "Search Table",
@@ -529,7 +505,6 @@ export default {
 
 		perPage: null,
 		paginate: false,
-		paginateOnTop: false,
 		paginateOnBottom: true,
 		customRowsPerPageDropdown: [],
 		paginateDropdownAllowAll: true,
@@ -1238,11 +1213,8 @@ export default {
 
 		changePage(value) {
 			const enabled = this.paginate;
-			let { paginationBottom, paginationTop } = this.$refs;
+			const { paginationBottom } = this.$refs;
 			if (enabled) {
-				if (this.paginateOnTop && paginationTop) {
-					paginationTop.currentPage = value;
-				}
 				if (this.paginateOnBottom && paginationBottom) {
 					paginationBottom.currentPage = value;
 				}
@@ -1272,17 +1244,7 @@ export default {
 
 		perPageChanged(pagination) {
 			this.currentPerPage = pagination.currentPerPage;
-			let paginationPosition = this.paginationOptions.position;
-			if (
-				this.$refs.paginationTop &&
-				(paginationPosition === "top" || paginationPosition === "both")
-			) {
-				this.$refs.paginationTop.currentPerPage = this.currentPerPage;
-			}
-			if (
-				this.$refs.paginationBottom &&
-				(paginationPosition === "bottom" || paginationPosition === "both")
-			) {
+			if (this.$refs.paginationBottom) {
 				this.$refs.paginationBottom.currentPerPage = this.currentPerPage;
 			}
 			const perPageChangedEvent = this.pageChangedEvent();
@@ -1511,7 +1473,6 @@ export default {
 			const {
 				enabled,
 				perPage,
-				position,
 				perPageDropdown,
 				perPageDropdownEnabled,
 				dropdownAllowAll,
@@ -1528,13 +1489,6 @@ export default {
 
 			if (typeof enabled === "boolean") this.paginate = enabled;
 			if (typeof perPage === "number") this.perPage = perPage;
-			if (position === "top") {
-				this.paginateOnTop = true;
-				this.paginateOnBottom = false;
-			} else if (position === "both") {
-				this.paginateOnTop = true;
-				this.paginateOnBottom = true;
-			}
 			if (Array.isArray(perPageDropdown) && perPageDropdown.length) {
 				this.customRowsPerPageDropdown = perPageDropdown;
 				if (!this.perPage) [this.perPage] = perPageDropdown;
