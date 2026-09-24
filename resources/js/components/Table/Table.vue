@@ -51,25 +51,25 @@
 				</template>
 			</ui-global-search>
 
-			<!-- Selection info -->
 			<div
-				v-if="alwaysShowSelectionInfo || (selectedRowCount && !disableSelectInfo)"
+				v-if="selectable"
 				class="bg-blue-50 text-blue-700 px-4 py-2 text-sm flex items-center justify-between"
 				:class="selectionInfoClass"
 			>
-				<span>
+				<span v-if="selectedRowCount && !disableSelectInfo">
 					{{ selectionInfo }}
 					<a href="" @click.prevent="unselectAllInternal(true)" class="ml-2 underline">
 						{{ clearSelectionText }}
 					</a>
 				</span>
+				<span v-else>&nbsp;</span>
 				<div>
 					<slot name="selected-row-actions"></slot>
 				</div>
 			</div>
 
 			<!-- Column toggle button -->
-			<div v-if="showColumnToggle && toggleableColumns.length > 0" class="absolute top-2 right-2 z-10">
+			<div v-if="showColumnToggle && toggleableColumns.length > 0" class="absolute top-2 right-2 z-[100]">
 				<ui-dropdown align="right" :closeable="false">
 					<template #trigger>
 						<ui-button color="white" class="border border-gray-200">
