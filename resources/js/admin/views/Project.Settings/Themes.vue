@@ -82,7 +82,7 @@
                     </div>
 
                     <!-- Design Token Customization -->
-                    <div v-if="selectedTheme && isActive(selectedTheme)" class="mt-8 bg-white rounded-xl border border-gray-200 p-6">
+                    <div v-if="!loading && selectedTheme && isActive(selectedTheme)" class="mt-8 bg-white rounded-xl border border-gray-200 p-6">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">{{ __('Customize Colors') }}</h3>
                         <p class="text-sm text-gray-500 mb-4">{{ __('Override the default design tokens for this project.') }}</p>
 
