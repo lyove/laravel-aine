@@ -815,7 +815,7 @@ export default {
 
             this.newData.published = published;
 
-            axios.post("projects/" + this.$route.params.project_id + "/collections/" + this.$route.params.col_id, this.newData).then(
+            axios.post("projects/" + this.$route.params.project_id + "/collections/" + this.$route.params.col_id + "/entries", this.newData).then(
                 (response) => {
                     this.$toast.success(__('Content created!'));
 

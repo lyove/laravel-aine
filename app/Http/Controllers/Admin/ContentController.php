@@ -301,7 +301,7 @@ class ContentController extends Controller
             $data['spam']     = $countComments('spam');
             $data['trash']    = $countComments('trash');
         }
-        $data['project']     = $project;
+        $data['project']     = $project->presentFor(auth()->user());
         $data['forms']       = Form::where('project_id', $project->id)->where('collection_id', $collection_id)->count();
 
         return $data;
@@ -325,7 +325,7 @@ class ContentController extends Controller
         $collection = Collection::with(['fields'])
             ->where('project_id', $project->id)->where('id', $collection_id)->firstOrFail();
 
-        return ['project' => $project, 'collection' => $collection];
+        return ['project' => $project->presentFor(auth()->user()), 'collection' => $collection];
     }
 
     public function edit($project_id, $collection_id, $content_id)
@@ -348,7 +348,7 @@ class ContentController extends Controller
             $content = $draft;
         }
 
-        return ['project' => $project, 'collection' => $collection, 'content' => $content];
+        return ['project' => $project->presentFor(auth()->user()), 'collection' => $collection, 'content' => $content];
     }
 
     // =================================================================

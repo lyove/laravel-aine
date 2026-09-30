@@ -898,7 +898,7 @@ function useCommentList(options = {}) {
         "projects/" +
           route.params.project_id +
           "/collections/" +
-          cid +
+          cid + "/entries" +
           "?page=" +
           page +
           "&search=" +

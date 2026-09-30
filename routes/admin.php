@@ -50,7 +50,6 @@ Route::middleware(['auth:web', 'backend.user'])->prefix(\App\Support\AdminPath::
     Route::post('/user/update_password', [UsersController::class, 'updatePassword']);
     Route::post('/user/update_profile', [UsersController::class, 'updateProfile']);
 
-    // Global user management (super admin only).
     Route::middleware('role:super_admin')->group(function () {
         Route::get('/users', [UsersManagementController::class, 'index']);
         Route::post('/users', [UsersManagementController::class, 'store']);
@@ -73,7 +72,6 @@ Route::middleware(['auth:web', 'backend.user'])->prefix(\App\Support\AdminPath::
 
     Route::prefix('settings')->group(function(){
         Route::get('/', [SettingsController::class, 'index']);
-        // Only super admins may change global site settings.
         Route::post('/update', [SettingsController::class, 'update'])->middleware(['role:super_admin']);
         Route::post('/test-media-storage', [SettingsController::class, 'testMediaStorage'])->middleware(['role:super_admin']);
     });
@@ -82,7 +80,6 @@ Route::middleware(['auth:web', 'backend.user'])->prefix(\App\Support\AdminPath::
     Route::prefix('system')->middleware(['role:super_admin'])->group(function () {
         Route::get('/status', [SystemController::class, 'status']);
 
-        // Cache management
         Route::post('/cache/clear-all', [SystemController::class, 'clearAllCache']);
         Route::post('/cache/clear-route', [SystemController::class, 'clearRouteCache']);
         Route::post('/cache/clear-config', [SystemController::class, 'clearConfigCache']);
@@ -112,7 +109,7 @@ Route::middleware(['auth:web', 'backend.user'])->prefix(\App\Support\AdminPath::
         Route::post('/add', [TranslationsController::class, 'addString'])->middleware(['role:super_admin']);
     });
 
-    // Admin UI languages — managed here (Localization), not in Translations.
+    // Admin UI languages
     Route::prefix('localization')->group(function(){
         Route::get('/', [LocalizationController::class, 'index']);
         Route::post('/', [LocalizationController::class, 'store'])->middleware(['role:super_admin']);
@@ -120,7 +117,7 @@ Route::middleware(['auth:web', 'backend.user'])->prefix(\App\Support\AdminPath::
         Route::delete('/{code}', [LocalizationController::class, 'destroy'])->middleware(['role:super_admin']);
     });
 
-    // Theme management (global)
+    // Theme management
     Route::prefix('themes')->group(function () {
         Route::get('/', [ThemesController::class, 'index']);
         Route::post('/sync', [ThemesController::class, 'sync'])->middleware(['role:super_admin']);
@@ -180,7 +177,7 @@ Route::middleware(['auth:web', 'backend.user'])->prefix(\App\Support\AdminPath::
         });
     });
 
-    // Collections — nested under projects
+    // Collections
     Route::prefix('projects/{project_id}/collections')->middleware('project.readonly')->group(function(){
         Route::get('/', [CollectionsController::class, 'project']);
         Route::post('/', [CollectionsController::class, 'store']);
@@ -198,13 +195,12 @@ Route::middleware(['auth:web', 'backend.user'])->prefix(\App\Support\AdminPath::
         Route::delete('/{collection_id}/fields/{field_id}', [CollectionFieldsController::class, 'delete']);
     });
 
-    // Content — nested under projects/{project_id}/collections/{collection_id}
+    // Content
     Route::prefix('projects/{project_id}/collections/{collection_id}')->middleware('project.readonly')->group(function(){
-
         // Content entries
-        Route::get('/', [ContentController::class, 'index']);
+        Route::get('/entries', [ContentController::class, 'index']);
         Route::get('/new', [ContentController::class, 'new']);
-        Route::post('/', [ContentController::class, 'store']);
+        Route::post('/entries', [ContentController::class, 'store']);
         Route::get('/{content_id}/edit', [ContentController::class, 'edit']);
         Route::post('/{content_id}', [ContentController::class, 'update']);
         Route::get('/export', [ContentController::class, 'exportContent']);
