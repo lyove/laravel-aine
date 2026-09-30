@@ -1,0 +1,163 @@
+import { defineStore } from "pinia";
+import http from "./http";
+import { api, setApiLocale } from "./api";
+import { PROJECTS } from "./config";
+
+const STORAGE_KEY = "aine_frontend_locale";
+
+let settingsRequest = null;
+const projectRequests = {};
+
+export const useFrontendStore = defineStore("frontend", {
+    state: () => ({
+        settings: {
+            name: null,
+            description: null,
+            version: "0.0.1",
+        },
+        settingsLoaded: false,
+
+        // Project info per identifier (locales, default_locale, ...)
+        projectsInfo: {},
+
+        // Currently displayed language (applies to both systems).
+        locale: localStorage.getItem(STORAGE_KEY) || null,
+        localeReady: false,
+
+        // CMS pages (navigation + page routes under /content)
+        pages: [],
+        pagesLoaded: false,
+
+        // Currently authenticated platform user (null when logged out).
+        user: null,
+    }),
+
+    actions: {
+        async loadSettings() {
+            if (this.settingsLoaded) {
+                return this.settings;
+            }
+            if (settingsRequest) {
+                return settingsRequest;
+            }
+
+            settingsRequest = (async () => {
+                const response = await http.get("/settings");
+                if (response && response.data && typeof response.data === "object") {
+                    this.settings = {
+                        name: response.data.name || null,
+                        description: response.data.description || null,
+                        version: response.data.version || "0.0.1",
+                    };
+                    this.settingsLoaded = true;
+                }
+                return this.settings;
+            })().finally(() => {
+                settingsRequest = null;
+            });
+
+            return settingsRequest;
+        },
+
+        /**
+         * Load project info (locales / default language) from the API and
+         * cache it per identifier. 
+         */
+        async loadProject(identifier, force = false) {
+            if (this.projectsInfo[identifier] && !force) {
+                return this.projectsInfo[identifier];
+            }
+            if (projectRequests[identifier]) {
+                return projectRequests[identifier];
+            }
+
+            projectRequests[identifier] = (async () => {
+
+                const response = await http.get(`/api/project/${identifier}`, {
+                    _suppressError: true,
+                });
+                this.projectsInfo[identifier] = (response && response.data && response.data.data) || null;
+                return this.projectsInfo[identifier];
+            })().finally(() => {
+                delete projectRequests[identifier];
+            });
+
+            return projectRequests[identifier];
+        },
+
+        /**
+         * Load all three projects and settle the language. Uses the CMS
+         * project's locales as the site language list.
+         */
+        async initLocale() {
+            const cms = await this.loadProject(PROJECTS.cms.identifier);
+            await this.loadProject(PROJECTS.directory.identifier);
+            await this.loadProject(PROJECTS.note.identifier);
+
+            const locales = this.cmsProjectLocales;
+            if (!this.locale || !locales.includes(this.locale)) {
+                this.locale = (cms && cms.default_locale) || locales[0] || "en";
+                localStorage.setItem(STORAGE_KEY, this.locale);
+            }
+
+            setApiLocale(this.locale);
+            this.localeReady = true;
+        },
+
+        /**
+         * Switch the displayed language and persist the choice.
+         */
+        setLocale(locale) {
+            if (!locale || locale === this.locale) {
+                return;
+            }
+            this.locale = locale;
+            localStorage.setItem(STORAGE_KEY, locale);
+            setApiLocale(locale);
+        },
+
+        async loadPages(force = false) {
+            if (this.pagesLoaded && !force) {
+                return this.pages;
+            }
+            this.pages = (await api.getPages({ timestamps: true })) || [];
+            this.pagesLoaded = true;
+            return this.pages;
+        },
+
+        /**
+         * Load the current authenticated user.
+         * Returns null when logged out.
+         */
+        async loadMe(force = false) {
+            if (this.user && !force) {
+                return this.user;
+            }
+            try {
+                this.user = await api.me();
+            } catch (e) {
+                this.user = null;
+            }
+            return this.user;
+        },
+
+        setUser(user) {
+            this.user = user;
+        },
+    },
+
+    getters: {
+        cmsProject: (state) => state.projectsInfo[PROJECTS.cms.identifier] || null,
+        cmsProjectLocales: (state) => {
+            const p = state.projectsInfo[PROJECTS.cms.identifier];
+            if (p && Array.isArray(p.locales) && p.locales.length) {
+                return p.locales;
+            }
+            return ["en"];
+        },
+        defaultLocale: (state) => {
+            const p = state.projectsInfo[PROJECTS.cms.identifier];
+            return (p && p.default_locale) || "en";
+        },
+    },
+});

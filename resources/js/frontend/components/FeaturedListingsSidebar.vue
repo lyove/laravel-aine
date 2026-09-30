@@ -1,0 +1,116 @@
+<template>
+    <section v-if="items.length" class="rounded-2xl border border-gray-200/80 bg-gradient-to-b from-white to-gray-50/50 p-5">
+        <!-- Featured heading + More (right-aligned in the same row) -->
+        <div class="mb-5 flex items-center border-b border-gray-200">
+            <span class="-mb-px inline-flex items-center gap-1.5 border-b-2 border-indigo-600 px-4 py-2.5 text-sm font-semibold text-indigo-600">
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2 15.09 8.26 22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Featured
+            </span>
+            <router-link
+                :to="moreLink"
+                class="-mb-px ml-auto py-2.5 text-sm font-medium text-indigo-600 transition hover:opacity-70"
+            >
+                More →
+            </router-link>
+        </div>
+
+        <!-- Horizontal list items -->
+        <div class="space-y-3">
+            <article
+                v-for="item in items"
+                :key="item.id"
+                class="group flex gap-3.5 rounded-xl border border-gray-200/80 bg-white p-3 shadow-sm transition-all duration-300 hover:shadow-md hover:border-indigo-200"
+            >
+                <router-link
+                    :to="itemLink(item)"
+                    class="block h-20 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-100"
+                >
+                    <img
+                        v-if="item.logo && item.logo.full_url"
+                        :src="item.logo.full_url"
+                        :alt="item.title"
+                        class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        loading="lazy"
+                    />
+                    <div
+                        v-else
+                        class="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-lg font-bold text-white"
+                    >
+                        {{ initials(item) }}
+                    </div>
+                </router-link>
+
+                <div class="flex min-w-0 flex-1 flex-col">
+                    <h3 class="mb-1.5 line-clamp-2 text-sm font-semibold leading-snug text-gray-900 transition group-hover:text-indigo-600">
+                        <router-link :to="itemLink(item)">{{ item.title }}</router-link>
+                    </h3>
+
+                    <div class="mb-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-gray-400">
+                        <router-link
+                            v-if="item.category"
+                            :to="`${pathPrefix}/category/${item.category.slug}`"
+                            class="font-medium text-indigo-600 transition hover:text-indigo-700"
+                        >
+                            {{ item.category.title }}
+                        </router-link>
+                        <span v-if="item.location">·</span>
+                        <span v-if="item.location">{{ item.location.name }}</span>
+                    </div>
+
+                    <div class="mt-auto flex items-center justify-between">
+                        <div v-if="item.tags && item.tags.length" class="flex flex-wrap gap-1">
+                            <router-link
+                                v-for="tag in item.tags.slice(0, 2)"
+                                :key="tag.id"
+                                :to="`${pathPrefix}/tag/${(tag.tag || '').toLowerCase().replace(/\s+/g, '-')}`"
+                                class="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-500 transition hover:bg-indigo-50 hover:text-indigo-600"
+                            >
+                                #{{ tag.tag }}
+                            </router-link>
+                        </div>
+                        <span v-if="item['price-range']" class="ml-auto text-xs font-semibold text-emerald-600">
+                            {{ item['price-range'] }}
+                        </span>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</template>
+
+<script>
+export default {
+    name: "FeaturedListingsSidebar",
+    props: {
+        items: {
+            type: Array,
+            default: () => [],
+        },
+        pathPrefix: {
+            type: String,
+            default: "/directory",
+        },
+        moreLink: {
+            type: String,
+            default: "/directory/featured",
+        },
+    },
+    methods: {
+        itemLink(item) {
+            const category = item.category ? item.category.slug : "listings";
+            const url = item.slug || item.id;
+            return `${this.pathPrefix}/${category}/${url}`;
+        },
+        initials(item) {
+            return (item.title || "?")
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((w) => w[0])
+                .join("")
+                .toUpperCase();
+        },
+    },
+};
+</script>
