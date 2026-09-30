@@ -136,8 +136,7 @@
                                 </div>
                                 <div>{{ $filters.prettyBytes(selectedFile.size) }}</div>
                                 <div v-if="selectedFile.width !== null && selectedFile.height !== null">
-                                    {{ selectedFile.width }} x
-                                    {{ selectedFile.height }}
+                                    {{ __('{selectedFileWidth} x {selectedFileHeight}', { selectedFileWidth: selectedFile.width, selectedFileHeight: selectedFile.height }) }}
                                 </div>
                             </div>
                             <div class="clear-left"></div>

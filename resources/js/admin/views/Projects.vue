@@ -573,10 +573,8 @@ export default {
                         );
                     })
                     .catch((error) => {
-                        const message =
-                            error.response?.data?.message ||
-                            this.__("Failed to update project status.");
-                        this.$toast.error(message);
+                        const raw = error.response?.data?.message;
+                        this.$toast.error(typeof raw === 'string' ? this.__(raw) : this.__("Failed to update project status."));
                         this.getProjects();
         axios.get("project-templates").then((res) => { this.templates = res.data; });
                     });

@@ -46,13 +46,13 @@
                                     <i :class="theme.icon || 'fa-palette'"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <h3 class="text-lg font-semibold text-gray-900 truncate">{{ theme.name }}</h3>
-                                    <p class="text-sm text-gray-500 mt-0.5">v{{ theme.version }} <span v-if="theme.author">by {{ theme.author }}</span></p>
+                                    <h3 class="text-lg font-semibold text-gray-900 truncate">{{ __(theme.name) }}</h3>
+                                    <p class="text-sm text-gray-500 mt-0.5">v{{ theme.version }} <span v-if="theme.author">{{ __('by {themeAuthor}', { themeAuthor: theme.author }) }}</span></p>
                                 </div>
                             </div>
 
                             <!-- Description -->
-                            <p class="text-sm text-gray-600 mt-3 line-clamp-2">{{ theme.description }}</p>
+                            <p class="text-sm text-gray-600 mt-3 line-clamp-2">{{ __(theme.description) }}</p>
 
                             <!-- Color Preview -->
                             <div class="flex items-center gap-2 mt-4">

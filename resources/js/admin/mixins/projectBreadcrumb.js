@@ -9,6 +9,7 @@
  *  - this.$route.name / this.$route.params (project_id, col_id)
  */
 import { useAdminStore } from '../store';
+import { __ } from "@/admin/translations/engine";
 
 const SEGMENT_DEFS = {
     'projects.collections': [
@@ -90,11 +91,11 @@ export default {
             const route_name = this.$route.name;
             const project_id = this.$route.params.project_id;
             const project = store.currentProject;
-            const project_name = (project && project.name) || 'Project';
+            const project_name = (project && project.name) || __('Project');
 
             const items = [
-                { name: 'Dashboard', url: '/', icon: 'fa fa-tachometer-alt' },
-                { name: 'Projects List', url: { name: 'projects' }, icon: 'fas fa-list' },
+                { name: __('Dashboard'), url: '/', icon: 'fa fa-tachometer-alt' },
+                { name: __('Projects List'), url: { name: 'projects' }, icon: 'fas fa-list' },
             ];
 
             if (!route_name || route_name === 'projects' || !project_id) {
@@ -115,7 +116,7 @@ export default {
             if (defs) {
                 defs.forEach((seg, index) => {
                     const is_last = index === defs.length - 1;
-                    const item = { name: seg.label };
+                    const item = { name: __(seg.label) };
                     if (seg.icon) {
                         item.icon = seg.icon;
                     }

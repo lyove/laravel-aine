@@ -28,6 +28,18 @@ const HTML_TAGS = new Set([
 
 const strings = new Set();
 
+// Known non-UI strings that the heuristics still pick up (component names,
+// data values, DOM query fragments). Kept out of the registry; extend when a
+// re-run adds another false positive.
+const BLACKLIST = new Set([
+    "ContentTable",
+    "MediaModal",
+    "TextModal",
+    "ProjectUiView_{value}",
+    "GET",
+    "script, iframe, object, embed, link, meta",
+]);
+
 /** Lexically strip // and /* *\/ comments, keeping string literals intact. */
 function stripComments(src) {
     let out = "";
@@ -232,6 +244,13 @@ function isMeaningful(s, allowLowercaseToken = false) {
     const compact = s.replace(/\{\{[^{}]*\}\}/g, "{}").replace(/\{[^{}]*\}/g, "{}");
     if (!compact || compact.length < 2) return false;
     if (!/[A-Za-z]/.test(compact)) return false;   // must contain letters
+    // Whole __('...') call text picked up as a literal (Preferences.vue
+    // stores the call string in script data) — the real key is the inner text.
+    if (/^__\(/.test(compact)) return false;
+    // JS comparison expressions ("activeTab === 'contact'")
+    if (/\s===\s/.test(compact)) return false;
+    // CSS root/selector fragments (":root { {cssVars} }")
+    if (/^:root\b/.test(compact)) return false;
     // Icon / CSS class combos (e.g. "fas fa-lock", "bi bi-trash")
     if (/^(fa|fas|far|fal|fab|bi|bx|bx-|mdi|icon|glyphicon|el-icon)\b/i.test(compact)) return false;
     // Markup / code fragments
@@ -277,9 +296,40 @@ walk(ADMIN_DIR);
     if (fs.existsSync(entry)) collectStrings(stripComments(fs.readFileSync(entry, "utf8")));
 }
 
+// Drop known non-UI strings (component names, data values, DOM fragments).
+for (const bad of BLACKLIST) {
+    strings.delete(bad);
+}
+
 const sorted = [...strings].sort((a, b) => a.localeCompare(b));
 
-const phpLines = sorted.map((s) => {
+// Preserve the hand-maintained tail of 'sources' (backend PHP strings, theme
+// metadata and other strings the extractor cannot see). Re-running the
+// extractor must NOT drop them, so any old source entry that the new scan
+// does not produce is appended after the extracted part.
+const existing = fs.existsSync(OUT) ? fs.readFileSync(OUT, "utf8") : "";
+
+function parseOldSources(fileText) {
+    const m = fileText.match(/'sources' => \[\n([\s\S]*?)\n    \],\n    'defaults' => \[/);
+    if (!m) return [];
+    const out = [];
+    const lineRe = /^\s*'((?:\\.|[^'\\])*)',$/gm;
+    let lm;
+    while ((lm = lineRe.exec(m[1])) !== null) {
+        out.push(lm[1].replace(/\\'/g, "'").replace(/\\\\/g, "\\"));
+    }
+    return out;
+}
+
+const oldSources = parseOldSources(existing);
+const manual = [];
+for (const s of oldSources) {
+    if (!strings.has(s) && !manual.includes(s)) {
+        manual.push(s);
+    }
+}
+
+const phpLines = [...sorted, ...manual].map((s) => {
     const escaped = s.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
     return "    '" + escaped + "'";
 });
@@ -287,7 +337,6 @@ const phpLines = sorted.map((s) => {
 // Preserve the hand-maintained 'defaults' block (factory default
 // translations, e.g. zh) verbatim across runs.
 let defaultsBlock = "";
-const existing = fs.existsSync(OUT) ? fs.readFileSync(OUT, "utf8") : "";
 const dIdx = existing.indexOf("    'defaults' => [");
 if (dIdx !== -1) {
     defaultsBlock = existing.slice(dIdx);
@@ -323,5 +372,5 @@ ${phpLines.join(",\n")}
 ${defaultsBlock}`;
 
 fs.writeFileSync(OUT, php);
-console.log(`Extracted ${sorted.length} strings -> database/seeders/data/admin_strings.php`);
+console.log(`Extracted ${sorted.length} strings (+${manual.length} preserved manual) -> database/seeders/data/admin_strings.php`);
 console.log(`Sync the registry into the database with:  php artisan db:seed --class=AdminTranslationsSeeder`);

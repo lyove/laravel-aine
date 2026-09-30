@@ -3,6 +3,7 @@ import { defineComponent, ref, watch, h, onMounted } from 'vue';
 import { useAdminStore } from './store';
 import { resolveView, resolveContentView, preloadProjectUis } from './viewRegistry';
 import Swal from 'sweetalert2';
+import { __ } from "@/admin/translations/engine";
 
 /**
  * Create a project-UI-aware route component.
@@ -43,7 +44,7 @@ function projectUiView(routeName, options = {}) {
                     if (!loader) {
                         if (seq === loadSeq) {
                             Comp.value = null;
-                            error.value = `No view registered for route "${routeName}" (UI: ${uiSlug || 'shared default'})`;
+                            error.value = __('No view registered for route "{routeName}" (UI: {uiSlug})', { routeName, uiSlug: uiSlug || __('shared default') });
                         }
                         return;
                     }
@@ -55,7 +56,7 @@ function projectUiView(routeName, options = {}) {
                     console.error(`[projectUiView] failed to load view for "${routeName}":`, e);
                     if (seq === loadSeq) {
                         Comp.value = null;
-                        error.value = (e && (e.message || String(e))) || 'Failed to load view';
+                        error.value = (e && (e.message || String(e))) || __('Failed to load view');
                     }
                 }
             };
@@ -80,7 +81,7 @@ function projectUiView(routeName, options = {}) {
                     ? h(Comp.value)
                     : h('div', {
                         class: 'flex items-center justify-center h-full text-gray-400 text-sm',
-                    }, [h('i', { class: 'fas fa-spinner fa-spin mr-2' }), 'Loading...']);
+                    }, [h('i', { class: 'fas fa-spinner fa-spin mr-2' }), __('Loading...')]);
             };
         },
     });

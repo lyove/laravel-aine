@@ -26,6 +26,10 @@ class DashboardController extends Controller
             'my_projects' => Project::whereIn('id', $accessibleProjectIds)->count(),
             'total_content' => Content::whereIn('project_id', $accessibleProjectIds)->count(),
             'media_files' => Media::whereIn('project_id', $accessibleProjectIds)->count(),
+            'pending_comments' => Content::whereIn('project_id', $accessibleProjectIds)
+                ->whereHas('collection', fn ($q) => $q->where('slug', 'comments'))
+                ->whereHas('meta', fn ($q) => $q->where('field_name', 'status')->where('value', 'pending'))
+                ->count(),
         ];
 
         return response()->json($stats);
@@ -79,7 +83,9 @@ class DashboardController extends Controller
             $todos[] = [
                 'type' => 'drafts',
                 'count' => $draftContent,
-                'message' => trans_choice('{1} :count draft content|[2,*] :count draft contents', $draftContent, ['count' => $draftContent]),
+                // Source string; the admin UI renders it via __() with the
+                // count placeholder so it follows the active UI language.
+                'message' => $draftContent === 1 ? '{count} draft content' : '{count} draft contents',
                 'action' => $draftContent2 ? "/project/{$draftContent2->project_id}/content/{$draftContent2->collection_id}?filter=draft" : '/projects',
             ];
         }
@@ -97,8 +103,27 @@ class DashboardController extends Controller
             $todos[] = [
                 'type' => 'trashed',
                 'count' => $trashedContent,
-                'message' => trans_choice('{1} :count item in trash|[2,*] :count items in trash', $trashedContent, ['count' => $trashedContent]),
+                'message' => $trashedContent === 1 ? '{count} item in trash' : '{count} items in trash',
                 'action' => $trashedContent2 ? "/project/{$trashedContent2->project_id}/content/{$trashedContent2->collection_id}?filter=trashed" : '/projects',
+            ];
+        }
+
+        $pendingComments = Content::whereIn('project_id', $accessibleProjectIds)
+            ->whereHas('collection', fn ($q) => $q->where('slug', 'comments'))
+            ->whereHas('meta', fn ($q) => $q->where('field_name', 'status')->where('value', 'pending'))
+            ->count();
+
+        if ($pendingComments > 0) {
+            $pendingComment = Content::whereIn('project_id', $accessibleProjectIds)
+                ->whereHas('collection', fn ($q) => $q->where('slug', 'comments'))
+                ->whereHas('meta', fn ($q) => $q->where('field_name', 'status')->where('value', 'pending'))
+                ->first();
+
+            $todos[] = [
+                'type' => 'comments',
+                'count' => $pendingComments,
+                'message' => $pendingComments === 1 ? '{count} pending comment' : '{count} pending comments',
+                'action' => $pendingComment ? "/project/{$pendingComment->project_id}/content/{$pendingComment->collection_id}?filter=pending" : '/projects',
             ];
         }
 

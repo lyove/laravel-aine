@@ -503,7 +503,7 @@
                                 <div class="w-3/5 block mt-1 ml-7" v-if="new_field.validations.charcount.status">
                                     <div class="grid grid-cols-5">
                                         <div class="col-span-3">
-                                            <v-select :options="charcount.fields" :append-to-body="true" class="v-select" v-model="new_field.validations.charcount.type" :clearable="false"></v-select>
+                                            <v-select :options="charcount.fields" :append-to-body="true" class="v-select" v-model="new_field.validations.charcount.type" :clearable="false" :get-option-label="(opt) => __(opt)"></v-select>
                                             <p class="text-sm text-red-600 mt-1" v-if="new_field.errors['validations.charcount.type']">
                                                 {{ new_field.errors["validations.charcount.type"][0] }}
                                             </p>

@@ -220,51 +220,51 @@
                     <p class="text-xs text-slate-500 mb-4">{{ __('Run these on the server via SSH when needed. Cache & storage tools above cover the most common ones from the UI.') }}</p>
                     <div class="grid gap-x-6 gap-y-2 sm:grid-cols-2">
                         <div class="flex items-start gap-3">
-                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">php artisan migrate</code>
+                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">{{ __('php artisan migrate') }}</code>
                             <span class="text-xs text-slate-600 pt-1">{{ __('Run pending database migrations') }}</span>
                         </div>
                         <div class="flex items-start gap-3">
-                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">php artisan db:seed</code>
+                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">{{ __('php artisan db:seed') }}</code>
                             <span class="text-xs text-slate-600 pt-1">{{ __('Run database seeders') }}</span>
                         </div>
                         <div class="flex items-start gap-3">
-                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">php artisan optimize</code>
+                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">{{ __('php artisan optimize') }}</code>
                             <span class="text-xs text-slate-600 pt-1">{{ __('Cache config, routes & views (recommended in production)') }}</span>
                         </div>
                         <div class="flex items-start gap-3">
-                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">php artisan config:clear</code>
+                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">{{ __('php artisan config:clear') }}</code>
                             <span class="text-xs text-slate-600 pt-1">{{ __('Clear cached configuration') }}</span>
                         </div>
                         <div class="flex items-start gap-3">
-                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">php artisan route:clear</code>
+                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">{{ __('php artisan route:clear') }}</code>
                             <span class="text-xs text-slate-600 pt-1">{{ __('Clear cached routes') }}</span>
                         </div>
                         <div class="flex items-start gap-3">
-                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">php artisan view:clear</code>
+                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">{{ __('php artisan view:clear') }}</code>
                             <span class="text-xs text-slate-600 pt-1">{{ __('Clear compiled view cache') }}</span>
                         </div>
                         <div class="flex items-start gap-3">
-                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">php artisan cache:clear</code>
+                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">{{ __('php artisan cache:clear') }}</code>
                             <span class="text-xs text-slate-600 pt-1">{{ __('Clear application cache') }}</span>
                         </div>
                         <div class="flex items-start gap-3">
-                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">php artisan storage:link</code>
+                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">{{ __('php artisan storage:link') }}</code>
                             <span class="text-xs text-slate-600 pt-1">{{ __('Recreate the public/storage symlink') }}</span>
                         </div>
                         <div class="flex items-start gap-3">
-                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">php artisan queue:restart</code>
+                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">{{ __('php artisan queue:restart') }}</code>
                             <span class="text-xs text-slate-600 pt-1">{{ __('Restart queue workers (required after deploy)') }}</span>
                         </div>
                         <div class="flex items-start gap-3">
-                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-amber-300 whitespace-nowrap">php artisan down / up</code>
+                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-amber-300 whitespace-nowrap">{{ __('php artisan down / up') }}</code>
                             <span class="text-xs text-slate-600 pt-1">{{ __('Toggle maintenance mode') }}</span>
                         </div>
                         <div class="flex items-start gap-3">
-                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">php artisan tinker</code>
+                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">{{ __('php artisan tinker') }}</code>
                             <span class="text-xs text-slate-600 pt-1">{{ __('Interactive REPL for inspection & debugging') }}</span>
                         </div>
                         <div class="flex items-start gap-3">
-                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">php artisan list</code>
+                            <code class="shrink-0 rounded bg-slate-900 px-2 py-1 text-xs font-mono text-emerald-300 whitespace-nowrap">{{ __('php artisan list') }}</code>
                             <span class="text-xs text-slate-600 pt-1">{{ __('List all available Artisan commands') }}</span>
                         </div>
                     </div>

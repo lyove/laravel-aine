@@ -776,9 +776,9 @@ export default {
                 .then((response) => response.data)
                 .catch((error) => {
                     if (error.response && error.response.status === 422) {
+                        const raw = error.response?.data?.message;
                         this.$toast.error(
-                            (error.response.data && error.response.data.message) ||
-                                __('Invalid URL format. Please check your domains.')
+                            typeof raw === 'string' ? __(raw) : __('Invalid URL format. Please check your domains.')
                         );
                     } else {
                         this.$toast.error(__('Failed to save domains'));

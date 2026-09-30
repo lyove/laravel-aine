@@ -1028,18 +1028,16 @@ function useContentList(options = {}) {
         formData,
       )
       .then((response) => {
+        const rawMsg = response.data.message;
         instance?.proxy?.$toast.success(
-          response.data.message || __("Content imported."),
+          typeof rawMsg === 'string' ? __(rawMsg) : __("Content imported."),
         );
         getContent();
       })
       .catch((error) => {
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.message
-        ) {
-          instance?.proxy?.$toast.error(error.response.data.message);
+        const raw = error.response?.data?.message;
+        if (typeof raw === 'string') {
+          instance?.proxy?.$toast.error(__(raw));
         }
       })
       .finally(() => {
@@ -1072,7 +1070,7 @@ function useContentList(options = {}) {
       .then((response) => {
         openMediaModal.value = true;
         mediaRecords.value = response.data;
-        mediaModalFieldName.value = field.label;
+        mediaModalFieldName.value = __(field.label);
         instance?.proxy?.$forceUpdate();
       })
       .catch((error) => {

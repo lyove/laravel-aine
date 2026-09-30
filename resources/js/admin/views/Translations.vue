@@ -183,8 +183,8 @@ export default {
     },
     methods: {
         labelOf(l) {
-            if (l === "en") return "English (en)";
-            if (l === "zh") return "中文 (zh)";
+            if (l === "en") return __("English (en)");
+            if (l === "zh") return __("中文 (zh)");
             return l.toUpperCase() + " (" + l + ")";
         },
 

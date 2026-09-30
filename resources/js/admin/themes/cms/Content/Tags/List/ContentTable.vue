@@ -9,7 +9,7 @@
     :search-options="{
       enabled: true,
       trigger: 'enter',
-      placeholder: 'Search...',
+      placeholder: __('Search...'),
     }"
     @search="onTableSearch"
     :pagination-options="{

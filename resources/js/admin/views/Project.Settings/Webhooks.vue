@@ -123,7 +123,7 @@
                                                     v-for="src in wh.sources"
                                                     :key="src"
                                                 >
-                                                    {{ src }}
+                                                    {{ __(src) }}
                                                 </div>
                                             </td>
                                             <td
@@ -323,6 +323,7 @@
                                     multiple
                                     :clearable="true"
                                     :selectable="(selected) => !new_webhook.data.sources.includes(selected)"
+                                    :get-option-label="(opt) => __(opt)"
                                     v-model="new_webhook.data.sources"
                                 ></v-select>
 

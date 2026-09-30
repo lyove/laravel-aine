@@ -562,6 +562,9 @@ export default {
                                 this.$toast.success(__('User removed.'));
                                 this.getProject();
                                 this.closeAssignUserModal();
+                            })
+                            .catch((error) => {
+                                this.$toast.error(__(error.response?.data?.error || __('Failed to remove user.')));
                             });
                     }
                 });

@@ -147,9 +147,8 @@ export default {
                 this.$toast.success(__('Language "{languageName}" added.', { languageName: code }));
                 await this.load();
             } catch (error) {
-                const msg = (error.response && error.response.data && (error.response.data.error || error.response.data.message))
-                    || __('Failed to add language.');
-                this.$toast.error(msg);
+                const backendMsg = error.response?.data?.error || error.response?.data?.message;
+                this.$toast.error(backendMsg ? __(backendMsg) : __('Failed to add language.'));
             }
         },
         setDefault(code) {
@@ -188,8 +187,8 @@ export default {
                         await this.load();
                         await useAdminStore().loadUiLocales();
                     } catch (error) {
-                        const msg = (error.response && error.response.data && error.response.data.error) || __('Failed to remove language.');
-                        this.$toast.error(msg);
+                        const backendMsg = error.response?.data?.error;
+                        this.$toast.error(backendMsg ? __(backendMsg) : __('Failed to remove language.'));
                     }
                 });
         },

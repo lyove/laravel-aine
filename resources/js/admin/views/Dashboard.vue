@@ -43,6 +43,18 @@
                     </div>
                 </div>
             </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">{{ __('Pending Comments') }}</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.pending_comments || 0 }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-comments text-amber-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Main Content Grid -->
@@ -181,7 +193,7 @@
                                         <i :class="getTodoIcon(todo.type)" class="text-amber-600 text-sm"></i>
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-900">{{ todo.message }}</p>
+                                        <p class="text-sm font-medium text-gray-900">{{ __(todo.message, { count: todo.count }) }}</p>
                                     </div>
                                 </div>
                                 <router-link
@@ -360,6 +372,7 @@
                 const icons = {
                     'drafts': 'fas fa-file-alt',
                     'trashed': 'fas fa-trash-alt',
+                    'comments': 'fas fa-comments',
                 };
                 return icons[type] || 'fas fa-bell';
             },

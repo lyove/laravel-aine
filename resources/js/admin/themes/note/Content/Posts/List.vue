@@ -970,7 +970,7 @@ function useContentList(options = {}) {
             .then((response) => {
                 openMediaModal.value = true;
                 mediaRecords.value = response.data;
-                mediaModalFieldName.value = field.label;
+                mediaModalFieldName.value = __(field.label);
                 instance?.proxy?.$forceUpdate();
             });
     }
