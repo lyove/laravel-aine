@@ -8,7 +8,7 @@
 // Default fallback views
 const defaultViews = {
     'projects.index':               () => import('./views/Project.Index/Index.vue'),
-    'projects.collections':         () => import('./views/Project.Collection/List.vue'),
+    'projects.collections':         () => import('./views/Project.Collection/Index.vue'),
     'projects.collections.list':    () => import('./views/Project.Collection/List.vue'),
     'projects.content':             () => import('./views/Project.Content/Index/index.vue'),
     'projects.content.list':        () => import('./views/Project.Content/List/index.vue'),
