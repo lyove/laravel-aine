@@ -12,6 +12,14 @@
             </li>
             <li class="mb-2">
                 <router-link
+                    v-if="typeof project.id !== 'undefined' && canProject(['owner', 'admin'])"
+                    :to="{ name: 'projects.settings.themes', params: { project_id: project.id } }"
+                    :active-class="'bg-blue-100 text-blue-700 font-semibold'"
+                    class="block w-full p-2 cursor-pointer hover:bg-gray-100 rounded"
+                >{{ __('Themes') }}</router-link>
+            </li>
+            <li class="mb-2">
+                <router-link
                     v-if="typeof project.id !== 'undefined' && canProject(['owner'])"
                     :to="{ name: 'projects.settings.users', params: { project_id: project.id } }"
                     :active-class="'bg-blue-50 text-blue-700'"
@@ -44,14 +52,6 @@
                     :active-class="'bg-blue-100 text-blue-700 font-semibold'"
                     class="block w-full p-2 cursor-pointer hover:bg-gray-100 rounded"
                 >{{ __('Language') }}</router-link>
-            </li>
-            <li class="mb-2">
-                <router-link
-                    v-if="typeof project.id !== 'undefined' && canProject(['owner', 'admin'])"
-                    :to="{ name: 'projects.settings.themes', params: { project_id: project.id } }"
-                    :active-class="'bg-blue-100 text-blue-700 font-semibold'"
-                    class="block w-full p-2 cursor-pointer hover:bg-gray-100 rounded"
-                >{{ __('Themes') }}</router-link>
             </li>
             <li class="mb-2">
                 <router-link
