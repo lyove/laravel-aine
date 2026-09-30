@@ -49,13 +49,13 @@ class ProjectTheme extends Model
      */
     public function mergedTokens(?Project $project): array
     {
-        $defaults = $this->design_tokens ?? [];
+        $defaults = is_array($this->design_tokens) ? $this->design_tokens : [];
 
         if (!$project) {
             return $defaults;
         }
 
-        $overrides = $project->theme_config ?? [];
+        $overrides = is_array($project->theme_config) ? $project->theme_config : [];
 
         return array_merge($defaults, $overrides);
     }

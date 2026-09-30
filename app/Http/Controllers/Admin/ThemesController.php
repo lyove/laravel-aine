@@ -106,7 +106,7 @@ class ThemesController extends Controller
      */
     public function updateConfig(Request $request, int $projectId)
     {
-        $project = Project::findOrFail($projectId);
+        $project = Project::with('theme')->findOrFail($projectId);
 
         // Check authorization
         $user = auth()->user();
@@ -118,11 +118,24 @@ class ThemesController extends Controller
             'theme_config' => 'required|array',
         ]);
 
-        $this->themeService->updateThemeConfig($project, $request->theme_config);
+        try {
+            $this->themeService->updateThemeConfig($project, $request->theme_config);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to update theme config: ' . $e->getMessage(), [
+                'project_id' => $projectId,
+                'exception' => $e,
+            ]);
+            return response()->json([
+                'message' => 'Failed to save theme configuration.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+
+        $project->theme_config = $request->theme_config;
 
         return response()->json([
             'message' => 'Theme configuration updated.',
-            'theme_config' => $project->fresh()->theme_config,
+            'theme_config' => $project->theme_config,
             'merged_tokens' => $project->theme?->mergedTokens($project) ?? [],
         ]);
     }
