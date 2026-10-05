@@ -1428,6 +1428,31 @@ export default {
 
   emits: ["addSelected"],
 
+  props: {
+    relationSelect: {
+      type: Boolean,
+      default: false,
+    },
+    collection_id: {
+      type: Number,
+      default: undefined,
+    },
+    eachProp: {
+      type: Number,
+      default: 15,
+    },
+    relation_type: {
+      type: Number,
+      default: undefined,
+    },
+    embedded: {
+      type: Boolean,
+      default: false,
+    },
+  },
+
+  emits: ["addSelected"],
+
   data() {
     return {
       project: useAdminStore().currentProject || {},

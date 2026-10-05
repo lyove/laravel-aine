@@ -1,13 +1,15 @@
 <template>
   <div class="admin__project-content-list relative h-full flex flex-col">
-    <project-header :project="project"></project-header>
+    <div v-show="!embedded" class="shrink-0">
+      <project-header :project="project"></project-header>
+    </div>
 
     <div class="flex flex-1 overflow-y-auto">
-      <div class="w-3/12 bg-white overflow-x-hidden">
+      <div v-show="!embedded" class="w-3/12 bg-white overflow-x-hidden">
         <content-sidebar :project="project"></content-sidebar>
       </div>
 
-      <div class="w-9/12 p-4 overflow-x-auto">
+      <div class="p-4 overflow-x-auto" :class="embedded ? 'w-full' : 'w-9/12'">
         <div v-if="$route.params.col_id !== undefined" class="admin__project-content-table">
           <ContentTable
             :columns="tableColumns"
@@ -29,6 +31,7 @@
             :pending-count="pendingCount"
             :spam-count="spamCount"
             :trash-count="trashCount"
+            :relation-select="relationSelect"
             @sort-change="onSortChange"
             @selected-rows-change="onSelectedRowsChange"
             @page-change="onPageChange"
@@ -49,6 +52,7 @@
             @move-to-trash-selected="moveToTrashSelected"
             @restore-selected="restoreSelected"
             @change-get-items="changeGetItems"
+            @add-selected="addSelected"
           />
 
           <TextModal
@@ -856,12 +860,29 @@ export default {
 
   mixins: [projectBreadcrumb],
 
-  setup() {
+  props: {
+    relationSelect: { type: Boolean, default: false },
+    collection_id: { type: Number, default: undefined },
+    eachProp: { type: Number, default: 15 },
+    relation_type: { type: Number, default: undefined },
+    embedded: { type: Boolean, default: false },
+  },
+
+  emits: ["addSelected"],
+
+  setup(props, { emit }) {
     const route = useRoute();
     const cl = useContentList({
       collectionId: () =>
-        route.params.col_id !== undefined ? parseInt(route.params.col_id) : undefined,
-      eachProp: 15,
+        props.collection_id !== undefined
+          ? props.collection_id
+          : route.params.col_id !== undefined
+            ? parseInt(route.params.col_id)
+            : undefined,
+      eachProp: props.eachProp,
+      relationSelect: () => props.relationSelect,
+      relationType: () => props.relation_type,
+      onAddSelected: (payload) => emit("addSelected", payload),
       enableCollectionWatch: true,
       initialProject: () => useAdminStore().currentProject || {},
     });
@@ -914,7 +935,7 @@ export default {
         });
       });
 
-      if (cl.listOptions.value.getItems !== "trashed") {
+      if (!props.relationSelect && cl.listOptions.value.getItems !== "trashed") {
         cols.push({
           field: "action",
           label: __("Action"),

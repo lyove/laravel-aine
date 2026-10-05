@@ -457,18 +457,7 @@
                                         </div>
                                     </div>
                                     <div v-if="field.type == 'media' && field.options.media !== undefined" class="w-full">
-                                        <div
-                                            class="w-32 h-32 float-left my-1 mr-2 p-3 bg-gray-200 rounded-md flex items-center text-center cursor-pointer hover:bg-gray-300"
-                                            @click="openMediaLibraryModalFn(field.name, false, field.options.media.type)"
-                                        >
-                                            <div class="w-full">
-                                                <i class="fa fa-plus text-2xl text-gray-400"></i>
-                                                <div class="block text-sm text-gray-500">
-                                                    <span v-if="field.options.media.type == 1"> {{ __('Add a single file from the library') }} </span>
-                                                    <span v-if="field.options.media.type == 2"> {{ __('Add multiple files from the library') }} </span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        
 
                                         <div v-for="file in newData.files[field.name]" :key="file.id" class="relative float-left w-32 h-32 my-1 mr-2">
                                             <div class="absolute inset-0 rounded-md bg-black bg-opacity-70 items-center text-center flex opacity-0 hover:opacity-100 z-10">
@@ -522,6 +511,19 @@
                                                     <i v-else-if="file.type == 'doc' || file.type == 'docx'" class="far fa-file-word text-5xl text-blue-500"></i>
                                                     <i v-else-if="file.type == 'zip'" class="far fa-file-archive text-5xl text-yellow-300"></i>
                                                     <i v-else class="far fa-file text-5xl text-gray-400"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+
+<div
+                                            class="w-32 h-32 float-left my-1 mr-2 p-3 bg-gray-200 rounded-md flex items-center text-center cursor-pointer hover:bg-gray-300"
+                                            @click="openMediaLibraryModalFn(field.name, false, field.options.media.type)"
+                                        >
+                                            <div class="w-full">
+                                                <i class="fa fa-plus text-2xl text-gray-400"></i>
+                                                <div class="block text-sm text-gray-500">
+                                                    <span v-if="field.options.media.type == 1"> {{ __('Add a single file from the library') }} </span>
+                                                    <span v-if="field.options.media.type == 2"> {{ __('Add multiple files from the library') }} </span>
                                                 </div>
                                             </div>
                                         </div>

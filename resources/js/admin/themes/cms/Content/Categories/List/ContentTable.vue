@@ -35,6 +35,7 @@
         </div>
 
         <div class="flex items-center gap-2">
+          <template v-if="!relationSelect">
           <router-link
             v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])"
             :to="{
@@ -88,7 +89,16 @@
           >
             <i class="fa fa-upload mr-1"></i> {{ __("Import") }}
           </button>
+          </template>
 
+          <button
+            v-if="relationSelect && selected.length !== 0"
+            type="button"
+            class="bg-green-500 items-center px-4 py-2 border border-transparent rounded-md text-sm text-white focus:outline-none transition ease-in-out duration-150"
+            @click="$emit('add-selected')"
+          >
+            <i class="fa fa-link mr-1"></i> {{ __("Add Selected") }}
+          </button>
         </div>
       </div>
     </template>
@@ -454,7 +464,7 @@
       </span>
 
       <span v-else-if="props.column.field === 'action'">
-        <div class="flex items-center justify-center gap-1 py-2">
+        <div v-if="!relationSelect" class="flex items-center justify-center gap-1 py-2">
           <router-link
             v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])"
             :to="{
@@ -542,6 +552,7 @@ export default {
     pendingCount: { type: Number, default: 0 },
     spamCount: { type: Number, default: 0 },
     trashCount: { type: Number, default: 0 },
+    relationSelect: { type: Boolean, default: false },
   },
 
   emits: [
@@ -565,6 +576,7 @@ export default {
     "move-to-trash-selected",
     "restore-selected",
     "change-get-items",
+    "add-selected",
   ],
 
   methods: {
