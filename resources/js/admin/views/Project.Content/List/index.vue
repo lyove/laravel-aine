@@ -95,7 +95,7 @@
                 </button>
 
                 <input
-                  v-if="!isReadonly && canProject(['owner', 'admin'])"
+                  v-if="!relationSelect && !isReadonly && canProject(['owner', 'admin'])"
                   ref="importFile"
                   type="file"
                   accept=".json,.csv"
@@ -325,7 +325,7 @@
               </span>
 
               <span v-else-if="props.column.field === 'action'">
-                <div class="flex items-center justify-center gap-1 py-2">
+                <div v-if="!relationSelect" class="flex items-center justify-center gap-1 py-2">
                   <router-link
                     v-if="
                       !isReadonly && canProject(['owner', 'admin', 'editor'])
@@ -375,7 +375,7 @@
 
             <!-- Table actions -->
             <template #table-actions>
-              <div v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])" class="flex items-center gap-2">
+              <div v-if="!relationSelect && !isReadonly && canProject(['owner', 'admin', 'editor'])" class="flex items-center gap-2">
                 <ui-dropdown>
                   <template #trigger>
                     <button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 shadow-sm">
