@@ -1503,7 +1503,7 @@ export default {
         });
       });
 
-      if (cl.listOptions.value.getItems !== "trashed") {
+      if (!props.relationSelect && cl.listOptions.value.getItems !== "trashed") {
         cols.push({
           field: "action",
           label: __("Action"),

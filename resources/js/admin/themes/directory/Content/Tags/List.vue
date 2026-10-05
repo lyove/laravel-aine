@@ -416,7 +416,7 @@
               </span>
 
               <span v-else-if="props.column.field === 'action'">
-                <div class="flex items-center justify-center gap-1 py-2">
+                  <div v-if="!relationSelect" class="flex items-center justify-center gap-1 py-2">
                   <router-link
                     v-if="
                       !isReadonly && canProject(['owner', 'admin', 'editor'])
@@ -1418,7 +1418,7 @@ export default {
                 });
             });
 
-            if (cl.listOptions.value.getItems !== 'trashed') {
+            if (!props.relationSelect && cl.listOptions.value.getItems !== 'trashed') {
                 cols.push({ field: "action", label: __("Action"), sortable: false, toggleable: false, sticky: true });
             }
             return cols;

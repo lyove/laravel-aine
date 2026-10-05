@@ -1,13 +1,15 @@
 <template>
     <div class="admin__project-content-list relative h-full flex flex-col">
-        <project-header :project="project"></project-header>
-        
+        <div v-show="!embedded" class="shrink-0">
+            <project-header :project="project"></project-header>
+        </div>
+
         <div class="flex flex-1 overflow-y-auto">
-            <div class="w-3/12 bg-white overflow-x-hidden">
+            <div v-show="!embedded" class="w-3/12 bg-white overflow-x-hidden">
                 <content-sidebar :project="project"></content-sidebar>
             </div>
-            
-            <div class="w-9/12 p-4 overflow-x-auto">
+
+            <div class="p-4 overflow-x-auto" :class="embedded ? 'w-full' : 'w-9/12'">
                 <div v-if="$route.params.col_id !== undefined" class="admin__project-content-table">
                     <h4 class="h-10 flex justify-end items-center font-bold text-lg mb-2">
                         <div class="flex-1">
@@ -16,7 +18,7 @@
                         </div>
 
                         <router-link
-                            v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])"
+                            v-if="!relationSelect && !isReadonly && canProject(['owner', 'admin', 'editor'])"
                             :to="{
                                 name: 'projects.content.forms',
                                 params: {
@@ -38,12 +40,13 @@
                                 },
                             }"
                             class="bg-indigo-500 items-center px-4 py-2 border border-transparent rounded-md text-sm text-white focus:outline-none transition ease-in-out duration-150"
-                            v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])"
+                            v-if="!relationSelect && !isReadonly && canProject(['owner', 'admin', 'editor'])"
                         >
                             {{ __('+ Create New') }}
                         </router-link>
 
                         <button
+                            v-if="!relationSelect"
                             type="button"
                             class="bg-white items-center px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150 ml-2"
                             @click="exportContent()"
@@ -51,15 +54,24 @@
                             <i class="fa fa-download"></i> {{ __('Export') }}
                         </button>
 
-                        <input v-if="!isReadonly && canProject(['owner', 'admin'])" ref="importFile" type="file" accept=".json,.csv" class="hidden" @change="importContent($event)" />
+                        <input v-if="!relationSelect && !isReadonly && canProject(['owner', 'admin'])" ref="importFile" type="file" accept=".json,.csv" class="hidden" @change="importContent($event)" />
 
                         <button
-                            v-if="!isReadonly && canProject(['owner', 'admin'])"
+                            v-if="!relationSelect && !isReadonly && canProject(['owner', 'admin'])"
                             type="button"
                             class="bg-white items-center px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150 ml-2"
                             @click="$refs.importFile.click()"
                         >
                             <i class="fa fa-upload"></i> {{ __('Import') }}
+                        </button>
+
+                        <button
+                            v-if="relationSelect && selected.length !== 0"
+                            type="button"
+                            class="bg-green-500 items-center px-4 py-2 border border-transparent rounded-md text-sm text-white focus:outline-none transition ease-in-out duration-150 ml-2"
+                            @click="addSelected()"
+                        >
+                            <i class="fa fa-link"></i> {{ __('Add Selected') }}
                         </button>
                     </h4>
 
@@ -88,7 +100,7 @@
 
                     </div>
 
-                    <div v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])" class="w-full flex justify-between text-sm text-gray-700 mb-2 pl-1">
+                    <div v-if="!relationSelect && !isReadonly && canProject(['owner', 'admin', 'editor'])" class="w-full flex justify-between text-sm text-gray-700 mb-2 pl-1">
                         <div class="flex">
                             <div class="py-1">{{ selected.length }} {{ __('items selected') }}</div>
                             <template v-if="isComments">
@@ -215,6 +227,7 @@
                         :empty-text="__('No data found')"
                         @sort="sortBy"
                         @select-all="onSelectAll"
+                        @selected-rows-change="onSelectedRowsChange"
                         @page-change="getContent"
                         @each-change="onEachChange"
                         @column-toggle="onColumnToggle"
@@ -402,7 +415,7 @@
               </span>
 
               <span v-else-if="props.column.field === 'action'">
-                <div class="flex items-center justify-center gap-1 py-2">
+                <div v-if="!relationSelect" class="flex items-center justify-center gap-1 py-2">
                   <router-link
                     v-if="
                       !isReadonly && canProject(['owner', 'admin', 'editor'])
@@ -888,6 +901,10 @@ function useContentList(options = {}) {
         return selected.value.includes(id);
     }
 
+    function onSelectedRowsChange({ selectedRows }) {
+        selected.value = selectedRows.map((r) => r.id);
+    }
+
     function addSelected() {
         if (onAddSelected) {
             onAddSelected({
@@ -1285,6 +1302,7 @@ function useContentList(options = {}) {
         sortBy,
         selectRecord,
         checkIfSelected,
+        onSelectedRowsChange,
         addSelected,
         exportContent,
         importContent,
@@ -1321,11 +1339,44 @@ export default {
 
     mixins: [projectBreadcrumb],
 
-    setup() {
+    props: {
+        relationSelect: {
+            type: Boolean,
+            default: false,
+        },
+        collection_id: {
+            type: Number,
+            default: undefined,
+        },
+        eachProp: {
+            type: Number,
+            default: 15,
+        },
+        relation_type: {
+            type: Number,
+            default: undefined,
+        },
+        embedded: {
+            type: Boolean,
+            default: false,
+        },
+    },
+
+    emits: ["addSelected"],
+
+    setup(props, { emit }) {
         const route = useRoute();
         const cl = useContentList({
-            collectionId: () => (route.params.col_id !== undefined ? parseInt(route.params.col_id) : undefined),
-            eachProp: 15,
+            collectionId: () =>
+                props.collection_id !== undefined
+                    ? props.collection_id
+                    : route.params.col_id !== undefined
+                        ? parseInt(route.params.col_id)
+                        : undefined,
+            eachProp: props.eachProp,
+            relationSelect: () => props.relationSelect,
+            relationType: () => props.relation_type,
+            onAddSelected: (payload) => emit("addSelected", payload),
             enableCollectionWatch: true,
             initialProject: () => useAdminStore().currentProject || {},
         });
@@ -1370,7 +1421,7 @@ export default {
                 });
             });
 
-            if (cl.listOptions.value.getItems !== 'trashed') {
+            if (!props.relationSelect && cl.listOptions.value.getItems !== 'trashed') {
                 cols.push({ field: "action", label: __("Action"), sortable: false, toggleable: false, sticky: true });
             }
             return cols;
