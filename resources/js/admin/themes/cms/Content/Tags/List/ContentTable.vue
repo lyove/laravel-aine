@@ -17,7 +17,7 @@
       perPage: each,
     }"
     :sort-options="{ enabled: true }"
-    :show-column-toggle="true"
+    :show-column-toggle="!relationSelect"
     @sort-change="$emit('sort-change', $event)"
     @selected-rows-change="$emit('selected-rows-change', $event)"
     @page-change="$emit('page-change', $event)"
@@ -178,7 +178,7 @@
 
     <!-- Table actions -->
     <template #table-actions>
-      <div class="flex items-center gap-2">
+      <div v-if="!relationSelect" class="flex items-center gap-2">
         <ui-dropdown>
           <template #trigger>
             <button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 shadow-sm">

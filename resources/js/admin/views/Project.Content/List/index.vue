@@ -32,7 +32,7 @@
               position: 'bottom',
             }"
             :sort-options="{ enabled: true }"
-            :show-column-toggle="true"
+            :show-column-toggle="!relationSelect"
             @sort-change="onSortChange"
             @selected-rows-change="onSelectedRowsChange"
             @page-change="onPageChange"
