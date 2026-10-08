@@ -57,7 +57,7 @@
             >
                 <transition-group type="transition" class="_trans-group" :css="false">
                     <div
-                        class="mb-2 inline-flex items-center w-full"
+                        class="mb-2 inline-flex items-center w-full group"
                         v-for="collection in filterSearch"
                         :key="collection.id"
                     >
@@ -66,20 +66,52 @@
                         </span>
                         <router-link
                             :to="{
+                                name: 'projects.content.list',
+                                params: {
+                                    project_id: project.id,
+                                    col_id: collection.id,
+                                },
+                            }"
+                            :class="[
+                                'flex-1 p-2 cursor-pointer hover:bg-gray-100 rounded truncate',
+                                isContentRoute(collection.id)
+                                    ? 'bg-blue-50 text-blue-700 font-semibold'
+                                    : 'text-gray-700',
+                            ]"
+                            >{{ __(collection.name) }}</router-link
+                        >
+                        <router-link
+                            :to="{
                                 name: 'projects.collections.list',
                                 params: {
                                     project_id: project.id,
                                     col_id: collection.id,
                                 },
                             }"
-                            :active-class="'bg-blue-50 text-blue-700'"
-                            :exact-active-class="'bg-blue-100 text-blue-700 font-semibold'"
-                            class="block w-full p-2 cursor-pointer hover:bg-gray-100 rounded"
-                            >{{ __(collection.name) }}</router-link
+                            :title="__('Edit collection')"
+                            class="ml-1 p-2 rounded text-xs cursor-pointer transition-colors"
+                            :class="
+                                isSchemaRoute(collection.id)
+                                    ? 'text-indigo-500 bg-indigo-50 hover:bg-indigo-100'
+                                    : 'text-gray-300 hover:text-indigo-500 hover:bg-gray-100'
+                            "
                         >
+                            <i class="fas fa-pencil-alt"></i>
+                        </router-link>
                     </div>
                 </transition-group>
             </VueDraggable>
+
+            <div v-if="typeof project.id !== 'undefined'" class="mt-3 pt-3 border-t border-gray-100">
+                <router-link
+                    :to="{ name: 'projects.media_library', params: { project_id: project.id } }"
+                    :active-class="'bg-blue-50 text-blue-700 font-semibold'"
+                    class="flex items-center w-full p-2 cursor-pointer hover:bg-gray-100 rounded text-gray-700"
+                >
+                    <i class="fas fa-images text-gray-500 mr-3"></i>
+                    <span>{{ __('Media Library') }}</span>
+                </router-link>
+            </div>
         </div>
 
         <ui-modal
@@ -189,6 +221,21 @@ export default {
     methods: {
         canProject(roles) {
             return Array.isArray(roles) && roles.includes(this.project && this.project.my_role);
+        },
+
+        isContentRoute(collectionId) {
+            const name = this.$route.name;
+            const isContent = name === 'projects.content.list'
+                || name === 'projects.content.new'
+                || name === 'projects.content.edit'
+                || name === 'projects.content.forms'
+                || name === 'projects.content.forms.detail';
+            return isContent && String(this.$route.params.col_id) === String(collectionId);
+        },
+
+        isSchemaRoute(collectionId) {
+            return this.$route.name === 'projects.collections.list'
+                && String(this.$route.params.col_id) === String(collectionId);
         },
 
         addNewCollectionSubmit() {

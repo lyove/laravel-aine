@@ -28,7 +28,7 @@
                         </div>
                     </div>
                 </div>
-                <content-sidebar :project="project" class="shadow-md rounded-md"></content-sidebar>
+                <collection-sidebar :project="project" class="shadow-md rounded-md"></collection-sidebar>
             </div>
             <div class="col p-4 sm:col-span-2" v-if="canProject(['viewer']) && !canProject(['owner', 'admin', 'editor'])">
                 <div class="inline-flex mb-5">
@@ -51,14 +51,12 @@
 import { useAdminStore } from '@/admin/store';
 import ProjectHeader from "@/admin/components/ProjectHeader.vue";
 import CollectionSidebar from "@/admin/components/CollectionSidebar.vue";
-import ContentSidebar from "@/admin/components/ContentSidebar.vue";
 import projectBreadcrumb from "@/admin/mixins/projectBreadcrumb";
 
 export default {
     components: {
         ProjectHeader,
         CollectionSidebar,
-        ContentSidebar,
     },
 
     mixins: [projectBreadcrumb],

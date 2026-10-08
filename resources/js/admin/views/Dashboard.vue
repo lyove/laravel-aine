@@ -225,7 +225,7 @@
 
                         <router-link
                             v-if="myProjects.length > 0"
-                            :to="{ name: 'projects.content', params: { project_id: myProjects[0].id } }"
+                            :to="{ name: 'projects.collections', params: { project_id: myProjects[0].id } }"
                             class="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50 transition-colors"
                         >
                             <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">

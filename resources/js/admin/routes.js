@@ -160,7 +160,7 @@ const routes = [
   {
     path: "/project/:project_id",
     name: "projects.index",
-    component: projectUiView('projects.index'),
+    redirect: to => ({ name: "projects.collections", params: { project_id: to.params.project_id } }),
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
             requiredProjectRoles: ["owner", "admin", "editor", "viewer"],
@@ -176,7 +176,7 @@ const routes = [
         }),
   },
   {
-    path: "/project/:project_id/collections/:col_id",
+    path: "/project/:project_id/collections/:col_id/edit",
     name: "projects.collections.list",
     component: projectUiView('projects.collections.list'),
     beforeEnter: async (to, from, next) =>
@@ -185,16 +185,7 @@ const routes = [
         }),
   },
   {
-    path: "/project/:project_id/content",
-    name: "projects.content",
-    component: projectUiView('projects.content'),
-    beforeEnter: async (to, from, next) =>
-        checkPermission(to, from, next, {
-            requiredProjectRoles: ["owner", "admin", "editor"],
-        }),
-  },
-  {
-    path: "/project/:project_id/content/:col_id",
+    path: "/project/:project_id/collections/:col_id/content",
     name: "projects.content.list",
     component: projectUiView('projects.content.list', { collectionAware: true }),
     beforeEnter: async (to, from, next) =>
@@ -203,7 +194,7 @@ const routes = [
         }),
   },
   {
-    path: "/project/:project_id/content/:col_id/new",
+    path: "/project/:project_id/collections/:col_id/content/new",
     name: "projects.content.new",
     component: projectUiView('projects.content.new', { collectionAware: true }),
     beforeEnter: async (to, from, next) =>
@@ -212,7 +203,7 @@ const routes = [
         }),
   },
   {
-    path: "/project/:project_id/content/:col_id/edit/:content_id",
+    path: "/project/:project_id/collections/:col_id/content/:content_id/edit",
     name: "projects.content.edit",
     component: projectUiView('projects.content.edit', { collectionAware: true }),
     beforeEnter: async (to, from, next) =>
@@ -221,7 +212,7 @@ const routes = [
         }),
   },
   {
-    path: "/project/:project_id/content/:col_id/forms",
+    path: "/project/:project_id/collections/:col_id/content/forms",
     name: "projects.content.forms",
     component: projectUiView('projects.content.forms'),
     beforeEnter: async (to, from, next) =>
@@ -230,7 +221,7 @@ const routes = [
         }),
   },
   {
-    path: "/project/:project_id/content/:col_id/forms/:form_id",
+    path: "/project/:project_id/collections/:col_id/content/forms/:form_id",
     name: "projects.content.forms.detail",
     component: projectUiView('projects.content.forms.detail'),
     beforeEnter: async (to, from, next) =>

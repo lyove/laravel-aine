@@ -19,30 +19,27 @@ const SEGMENT_DEFS = {
         { label: 'Collections', route: 'projects.collections', icon: 'fa fa-table' },
         { label: 'Collection', storeKey: 'currentCollection', icon: 'fa fa-folder' },
     ],
-    'projects.content': [
-        { label: 'Content', icon: 'fa fa-edit' },
-    ],
     'projects.content.list': [
-        { label: 'Content', route: 'projects.content', icon: 'fa fa-edit' },
+        { label: 'Collections', route: 'projects.collections', icon: 'fa fa-table' },
         { label: 'Collection', storeKey: 'currentCollection', icon: 'fa fa-folder' },
     ],
     'projects.content.new': [
-        { label: 'Content', route: 'projects.content', icon: 'fa fa-edit' },
+        { label: 'Collections', route: 'projects.collections', icon: 'fa fa-table' },
         { label: 'Collection', storeKey: 'currentCollection', icon: 'fa fa-folder' },
         { label: 'Create Content', icon: 'fa fa-plus' },
     ],
     'projects.content.edit': [
-        { label: 'Content', route: 'projects.content', icon: 'fa fa-edit' },
+        { label: 'Collections', route: 'projects.collections', icon: 'fa fa-table' },
         { label: 'Collection', storeKey: 'currentCollection', icon: 'fa fa-folder' },
         { label: 'Edit Content', icon: 'fa fa-pen' },
     ],
     'projects.content.forms': [
-        { label: 'Content', route: 'projects.content', icon: 'fa fa-edit' },
+        { label: 'Collections', route: 'projects.collections', icon: 'fa fa-table' },
         { label: 'Collection', storeKey: 'currentCollection', icon: 'fa fa-folder' },
         { label: 'Forms', icon: 'fa fa-wpforms' },
     ],
     'projects.content.forms.detail': [
-        { label: 'Content', route: 'projects.content', icon: 'fa fa-edit' },
+        { label: 'Collections', route: 'projects.collections', icon: 'fa fa-table' },
         { label: 'Collection', storeKey: 'currentCollection', icon: 'fa fa-folder' },
         { label: 'Forms', route: 'projects.content.forms', icon: 'fa fa-wpforms' },
         { label: 'Form', nameKey: 'breadcrumbFormName', icon: 'fa fa-file-alt' },

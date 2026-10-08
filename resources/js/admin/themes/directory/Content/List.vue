@@ -4,7 +4,7 @@
         
         <div class="flex flex-1 overflow-y-auto">
             <div class="w-3/12 bg-white overflow-x-hidden">
-                <content-sidebar :project="project"></content-sidebar>
+                <collection-sidebar :project="project"></collection-sidebar>
             </div>
             
             <div class="w-9/12 p-4 overflow-x-auto">
@@ -63,9 +63,9 @@
                         </button>
                     </h4>
 
-                    <div class="flex space-between mb-2">
-                        <div class="relative flex w-full flex-wrap items-stretch">
-                            <span class="h-full leading-snug font-normal absolute text-center text-gray-400 absolute bg-transparent rounded-md text-base items-center justify-center w-8 pl-3 py-2">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="relative flex-1">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                                 <i class="fas fa-search"></i>
                             </span>
                             <form class="w-full" @submit.prevent="getContent()">
@@ -73,139 +73,78 @@
                                     type="text"
                                     v-model="search"
                                     @input="getContent()"
-                                    :placeholder="__('Type something and press enter')"
-                                    class="px-3 py-2 placeholder-gray-400 text-gray-700 bg-white rounded-md text-sm w-full pl-10 border-gray-200 focus:border-gray-300"
+                                    :placeholder="__('Search...')"
+                                    class="w-full pl-10 pr-8 py-2 text-sm border border-gray-300 rounded-md bg-white text-gray-700 focus:border-gray-400 focus:outline-none"
                                 />
                             </form>
                             <span
                                 v-show="search != ''"
-                                class="h-full leading-snug font-normal absolute text-center text-gray-400 absolute bg-transparent rounded-md text-base items-center justify-center w-8 py-2 right-0 pr-3 cursor-pointer"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
                                 @click="(search = ''), getContent()"
                             >
                                 <i class="fas fa-times-circle"></i>
                             </span>
                         </div>
-
-                    </div>
-
-                    <div v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])" class="w-full flex justify-between text-sm text-gray-700 mb-2 pl-1">
-                        <div class="flex">
-                            <div class="py-1">{{ selected.length }} {{ __('items selected') }}</div>
+                        <div class="flex items-center gap-1 whitespace-nowrap text-sm">
                             <template v-if="isComments">
-                                <div
-                                    v-if="selected.length !== 0 && listOptions.getItems !== 'trash'"
-                                    class="ml-2 cursor-pointer text-green-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
-                                    @click="commentBulk('approve')"
-                                >
-                                    <i class="fa fa-check"></i> {{ __('approve') }}
-                                </div>
-                                <div
-                                    v-if="selected.length !== 0 && listOptions.getItems !== 'trash'"
-                                    class="ml-2 cursor-pointer text-gray-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
-                                    @click="commentBulk('spam')"
-                                >
-                                    <i class="fa fa-bug"></i> {{ __('mark as spam') }}
-                                </div>
-                                <div
-                                    v-if="selected.length !== 0 && listOptions.getItems !== 'trash'"
-                                    class="ml-2 cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
-                                    @click="commentBulk('trash')"
-                                >
-                                    <i class="fa fa-trash-restore"></i> {{ __('move to trash') }}
-                                </div>
-                                <div
-                                    v-if="selected.length !== 0 && listOptions.getItems === 'trash'"
-                                    class="ml-2 cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
-                                    @click="commentBulk('restore')"
-                                >
-                                    <i class="fa fa-recycle"></i> {{ __('restore') }}
-                                </div>
-                                <div v-if="selected.length !== 0 && canProject(['owner', 'admin'])" class="ml-2 cursor-pointer text-red-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100" @click="deleteSelected">
-                                    <i class="fa fa-trash-alt"></i> {{ __('delete') }}
-                                </div>
+                                <div class="cursor-pointer px-3 py-1.5 rounded-md hover:bg-gray-100" :class="{ 'bg-blue-50 text-blue-700 font-semibold': listOptions.getItems == 'all' }" @click="changeGetItems('all')">{{ __('All') }}({{ totalCount }})</div>
+                                <div class="cursor-pointer px-3 py-1.5 rounded-md hover:bg-gray-100" :class="{ 'bg-blue-50 text-blue-700 font-semibold': listOptions.getItems == 'approved' }" @click="changeGetItems('approved')">{{ __('Approved') }}({{ approvedCount }})</div>
+                                <div class="cursor-pointer px-3 py-1.5 rounded-md hover:bg-gray-100" :class="{ 'bg-blue-50 text-blue-700 font-semibold': listOptions.getItems == 'pending' }" @click="changeGetItems('pending')">{{ __('Pending') }}({{ pendingCount }})</div>
+                                <div class="cursor-pointer px-3 py-1.5 rounded-md hover:bg-gray-100" :class="{ 'bg-blue-50 text-blue-700 font-semibold': listOptions.getItems == 'spam' }" @click="changeGetItems('spam')">{{ __('Spam') }}({{ spamCount }})</div>
+                                <div class="cursor-pointer px-3 py-1.5 rounded-md hover:bg-gray-100" :class="{ 'bg-blue-50 text-blue-700 font-semibold': listOptions.getItems == 'trash' }" @click="changeGetItems('trash')">{{ __('Trash') }}({{ trashCount }})</div>
                             </template>
                             <template v-else>
-                                <div
-                                    v-if="selected.length !== 0 && listOptions.getItems !== 'trashed' && canProject(['owner', 'admin'])"
-                                    class="ml-2 cursor-pointer text-green-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
-                                    @click="publishSelected"
-                                >
-                                    <i class="fa fa-cloud-upload-alt"></i> {{ __('publish') }}
-                                </div>
-                                <div
-                                    v-if="selected.length !== 0 && listOptions.getItems !== 'trashed'"
-                                    class="ml-2 cursor-pointer text-gray-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
-                                    @click="unPublishSelected"
-                                >
-                                    <i class="fa fa-cloud-download-alt"></i> {{ __('unpublish') }}
-                                </div>
-                                <div
-                                    v-if="selected.length !== 0 && listOptions.getItems !== 'trashed'"
-                                    class="ml-2 cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
-                                    @click="moveToTrashSelected"
-                                >
-                                    <i class="fa fa-trash-restore"></i> {{ __('move to trash') }}
-                                </div>
-                                <div
-                                    v-if="selected.length !== 0 && listOptions.getItems === 'trashed'"
-                                    class="ml-2 cursor-pointer text-orange-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100"
-                                    @click="restoreSelected"
-                                >
-                                    <i class="fa fa-recycle"></i> {{ __('restore') }}
-                                </div>
-                                <div v-if="selected.length !== 0 && canProject(['owner', 'admin'])" class="ml-2 cursor-pointer text-red-500 font-bold py-1 px-3 rounded-md hover:bg-gray-100" @click="deleteSelected">
-                                    <i class="fa fa-trash-alt"></i> {{ __('delete') }}
-                                </div>
-                            </template>
-                        </div>
-
-                        <div class="flex">
-                            <template v-if="isComments">
-                                <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('all')" :class="{ 'bg-gray-200': listOptions.getItems == 'all' }">
-                                    {{ __('All') }}({{ totalCount }})
-                                </div>
-                                <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('approved')" :class="{ 'bg-gray-200': listOptions.getItems == 'approved' }">
-                                    {{ __('Approved') }}({{ approvedCount }})
-                                </div>
-                                <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('pending')" :class="{ 'bg-gray-200': listOptions.getItems == 'pending' }">
-                                    {{ __('Pending') }}({{ pendingCount }})
-                                </div>
-                                <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('spam')" :class="{ 'bg-gray-200': listOptions.getItems == 'spam' }">
-                                    {{ __('Spam') }}({{ spamCount }})
-                                </div>
-                                <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('trash')" :class="{ 'bg-gray-200': listOptions.getItems == 'trash' }">
-                                    {{ __('Trash') }}({{ trashCount }})
-                                </div>
-                            </template>
-                            <template v-else>
-                                <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('all')" :class="{ 'bg-gray-200': listOptions.getItems == 'all' }">
-                                    {{ __('All') }}({{ totalCount }})
-                                </div>
-                                <div
-                                    class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100"
-                                    @click="changeGetItems('published')"
-                                    :class="{ 'bg-gray-200': listOptions.getItems == 'published' }"
-                                >
-                                    {{ __('Published') }}({{ publishedCount }})
-                                </div>
-                                <div class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100" @click="changeGetItems('draft')" :class="{ 'bg-gray-200': listOptions.getItems == 'draft' }">
-                                    {{ __('Draft') }}({{ draftCount }})
-                                </div>
-                                <div
-                                    class="ml-1 cursor-pointer text-blue-500 py-1 px-1 rounded-md hover:bg-gray-100"
-                                    @click="changeGetItems('trashed')"
-                                    :class="{ 'bg-gray-200': listOptions.getItems == 'trashed' }"
-                                >
-                                    {{ __('Trashed') }}({{ trashedCount }})
-                                </div>
+                                <div class="cursor-pointer px-3 py-1.5 rounded-md hover:bg-gray-100" :class="{ 'bg-blue-50 text-blue-700 font-semibold': listOptions.getItems == 'all' }" @click="changeGetItems('all')">{{ __('All') }}({{ totalCount }})</div>
+                                <div class="cursor-pointer px-3 py-1.5 rounded-md hover:bg-gray-100" :class="{ 'bg-blue-50 text-blue-700 font-semibold': listOptions.getItems == 'published' }" @click="changeGetItems('published')">{{ __('Published') }}({{ publishedCount }})</div>
+                                <div class="cursor-pointer px-3 py-1.5 rounded-md hover:bg-gray-100" :class="{ 'bg-blue-50 text-blue-700 font-semibold': listOptions.getItems == 'draft' }" @click="changeGetItems('draft')">{{ __('Draft') }}({{ draftCount }})</div>
+                                <div class="cursor-pointer px-3 py-1.5 rounded-md hover:bg-gray-100" :class="{ 'bg-blue-50 text-blue-700 font-semibold': listOptions.getItems == 'trashed' }" @click="changeGetItems('trashed')">{{ __('Trashed') }}({{ trashedCount }})</div>
                             </template>
                         </div>
                     </div>
+
+                    <div v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])" class="flex items-center justify-between mb-1">
+                        <span class="selection-info text-sm text-gray-700">
+                            <template v-if="selected.length">{{ selected.length }} {{ selected.length === 1 ? __('row selected') : __('rows selected') }} <a href="" @click.prevent="selected = []" class="ml-2 underline text-blue-700">{{ __('clear') }}</a></template>
+                        </span>
+                        <ui-dropdown>
+                            <template #trigger>
+                                <button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 shadow-sm">
+                                    <i class="fa fa-bolt text-gray-400"></i>
+                                    {{ __('Actions') }}
+                                    <i class="fa fa-caret-down text-gray-400 ml-0.5"></i>
+                                </button>
+                            </template>
+                            <template #content>
+                                <div class="py-1 min-w-[160px]">
+                                    <template v-if="selected.length === 0">
+                                        <div class="px-3 py-2 text-sm text-gray-400 italic">{{ __('No rows selected') }}</div>
+                                    </template>
+                                    <template v-else-if="isComments">
+                                        <a v-if="listOptions.getItems !== 'trash'" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 cursor-pointer" @click="commentBulk('approve')"><i class="fa fa-check text-green-500 w-4 text-center"></i>{{ __('Approve') }}</a>
+                                        <a v-if="listOptions.getItems !== 'trash'" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 cursor-pointer" @click="commentBulk('spam')"><i class="fa fa-bug text-amber-500 w-4 text-center"></i>{{ __('Mark as spam') }}</a>
+                                        <a v-if="listOptions.getItems !== 'trash'" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 cursor-pointer" @click="commentBulk('trash')"><i class="fa fa-trash-restore text-orange-500 w-4 text-center"></i>{{ __('Move to trash') }}</a>
+                                        <a v-if="listOptions.getItems === 'trash'" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer" @click="commentBulk('restore')"><i class="fa fa-recycle text-blue-500 w-4 text-center"></i>{{ __('Restore') }}</a>
+                                        <div v-if="canProject(['owner', 'admin'])" class="border-t border-gray-100 my-1"></div>
+                                        <a v-if="canProject(['owner', 'admin'])" class="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 cursor-pointer" @click="deleteSelected"><i class="fa fa-trash-alt w-4 text-center"></i>{{ __('Delete permanently') }}</a>
+                                    </template>
+                                    <template v-else>
+                                        <a v-if="listOptions.getItems !== 'trashed' && canProject(['owner', 'admin'])" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 cursor-pointer" @click="publishSelected"><i class="fa fa-cloud-upload-alt text-green-500 w-4 text-center"></i>{{ __('Publish') }}</a>
+                                        <a v-if="listOptions.getItems !== 'trashed'" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer" @click="unPublishSelected"><i class="fa fa-cloud-download-alt text-gray-400 w-4 text-center"></i>{{ __('Unpublish') }}</a>
+                                        <a v-if="listOptions.getItems !== 'trashed'" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 cursor-pointer" @click="moveToTrashSelected"><i class="fa fa-trash-restore text-orange-500 w-4 text-center"></i>{{ __('Move to trash') }}</a>
+                                        <a v-if="listOptions.getItems === 'trashed'" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer" @click="restoreSelected"><i class="fa fa-recycle text-blue-500 w-4 text-center"></i>{{ __('Restore') }}</a>
+                                        <div v-if="listOptions.getItems !== 'trashed' && canProject(['owner', 'admin'])" class="border-t border-gray-100 my-1"></div>
+                                        <a v-if="canProject(['owner', 'admin'])" class="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 cursor-pointer" @click="deleteSelected"><i class="fa fa-trash-alt w-4 text-center"></i>{{ __('Delete permanently') }}</a>
+                                    </template>
+                                </div>
+                            </template>
+                        </ui-dropdown>
+                    </div>
+
 
                     <ui-table
                         :columns="tableColumns"
                         :rows="content.data || []"
-                        :select-options="{ enabled: !isReadonly }"
+                        :select-options="{ enabled: !isReadonly, disableSelectInfo: true }"
                         :select-all="selectAll"
                         :show-select-all="true"
                         :order-by="listOptions.orderBy"
@@ -579,7 +518,7 @@ import UiButton from '@/components/Button.vue';
 import UiDropdown from '@/components/Dropdown.vue';
 
 import ProjectHeader from '@/admin/components/ProjectHeader.vue';
-import ContentSidebar from '@/admin/components/ContentSidebar.vue';
+import CollectionSidebar from '@/admin/components/CollectionSidebar.vue';
 import projectBreadcrumb from '@/admin/mixins/projectBreadcrumb';
 
 /**
@@ -1310,7 +1249,7 @@ function useContentList(options = {}) {
 export default {
     components: {
         ProjectHeader,
-        ContentSidebar,
+        CollectionSidebar,
         UiTable,
         UiModal,
         UiButton,

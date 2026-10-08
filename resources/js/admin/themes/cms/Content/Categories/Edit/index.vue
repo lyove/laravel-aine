@@ -4,7 +4,7 @@
 
         <div class="flex flex-1 overflow-hidden">
             <div class="w-3/12 bg-white overflow-x-hidden">
-                <content-sidebar :project="project" class="h-full"></content-sidebar>
+                <collection-sidebar :project="project" class="h-full"></collection-sidebar>
             </div>
             <div class="w-9/12 flex flex-col">
                 <div class="px-4 py-2 font-bold text-lg flex justify-between flex-shrink-0">
@@ -761,7 +761,7 @@ import UiDropdown from "@/components/Dropdown.vue";
 import ProjectHeader from "@/admin/components/ProjectHeader.vue";
 import MediaLibrary from "@/admin/components/MediaLibrary.vue";
 import RevisionsModal from "@/admin/components/RevisionsModal.vue";
-import ContentSidebar from "@/admin/components/ContentSidebar.vue";
+import CollectionSidebar from "@/admin/components/CollectionSidebar.vue";
 
 import List from "../List/index.vue";
 
@@ -773,7 +773,7 @@ import { useAdminStore } from "@/admin/store";
 export default {
     components: {
         ProjectHeader,
-        ContentSidebar,
+        CollectionSidebar,
         UiButton,
         UiModal,
         UiDropdown,

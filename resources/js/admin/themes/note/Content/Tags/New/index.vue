@@ -4,7 +4,7 @@
 
         <div class="flex flex-1 overflow-hidden">
             <div class="w-3/12 overflow-x-hidden bg-white">
-                <content-sidebar :project="project"></content-sidebar>
+                <collection-sidebar :project="project"></collection-sidebar>
             </div>
 
             <div class="w-9/12 flex flex-col">
@@ -713,7 +713,7 @@ import UiDropdown from "@/components/Dropdown.vue";
 
 import ProjectHeader from "@/admin/components/ProjectHeader.vue";
 import MediaLibrary from "@/admin/components/MediaLibrary.vue";
-import ContentSidebar from "@/admin/components/ContentSidebar.vue";
+import CollectionSidebar from "@/admin/components/CollectionSidebar.vue";
 import List from "../List.vue";
 
 import { __ } from '@/admin/translations/engine';
@@ -724,7 +724,7 @@ import { useAdminStore } from "@/admin/store";
 export default {
     components: {
         ProjectHeader,
-        ContentSidebar,
+        CollectionSidebar,
         UiButton,
         UiModal,
         UiDropdown,

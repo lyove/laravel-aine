@@ -6,7 +6,7 @@
 
     <div class="flex flex-1 overflow-y-auto">
       <div v-show="!embedded" class="w-3/12 bg-white overflow-x-hidden">
-        <content-sidebar :project="project"></content-sidebar>
+        <collection-sidebar :project="project"></collection-sidebar>
       </div>
 
       <div class="p-4 overflow-x-auto" :class="embedded ? 'w-full' : 'w-9/12'">
@@ -96,7 +96,7 @@ import UiButton from "@/components/Button.vue";
 import UiDropdown from "@/components/Dropdown.vue";
 
 import ProjectHeader from "@/admin/components/ProjectHeader.vue";
-import ContentSidebar from "@/admin/components/ContentSidebar.vue";
+import CollectionSidebar from "@/admin/components/CollectionSidebar.vue";
 import projectBreadcrumb from "@/admin/mixins/projectBreadcrumb";
 
 import ContentTable from "./ContentTable.vue";
@@ -847,7 +847,7 @@ function useContentList(options = {}) {
 export default {
   components: {
     ProjectHeader,
-    ContentSidebar,
+    CollectionSidebar,
     UiTable,
     UiModal,
     UiButton,

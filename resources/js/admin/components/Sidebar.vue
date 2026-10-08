@@ -70,18 +70,6 @@
                                 <span class="text-xs font-medium">{{ __('Collections') }}</span>
                             </router-link>
                             <router-link
-                                :to="{
-                                    name: 'projects.content',
-                                    params: { project_id: $route.params.project_id },
-                                }"
-                                :class="['admin__sub-menu-item flex items-center px-4 py-2.5 mx-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-200 group', { 'text-indigo-400 bg-indigo-500/10': isContentActive }]"
-                            >
-                                <div class="w-7 h-7 rounded-md bg-amber-500/20 flex items-center justify-center mr-3 group-hover:bg-amber-500/30 transition-colors">
-                                    <i class="fas fa-edit text-amber-400 text-xs"></i>
-                                </div>
-                                <span class="text-xs font-medium">{{ __('Content') }}</span>
-                            </router-link>
-                            <router-link
                                 v-if="canProject(['owner', 'admin'])"
                                 :to="{
                                     name: 'projects.settings',
