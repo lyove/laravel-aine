@@ -39,7 +39,7 @@
           <router-link
             v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])"
             :to="{
-              name: 'projects.content.forms',
+              name: 'projects.collections.content.forms',
               params: {
                 project_id: $route.params.project_id,
                 col_id: collection_id,
@@ -53,7 +53,7 @@
           <router-link
             v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])"
             :to="{
-              name: 'projects.content.new',
+              name: 'projects.collections.content.new',
               params: {
                 project_id: $route.params.project_id,
                 col_id: collection_id,
@@ -468,7 +468,7 @@
           <router-link
             v-if="!isReadonly && canProject(['owner', 'admin', 'editor'])"
             :to="{
-              name: 'projects.content.edit',
+              name: 'projects.collections.content.edit',
               params: {
                 project_id: $route.params.project_id,
                 col_id: collection_id,
@@ -482,7 +482,7 @@
           <router-link
             v-if="isReadonly || !canProject(['owner', 'admin', 'editor'])"
             :to="{
-              name: 'projects.content.edit',
+              name: 'projects.collections.content.edit',
               params: {
                 project_id: $route.params.project_id,
                 col_id: collection_id,
