@@ -27,18 +27,18 @@
     },
     "view_overrides": {
         "projects.index": "./Index/index.vue",
-        "projects.content.list": "./Content/List.vue",
-        "projects.content.list.pages": "./Content/Pages/List.vue",
-        "projects.content.list.posts": "./Content/Posts/List.vue",
-        "projects.content.list.categories": "./Content/Categories/List.vue",
-        "projects.content.list.tags": "./Content/Tags/List.vue",
-        "projects.content.new.pages": "./Content/Pages/New/index.vue",
-        "projects.content.new.posts": "./Content/Posts/New/index.vue",
-        "projects.content.new.categories": "./Content/Categories/New/index.vue",
-        "projects.content.new.tags": "./Content/Tags/New/index.vue",
-        "projects.content.edit.pages": "./Content/Pages/Edit/index.vue",
-        "projects.content.edit.posts": "./Content/Posts/Edit/index.vue",
-        "projects.content.edit.categories": "./Content/Categories/Edit/index.vue",
-        "projects.content.edit.tags": "./Content/Tags/Edit/index.vue"
+        "projects.collections.content.list": "./Content/List.vue",
+        "projects.collections.content.list.pages": "./Content/Pages/List.vue",
+        "projects.collections.content.list.posts": "./Content/Posts/List.vue",
+        "projects.collections.content.list.categories": "./Content/Categories/List.vue",
+        "projects.collections.content.list.tags": "./Content/Tags/List.vue",
+        "projects.collections.content.new.pages": "./Content/Pages/New/index.vue",
+        "projects.collections.content.new.posts": "./Content/Posts/New/index.vue",
+        "projects.collections.content.new.categories": "./Content/Categories/New/index.vue",
+        "projects.collections.content.new.tags": "./Content/Tags/New/index.vue",
+        "projects.collections.content.edit.pages": "./Content/Pages/Edit/index.vue",
+        "projects.collections.content.edit.posts": "./Content/Posts/Edit/index.vue",
+        "projects.collections.content.edit.categories": "./Content/Categories/Edit/index.vue",
+        "projects.collections.content.edit.tags": "./Content/Tags/Edit/index.vue"
     }
 }
