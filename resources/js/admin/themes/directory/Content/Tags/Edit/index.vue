@@ -11,7 +11,7 @@
                     <div class="flex items-center">
                         <router-link
                             :to="{
-                                name: 'projects.content.list',
+                                name: 'projects.collections.content.list',
                                 params: {
                                     project_id: $route.params.project_id,
                                     col_id: $route.params.col_id,
@@ -656,7 +656,7 @@
                         <div class="bg-white mb-2 rounded-md">
                             <router-link
                                 :to="{
-                                    name: 'projects.content.list',
+                                    name: 'projects.collections.content.list',
                                     params: {
                                         project_id: $route.params.project_id,
                                         col_id: $route.params.col_id,
@@ -1012,7 +1012,7 @@ export default {
                         this.newDataClone = JSON.parse(JSON.stringify(this.newData));
 
                         this.$router.push({
-                            name: "projects.content.list",
+                            name: "projects.collections.content.list",
                             params: {
                                 project_id: this.$route.params.project_id,
                                 col_id: this.$route.params.col_id,
@@ -1022,7 +1022,7 @@ export default {
                         this.newDataClone = JSON.parse(JSON.stringify(this.newData));
 
                         this.$router.push({
-                            name: "projects.content.new",
+                            name: "projects.collections.content.new",
                             params: {
                                 project_id: this.$route.params.project_id,
                                 col_id: this.$route.params.col_id,
@@ -1160,7 +1160,7 @@ export default {
                         axios.delete("projects/" + this.$route.params.project_id + "/collections/" + this.$route.params.col_id + "/" + this.$route.params.content_id + "/move-to-trash").then((response) => {
                             this.$toast.success(__('Content has been moved to the trash.'));
                             this.$router.push({
-                                name: "projects.content.list",
+                                name: "projects.collections.content.list",
                                 params: {
                                     project_id: this.$route.params.project_id,
                                     col_id: this.$route.params.col_id,
@@ -1182,7 +1182,7 @@ export default {
                         axios.delete("projects/" + this.$route.params.project_id + "/collections/" + this.$route.params.col_id + "/" + this.$route.params.content_id).then((response) => {
                             this.$toast.success(__('Content deleted.'));
                             this.$router.push({
-                                name: "projects.content.list",
+                                name: "projects.collections.content.list",
                                 params: {
                                     project_id: this.$route.params.project_id,
                                     col_id: this.$route.params.col_id,

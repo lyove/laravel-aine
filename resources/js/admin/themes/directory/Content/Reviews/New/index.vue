@@ -12,7 +12,7 @@
                     <div class="flex items-center">
                         <router-link
                             :to="{
-                                name: 'projects.content.list',
+                                name: 'projects.collections.content.list',
                                 params: {
                                     project_id: $route.params.project_id,
                                     col_id: $route.params.col_id,
@@ -645,7 +645,7 @@
                         <div class="bg-white mb-2 rounded-md">
                             <router-link
                                 :to="{
-                                    name: 'projects.content.list',
+                                    name: 'projects.collections.content.list',
                                     params: {
                                         project_id: $route.params.project_id,
                                         col_id: $route.params.col_id,
@@ -827,7 +827,7 @@ export default {
 
                     if (after === null) {
                         this.$router.push({
-                            name: "projects.content.edit",
+                            name: "projects.collections.content.edit",
                             params: {
                                 project_id: this.$route.params.project_id,
                                 col_id: this.$route.params.col_id,
@@ -836,7 +836,7 @@ export default {
                         });
                     } else if (after === "close") {
                         this.$router.push({
-                            name: "projects.content.list",
+                            name: "projects.collections.content.list",
                             params: {
                                 project_id: this.$route.params.project_id,
                                 col_id: this.$route.params.col_id,
