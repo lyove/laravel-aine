@@ -15,33 +15,33 @@ const SEGMENT_DEFS = {
     'projects.collections': [
         { label: 'Collections', icon: 'fa fa-table' },
     ],
-    'projects.collections.list': [
+    'projects.collections.fields': [
+        { label: 'Collections', route: 'projects.collections', icon: 'fa fa-table' },
+        { label: 'Fields', storeKey: 'currentCollection', icon: 'fa fa-folder' },
+    ],
+    'projects.collections.content.list': [
         { label: 'Collections', route: 'projects.collections', icon: 'fa fa-table' },
         { label: 'Collection', storeKey: 'currentCollection', icon: 'fa fa-folder' },
     ],
-    'projects.content.list': [
-        { label: 'Collections', route: 'projects.collections', icon: 'fa fa-table' },
-        { label: 'Collection', storeKey: 'currentCollection', icon: 'fa fa-folder' },
-    ],
-    'projects.content.new': [
+    'projects.collections.content.new': [
         { label: 'Collections', route: 'projects.collections', icon: 'fa fa-table' },
         { label: 'Collection', storeKey: 'currentCollection', icon: 'fa fa-folder' },
         { label: 'Create Content', icon: 'fa fa-plus' },
     ],
-    'projects.content.edit': [
+    'projects.collections.content.edit': [
         { label: 'Collections', route: 'projects.collections', icon: 'fa fa-table' },
         { label: 'Collection', storeKey: 'currentCollection', icon: 'fa fa-folder' },
         { label: 'Edit Content', icon: 'fa fa-pen' },
     ],
-    'projects.content.forms': [
+    'projects.collections.content.forms': [
         { label: 'Collections', route: 'projects.collections', icon: 'fa fa-table' },
         { label: 'Collection', storeKey: 'currentCollection', icon: 'fa fa-folder' },
         { label: 'Forms', icon: 'fa fa-wpforms' },
     ],
-    'projects.content.forms.detail': [
+    'projects.collections.content.forms.detail': [
         { label: 'Collections', route: 'projects.collections', icon: 'fa fa-table' },
         { label: 'Collection', storeKey: 'currentCollection', icon: 'fa fa-folder' },
-        { label: 'Forms', route: 'projects.content.forms', icon: 'fa fa-wpforms' },
+        { label: 'Forms', route: 'projects.collections.content.forms', icon: 'fa fa-wpforms' },
         { label: 'Form', nameKey: 'breadcrumbFormName', icon: 'fa fa-file-alt' },
     ],
     'projects.media_library': [

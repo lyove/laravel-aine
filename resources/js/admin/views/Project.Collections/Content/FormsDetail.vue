@@ -161,7 +161,7 @@
                         <div class="bg-white mb-2 rounded-md">
                             <router-link
                                 :to="{
-                                    name: 'projects.content.list',
+                                    name: 'projects.collections.content.list',
                                     params: {
                                         project_id: $route.params.project_id,
                                         col_id: $route.params.col_id,
@@ -479,7 +479,7 @@ export default {
                     this.closeNewFormModal();
                     this.$toast.success(__('New form created.'));
                     this.$router.push({
-                        name: "projects.content.forms.detail",
+                        name: "projects.collections.content.forms.detail",
                         params: {
                             project_id: this.project.id,
                             col_id: this.collection.id,
@@ -537,7 +537,7 @@ export default {
                         axios.delete("projects/" + this.$route.params.project_id + "/collections/" + this.$route.params.col_id + "/forms/" + this.$route.params.form_id).then((response) => {
                             this.$toast.success(__('Form deleted.'));
                             this.$router.push({
-                                name: "projects.content.forms",
+                                name: "projects.collections.content.forms",
                                 params: {
                                     project_id: this.$route.params.project_id,
                                     col_id: this.$route.params.col_id,

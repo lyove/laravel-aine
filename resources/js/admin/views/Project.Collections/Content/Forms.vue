@@ -30,7 +30,7 @@
 
                         <router-link
                             :to="{
-                                name: 'projects.content.forms.detail',
+                                name: 'projects.collections.content.forms.detail',
                                 params: {
                                     project_id: $route.params.project_id,
                                     col_id: $route.params.col_id,
@@ -194,7 +194,7 @@ export default {
                         this.closeNewFormModal();
                         this.$toast.success(__('New form created.'));
                         this.$router.push({
-                            name: "projects.content.forms.detail",
+                            name: "projects.collections.content.forms.detail",
                             params: {
                                 project_id: this.project.id,
                                 col_id: this.collection.id,

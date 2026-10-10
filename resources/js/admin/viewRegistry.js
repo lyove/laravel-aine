@@ -8,12 +8,12 @@
 // Default fallback views
 const defaultViews = {
     'projects.collections':         () => import('./views/Project.Collections/Collection/Index.vue'),
-    'projects.collections.list':    () => import('./views/Project.Collections/Collection/List.vue'),
-    'projects.content.list':        () => import('./views/Project.Collections/Content/List.vue'),
-    'projects.content.new':         () => import('./views/Project.Collections/Content/New.vue'),
-    'projects.content.edit':        () => import('./views/Project.Collections/Content/Edit.vue'),
-    'projects.content.forms':       () => import('./views/Project.Collections/Content/Forms.vue'),
-    'projects.content.forms.detail':() => import('./views/Project.Collections/Content/FormsDetail.vue'),
+    'projects.collections.fields':                  () => import('./views/Project.Collections/Collection/List.vue'),
+    'projects.collections.content.list':            () => import('./views/Project.Collections/Content/List.vue'),
+    'projects.collections.content.new':             () => import('./views/Project.Collections/Content/New.vue'),
+    'projects.collections.content.edit':            () => import('./views/Project.Collections/Content/Edit.vue'),
+    'projects.collections.content.forms':           () => import('./views/Project.Collections/Content/Forms.vue'),
+    'projects.collections.content.forms.detail':    () => import('./views/Project.Collections/Content/FormsDetail.vue'),
     'projects.media_library':       () => import('./views/Project.Collections/Media/Index.vue'),
     'projects.settings':            () => import('./views/Project.Settings/Index.vue'),
     'projects.settings.preferences':() => import('./views/Project.Settings/Preferences.vue'),

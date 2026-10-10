@@ -176,9 +176,9 @@ const routes = [
         }),
   },
   {
-    path: "/project/:project_id/collections/:col_id/edit",
-    name: "projects.collections.list",
-    component: projectUiView('projects.collections.list'),
+    path: "/project/:project_id/collections/:col_id/fields",
+    name: "projects.collections.fields",
+    component: projectUiView('projects.collections.fields'),
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
             requiredProjectRoles: ["owner", "admin"],
@@ -186,8 +186,8 @@ const routes = [
   },
   {
     path: "/project/:project_id/collections/:col_id/content",
-    name: "projects.content.list",
-    component: projectUiView('projects.content.list', { collectionAware: true }),
+    name: "projects.collections.content.list",
+    component: projectUiView('projects.collections.content.list', { collectionAware: true }),
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
             requiredProjectRoles: ["owner", "admin", "editor"],
@@ -195,8 +195,8 @@ const routes = [
   },
   {
     path: "/project/:project_id/collections/:col_id/content/new",
-    name: "projects.content.new",
-    component: projectUiView('projects.content.new', { collectionAware: true }),
+    name: "projects.collections.content.new",
+    component: projectUiView('projects.collections.content.new', { collectionAware: true }),
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
             requiredProjectRoles: ["owner", "admin", "editor"],
@@ -204,8 +204,8 @@ const routes = [
   },
   {
     path: "/project/:project_id/collections/:col_id/content/:content_id/edit",
-    name: "projects.content.edit",
-    component: projectUiView('projects.content.edit', { collectionAware: true }),
+    name: "projects.collections.content.edit",
+    component: projectUiView('projects.collections.content.edit', { collectionAware: true }),
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
             requiredProjectRoles: ["owner", "admin", "editor"],
@@ -213,8 +213,8 @@ const routes = [
   },
   {
     path: "/project/:project_id/collections/:col_id/content/forms",
-    name: "projects.content.forms",
-    component: projectUiView('projects.content.forms'),
+    name: "projects.collections.content.forms",
+    component: projectUiView('projects.collections.content.forms'),
     beforeEnter: async (to, from, next) =>
         checkPermission(to, from, next, {
             requiredProjectRoles: ["owner", "admin", "editor"],
@@ -222,8 +222,8 @@ const routes = [
   },
   {
     path: "/project/:project_id/collections/:col_id/content/forms/:form_id",
-    name: "projects.content.forms.detail",
-    component: projectUiView('projects.content.forms.detail'),
+    name: "projects.collections.content.forms.detail",
+    component: projectUiView('projects.collections.content.forms.detail'),
     beforeEnter: async (to, from, next) =>
       checkPermission(to, from, next, {
             requiredProjectRoles: ["owner", "admin", "editor"],

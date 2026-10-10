@@ -66,7 +66,7 @@
                         </span>
                         <router-link
                             :to="{
-                                name: 'projects.content.list',
+                                name: 'projects.collections.content.list',
                                 params: {
                                     project_id: project.id,
                                     col_id: collection.id,
@@ -82,13 +82,13 @@
                         >
                         <router-link
                             :to="{
-                                name: 'projects.collections.list',
+                                name: 'projects.collections.fields',
                                 params: {
                                     project_id: project.id,
                                     col_id: collection.id,
                                 },
                             }"
-                            :title="__('Edit collection')"
+                            :title="__('Edit fields')"
                             class="ml-1 p-2 rounded text-xs cursor-pointer transition-colors"
                             :class="
                                 isSchemaRoute(collection.id)
@@ -225,16 +225,16 @@ export default {
 
         isContentRoute(collectionId) {
             const name = this.$route.name;
-            const isContent = name === 'projects.content.list'
-                || name === 'projects.content.new'
-                || name === 'projects.content.edit'
-                || name === 'projects.content.forms'
-                || name === 'projects.content.forms.detail';
+            const isContent = name === 'projects.collections.content.list'
+                || name === 'projects.collections.content.new'
+                || name === 'projects.collections.content.edit'
+                || name === 'projects.collections.content.forms'
+                || name === 'projects.collections.content.forms.detail';
             return isContent && String(this.$route.params.col_id) === String(collectionId);
         },
 
         isSchemaRoute(collectionId) {
-            return this.$route.name === 'projects.collections.list'
+            return this.$route.name === 'projects.collections.fields'
                 && String(this.$route.params.col_id) === String(collectionId);
         },
 

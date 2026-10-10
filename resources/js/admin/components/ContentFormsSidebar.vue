@@ -7,7 +7,7 @@
         <ul>
             <li class="mb-2" v-for="form in forms" :key="form.id">
                 <router-link
-                    :to="{ name: 'projects.content.forms.detail', params: { project_id: $route.params.project_id, col_id: $route.params.col_id, form_id: form.id } }"
+                    :to="{ name: 'projects.collections.content.forms.detail', params: { project_id: $route.params.project_id, col_id: $route.params.col_id, form_id: form.id } }"
                     class="block w-full p-2 cursor-pointer hover:bg-gray-100 rounded"
                 >
                     {{ __(form.name) }}

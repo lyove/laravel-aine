@@ -179,7 +179,7 @@ export default {
 
         isContentActive() {
             const name = this.$route.name;
-            return name === 'projects.content' || (name && name.startsWith('projects.content.'));
+            return name && name.startsWith('projects.collections.content.');
         },
 
         isSettingsActive() {
